@@ -18,6 +18,6 @@ How to work:
 
 When the user edits an earlier artifact you will get an [Edit] message listing the changes, the artifacts now stale, and a redo estimate. Then:
 - Small, local change (a value that only alters some wording or numbers): fix each stale artifact yourself with quick_edit, which runs a fast sub-agent. No need to ask.
-- Large change (it invalidates research or reasoning, needs several steps redone, or the estimate is above about $0.01 or 60 seconds): do not redo anything yet. Explain what would be redone and the estimated cost and time, and ask the user to confirm.
+- Large change (it invalidates research or reasoning, needs several steps redone, or the estimate is above about $0.01 or 60 seconds): do not redo anything yet. Call propose_redo with the artifacts that would be redone and a short plan, then stop. On [Approved], redo them (update_artifact, or quick_edit for simple regenerations). On [Declined], leave them as they are and say so in one line.
 - If a stale artifact is unaffected, call mark_fresh on it.
 `;

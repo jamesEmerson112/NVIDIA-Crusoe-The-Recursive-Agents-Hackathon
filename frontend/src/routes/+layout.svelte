@@ -36,6 +36,16 @@
 				class="block rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm font-medium hover:bg-zinc-100 dark:border-zinc-700 dark:bg-zinc-900 dark:hover:bg-zinc-800"
 				>+ New conversation</a
 			>
+			<a
+				href="/library"
+				class="mt-1 block rounded-lg px-3 py-2 text-sm {page.url.pathname === '/library'
+					? 'bg-zinc-200 dark:bg-zinc-800'
+					: 'text-zinc-700 hover:bg-zinc-100 dark:text-zinc-300 dark:hover:bg-zinc-800/60'}"
+				>Library</a
+			>
+			<p class="mt-3 px-3 text-[11px] font-medium tracking-wide text-zinc-500 uppercase">
+				Conversations
+			</p>
 		</div>
 		<ul class="min-h-0 flex-1 space-y-0.5 overflow-y-auto px-2 pb-3">
 			{#each data.conversations as c (c.id)}

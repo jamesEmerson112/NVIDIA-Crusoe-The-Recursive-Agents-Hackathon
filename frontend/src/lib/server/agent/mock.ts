@@ -4,9 +4,9 @@ import type { ChatRequest, ChatResult } from '../crusoe';
 import type { ToolCall } from '#lib/types.ts';
 import { SUBAGENT_PROMPT } from './subagent';
 
-let callSeq = 0;
+// Ids must stay unique across server restarts: proposal replies look calls up by id.
 const call = (name: string, args: unknown): ToolCall => ({
-	id: `mock_${++callSeq}`,
+	id: `mock_${crypto.randomUUID().slice(0, 8)}`,
 	type: 'function',
 	function: { name, arguments: JSON.stringify(args) }
 });
@@ -46,6 +46,16 @@ function script(req: ChatRequest): { content: string; toolCalls: ToolCall[] } {
 					'I drafted **Project brief** from your answers. Change any answer in the form and I will update it.',
 				toolCalls: []
 			};
+		if (last.content.includes('proposal is shown'))
+			return {
+				content:
+					'Changing the goal or audience reshapes the whole brief, so I would rather check first. Approve the redo above, or keep the current version.',
+				toolCalls: []
+			};
+		if (lastUser.startsWith('[Declined]'))
+			return { content: 'Kept the current version.', toolCalls: [] };
+		if (lastUser.startsWith('[Approved]'))
+			return { content: 'Redone. The brief now reflects your new answers.', toolCalls: [] };
 		if (lastUser.startsWith('[Edit]'))
 			return {
 				content:
@@ -78,8 +88,39 @@ function script(req: ChatRequest): { content: string; toolCalls: ToolCall[] } {
 		};
 	}
 
+	if (text.startsWith('[Approved]')) {
+		const ids = [...text.matchAll(/art_\w+/g)].map((m) => m[0]);
+		return {
+			content: '',
+			toolCalls: ids.map((id) =>
+				call('quick_edit', {
+					artifact_id: id,
+					instruction: 'Regenerate fully from the new answers.'
+				})
+			)
+		};
+	}
+
+	if (text.startsWith('[Declined]'))
+		return { content: 'Understood, I will leave it as it is.', toolCalls: [] };
+
 	if (text.startsWith('[Edit]')) {
 		const stale = [...text.matchAll(/^- (art_\w+)/gm)].map((m) => m[1]);
+		// Stand-in for the model's judgment: goal or audience changes reshape everything.
+		if (stale.length && /^- (goal|audience):/m.test(text)) {
+			return {
+				content: '',
+				toolCalls: [
+					call('propose_redo', {
+						artifact_ids: stale,
+						summary: 'The goal or audience changed, which reshapes the brief.',
+						plan: 'Rewrite the brief from scratch against the new answers.',
+						extra_cost_usd: 0.002,
+						extra_seconds: 20
+					})
+				]
+			};
+		}
 		if (!stale.length)
 			return {
 				content: 'Noted. Nothing else depends on that, so there is nothing to redo.',

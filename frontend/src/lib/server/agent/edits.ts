@@ -87,3 +87,28 @@ export async function editArtifact(
 
 	return { content, meta: { kind: 'artifact_edit', artifactId, version, staleIds } };
 }
+
+/** The user answered a propose_redo card. */
+export async function replyToProposal(
+	cid: string,
+	callId: string,
+	approved: boolean
+): Promise<Input> {
+	const rows = await store.listMessages(cid);
+	const proposal = rows.find((m) => m.meta?.kind === 'proposal' && m.meta.callId === callId)?.meta;
+	if (proposal?.kind !== 'proposal') throw new Error('Unknown proposal');
+	if (rows.some((m) => m.meta?.kind === 'proposal_reply' && m.meta.callId === callId)) {
+		throw new Error('Already answered');
+	}
+	const titles = [];
+	for (const id of proposal.artifactIds) {
+		const a = await store.getArtifact(cid, id);
+		titles.push(`"${a?.title ?? id}" (${id})`);
+	}
+	return {
+		content: approved
+			? `[Approved] Go ahead and redo ${titles.join(', ')}.`
+			: `[Declined] Keep the current versions of ${titles.join(', ')}; don't redo them.`,
+		meta: { kind: 'proposal_reply', callId, approved }
+	};
+}

@@ -99,7 +99,9 @@ export async function runAgent(
 				const batch = result.toolCalls.slice(i, j);
 				outputs.push(
 					...(await Promise.all(
-						batch.map((c) => runTool(c.function.name, c.function.arguments, ctx))
+						batch.map((c) =>
+							runTool(c.function.name, c.function.arguments, { ...ctx, callId: c.id })
+						)
 					))
 				);
 				i = j;

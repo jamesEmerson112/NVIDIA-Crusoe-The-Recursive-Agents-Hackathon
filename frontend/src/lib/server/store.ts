@@ -1,4 +1,4 @@
-import { and, asc, desc, eq, inArray, max } from 'drizzle-orm';
+import { and, asc, desc, eq, inArray, like, max, or } from 'drizzle-orm';
 import { db } from './db';
 import {
 	artifactDeps,
@@ -269,6 +269,7 @@ export async function addVersion(
 		.update(artifacts)
 		.set({ currentVersion: version, status: patch.status ?? 'ready', updatedAt: new Date() })
 		.where(eq(artifacts.id, id));
+	await syncStepStatus([id]);
 	return { previous: current, version };
 }
 
@@ -278,6 +279,31 @@ export async function setArtifactStatus(ids: string[], status: ArtifactStatus) {
 		.update(artifacts)
 		.set({ status, updatedAt: new Date() })
 		.where(inArray(artifacts.id, ids));
+	await syncStepStatus(ids);
+}
+
+/**
+ * A finished step whose artifacts went out of date shows as stale in the process, and returns
+ * to done once none of them are stale. Pending and active steps keep their status.
+ */
+async function syncStepStatus(artifactIds: string[]) {
+	const rows = await db
+		.select({ stepId: artifacts.stepId })
+		.from(artifacts)
+		.where(inArray(artifacts.id, artifactIds));
+	const stepIds = [...new Set(rows.map((r) => r.stepId).filter((s): s is string => !!s))];
+	for (const stepId of stepIds) {
+		const [step] = await db.select().from(steps).where(eq(steps.id, stepId));
+		if (!step || (step.status !== 'done' && step.status !== 'stale')) continue;
+		const inStep = await db
+			.select({ status: artifacts.status })
+			.from(artifacts)
+			.where(eq(artifacts.stepId, stepId));
+		const status = inStep.some((a) => a.status === 'stale' || a.status === 'updating')
+			? 'stale'
+			: 'done';
+		if (status !== step.status) await db.update(steps).set({ status }).where(eq(steps.id, stepId));
+	}
 }
 
 export async function listVersions(artifactId: string) {
@@ -398,3 +424,78 @@ export async function conversationState(id: string) {
 }
 
 export type ConversationState = NonNullable<Awaited<ReturnType<typeof conversationState>>>;
+
+// ---------- library: every artifact across conversations ----------
+
+/** Current versions of all artifacts, newest first, optionally filtered by title, content or answers. */
+export async function searchArtifacts(query: string, kind?: ArtifactKind) {
+	// SQLite LIKE is case-insensitive for ASCII; % and _ in the query act as wildcards.
+	const pattern = `%${query}%`;
+	const rows = await db
+		.select({
+			id: artifacts.id,
+			kind: artifacts.kind,
+			title: artifacts.title,
+			status: artifacts.status,
+			version: artifacts.currentVersion,
+			updatedAt: artifacts.updatedAt,
+			conversationId: conversations.id,
+			conversationTitle: conversations.title,
+			stepTitle: steps.title,
+			stepPosition: steps.position,
+			content: artifactVersions.content,
+			data: artifactVersions.data
+		})
+		.from(artifacts)
+		.innerJoin(conversations, eq(conversations.id, artifacts.conversationId))
+		.innerJoin(
+			artifactVersions,
+			and(
+				eq(artifactVersions.artifactId, artifacts.id),
+				eq(artifactVersions.version, artifacts.currentVersion)
+			)
+		)
+		.leftJoin(steps, eq(steps.id, artifacts.stepId))
+		.where(
+			and(
+				kind ? eq(artifacts.kind, kind) : undefined,
+				query
+					? or(
+							like(artifacts.title, pattern),
+							like(artifactVersions.content, pattern),
+							like(artifactVersions.data, pattern),
+							like(conversations.title, pattern)
+						)
+					: undefined
+			)
+		)
+		.orderBy(desc(artifacts.updatedAt))
+		.limit(200);
+	return rows.map(({ content, data, ...r }) => ({
+		...r,
+		snippet: snippet(r.kind, content, data, query)
+	}));
+}
+
+function snippet(
+	kind: ArtifactKind,
+	content: string,
+	data: Record<string, unknown> | null,
+	query: string
+) {
+	const text =
+		kind === 'form'
+			? Object.entries(data ?? {})
+					.filter(([, v]) => v !== '' && v !== null && v !== undefined)
+					.map(([k, v]) => `${k}: ${Array.isArray(v) ? v.join(', ') : v}`)
+					.join(' · ')
+			: kind === 'html'
+				? content.replace(/<(script|style)[\s\S]*?<\/\1>/gi, ' ').replace(/<[^>]+>/g, ' ')
+				: content.replace(/[#*_`>|]/g, '');
+	const flat = text.replace(/\s+/g, ' ').trim();
+	const at = query ? flat.toLowerCase().indexOf(query.toLowerCase()) : -1;
+	const start = Math.max(0, at - 60);
+	return (
+		(start > 0 ? '…' : '') + flat.slice(start, start + 180) + (flat.length > start + 180 ? '…' : '')
+	);
+}

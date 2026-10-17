@@ -15,6 +15,16 @@ export type MessageMeta =
 	| { kind: 'form_submit'; artifactId: string; version: number }
 	| { kind: 'artifact_edit'; artifactId: string; version: number; staleIds: string[] }
 	| { kind: 'artifact'; artifactId: string }
+	| {
+			kind: 'proposal';
+			callId: string;
+			artifactIds: string[];
+			summary: string;
+			plan: string;
+			costUsd: number;
+			durationMs: number;
+	  }
+	| { kind: 'proposal_reply'; callId: string; approved: boolean }
 	| { kind: 'error' };
 
 export type FieldType =
