@@ -1,0 +1,333 @@
+{
+ "id": "sf-studio",
+ "name": "SF studio (Lower Haight style)",
+ "synthetic": true,
+ "origin": [
+  0,
+  0
+ ],
+ "stories": [
+  {
+   "level": 0,
+   "elevation": 0,
+   "height": 2.7,
+   "walls": [
+    {
+     "id": "s",
+     "a": [
+      0,
+      0
+     ],
+     "b": [
+      5.6,
+      0
+     ],
+     "t": 0.15,
+     "exterior": true,
+     "party": false
+    },
+    {
+     "id": "e",
+     "a": [
+      5.6,
+      0
+     ],
+     "b": [
+      5.6,
+      6.4
+     ],
+     "t": 0.15,
+     "exterior": true,
+     "party": false
+    },
+    {
+     "id": "n",
+     "a": [
+      5.6,
+      6.4
+     ],
+     "b": [
+      0,
+      6.4
+     ],
+     "t": 0.15,
+     "exterior": true,
+     "party": false
+    },
+    {
+     "id": "w",
+     "a": [
+      0,
+      6.4
+     ],
+     "b": [
+      0,
+      0
+     ],
+     "t": 0.15,
+     "exterior": true,
+     "party": false
+    },
+    {
+     "id": "bath-n",
+     "a": [
+      0,
+      4.4
+     ],
+     "b": [
+      2.0,
+      4.4
+     ],
+     "t": 0.1,
+     "exterior": false,
+     "party": false
+    },
+    {
+     "id": "bath-e",
+     "a": [
+      2.0,
+      4.4
+     ],
+     "b": [
+      2.0,
+      6.4
+     ],
+     "t": 0.1,
+     "exterior": false,
+     "party": false
+    }
+   ],
+   "openings": [
+    {
+     "id": "s-w1",
+     "wallId": "s",
+     "pos": 0.25,
+     "w": 1.4,
+     "h": 1.8,
+     "sill": 0.6,
+     "kind": "window"
+    },
+    {
+     "id": "s-w2",
+     "wallId": "s",
+     "pos": 0.75,
+     "w": 1.4,
+     "h": 1.8,
+     "sill": 0.6,
+     "kind": "window"
+    },
+    {
+     "id": "e-w1",
+     "wallId": "e",
+     "pos": 0.35,
+     "w": 1.2,
+     "h": 1.5,
+     "sill": 0.9,
+     "kind": "window"
+    },
+    {
+     "id": "entry",
+     "wallId": "n",
+     "pos": 0.5,
+     "w": 1.0,
+     "h": 2.1,
+     "sill": 0,
+     "kind": "door"
+    },
+    {
+     "id": "bath-d",
+     "wallId": "bath-e",
+     "pos": 0.3,
+     "w": 0.8,
+     "h": 2.1,
+     "sill": 0,
+     "kind": "door"
+    }
+   ],
+   "rooms": [
+    {
+     "id": "living",
+     "name": "Living / sleeping",
+     "type": "living",
+     "polygon": [
+      [
+       0,
+       0
+      ],
+      [
+       5.6,
+       0
+      ],
+      [
+       5.6,
+       4.4
+      ],
+      [
+       0,
+       4.4
+      ]
+     ]
+    },
+    {
+     "id": "hall",
+     "name": "Entry",
+     "type": "hall",
+     "polygon": [
+      [
+       2.0,
+       4.4
+      ],
+      [
+       3.6,
+       4.4
+      ],
+      [
+       3.6,
+       6.4
+      ],
+      [
+       2.0,
+       6.4
+      ]
+     ]
+    },
+    {
+     "id": "kitchen",
+     "name": "Kitchen",
+     "type": "kitchen",
+     "polygon": [
+      [
+       3.6,
+       4.4
+      ],
+      [
+       5.6,
+       4.4
+      ],
+      [
+       5.6,
+       6.4
+      ],
+      [
+       3.6,
+       6.4
+      ]
+     ]
+    },
+    {
+     "id": "bath",
+     "name": "Bath",
+     "type": "bath",
+     "polygon": [
+      [
+       0,
+       4.4
+      ],
+      [
+       2.0,
+       4.4
+      ],
+      [
+       2.0,
+       6.4
+      ],
+      [
+       0,
+       6.4
+      ]
+     ]
+    }
+   ],
+   "furniture": [
+    {
+     "id": "bed",
+     "type": "bed",
+     "room": "living",
+     "x": 1.2,
+     "y": 1.4,
+     "w": 1.5,
+     "d": 2.0,
+     "h": 0.5,
+     "rot": 0
+    },
+    {
+     "id": "sofa",
+     "type": "sofa",
+     "room": "living",
+     "x": 4.4,
+     "y": 3.2,
+     "w": 2.0,
+     "d": 0.9,
+     "h": 0.8,
+     "rot": 0
+    },
+    {
+     "id": "table",
+     "type": "table",
+     "room": "living",
+     "x": 4.4,
+     "y": 1.6,
+     "w": 1.0,
+     "d": 0.8,
+     "h": 0.75,
+     "rot": 0
+    },
+    {
+     "id": "counter",
+     "type": "counter",
+     "room": "kitchen",
+     "x": 4.6,
+     "y": 6.05,
+     "w": 2.0,
+     "d": 0.6,
+     "h": 0.9,
+     "rot": 0
+    },
+    {
+     "id": "fridge",
+     "type": "fridge",
+     "room": "kitchen",
+     "x": 5.2,
+     "y": 5.0,
+     "w": 0.7,
+     "d": 0.7,
+     "h": 1.8,
+     "rot": 0
+    },
+    {
+     "id": "tub",
+     "type": "tub",
+     "room": "bath",
+     "x": 0.45,
+     "y": 5.5,
+     "w": 0.75,
+     "d": 1.7,
+     "h": 0.55,
+     "rot": 0
+    },
+    {
+     "id": "toilet",
+     "type": "toilet",
+     "room": "bath",
+     "x": 1.5,
+     "y": 6.05,
+     "w": 0.4,
+     "d": 0.6,
+     "h": 0.75,
+     "rot": 0
+    },
+    {
+     "id": "sink",
+     "type": "sink",
+     "room": "bath",
+     "x": 1.5,
+     "y": 4.8,
+     "w": 0.5,
+     "d": 0.4,
+     "h": 0.85,
+     "rot": 0
+    }
+   ]
+  }
+ ]
+}

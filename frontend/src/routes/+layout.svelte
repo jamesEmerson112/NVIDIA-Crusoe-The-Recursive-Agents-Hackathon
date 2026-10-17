@@ -121,6 +121,25 @@
 						/>
 					</svg>
 				</a>
+				<a
+					data-testid="sidebar-plans"
+					href="/plans"
+					class="grid size-9 place-items-center rounded-lg {page.url.pathname === '/plans'
+						? 'bg-zinc-200 dark:bg-zinc-800'
+						: 'text-zinc-600 hover:bg-zinc-200 dark:text-zinc-300 dark:hover:bg-zinc-800'}"
+					aria-label="Blueprints"
+					title="Blueprints"
+				>
+					<svg
+						viewBox="0 0 24 24"
+						class="size-5"
+						fill="none"
+						stroke="currentColor"
+						stroke-width="1.8"
+					>
+						<path d="M3 4h18v16H3zM3 12h8M11 4v12M15 12h6M15 12v4" stroke-linejoin="round" />
+					</svg>
+				</a>
 			</div>
 		{:else}
 			<div class="px-3 pb-3">
@@ -137,6 +156,14 @@
 						? 'bg-zinc-200 dark:bg-zinc-800'
 						: 'text-zinc-700 hover:bg-zinc-100 dark:text-zinc-300 dark:hover:bg-zinc-800/60'}"
 					>Library</a
+				>
+				<a
+					data-testid="sidebar-plans"
+					href="/plans"
+					class="mt-1 block rounded-lg px-3 py-2 text-sm {page.url.pathname === '/plans'
+						? 'bg-zinc-200 dark:bg-zinc-800'
+						: 'text-zinc-700 hover:bg-zinc-100 dark:text-zinc-300 dark:hover:bg-zinc-800/60'}"
+					>Blueprints</a
 				>
 				<p class="mt-3 px-3 text-[11px] font-medium tracking-wide text-zinc-500 uppercase">
 					Conversations
