@@ -32,9 +32,9 @@
 	<SanFrancisco3D />
 	<div class="relative w-full max-w-3xl space-y-8">
 		<h1 data-testid="start-heading" class="text-center text-3xl font-normal tracking-tight">
-			<!-- Frosted pill so the heading stays readable over the SF map. -->
+			<!-- Apple-style glass pill (blur, saturation, light rim) so the heading reads over the SF map. -->
 			<span
-				class="inline-block rounded-2xl bg-white/50 px-5 py-1.5 backdrop-blur-md dark:bg-zinc-950/40"
+				class="inline-block rounded-full border border-white/70 bg-gradient-to-b from-white/60 to-white/25 px-7 py-2.5 shadow-[inset_0_1px_1px_rgba(255,255,255,0.9),inset_0_-1px_1px_rgba(0,0,0,0.04),0_8px_30px_rgba(0,0,0,0.08)] backdrop-blur-xl backdrop-saturate-150 dark:border-white/15 dark:from-white/15 dark:to-white/5 dark:shadow-[inset_0_1px_1px_rgba(255,255,255,0.15),0_8px_30px_rgba(0,0,0,0.4)]"
 				>What's on your mind today?</span
 			>
 		</h1>
