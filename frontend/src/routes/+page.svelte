@@ -32,7 +32,11 @@
 	<SanFrancisco3D />
 	<div class="relative w-full max-w-3xl space-y-8">
 		<h1 data-testid="start-heading" class="text-center text-3xl font-normal tracking-tight">
-			What's on your mind today?
+			<!-- Frosted pill so the heading stays readable over the SF map. -->
+			<span
+				class="inline-block rounded-2xl bg-white/50 px-5 py-1.5 backdrop-blur-md dark:bg-zinc-950/40"
+				>What's on your mind today?</span
+			>
 		</h1>
 		<Composer
 			variant="hero"
