@@ -26,22 +26,19 @@ NOW
 1. [S] Comparison table view of shortlisted homes   <-- James
 2. [M] Visit feedback form and visit task view      <-- James
    - Ratings feed BE's next search round
-3. [M] Real SF map on start page (MapTiler)         <-- James
-   - Agent branch in progress; not merged yet
-   - Key: PUBLIC_MAPTILER_KEY in frontend/.env
 
 LATER
-4. [S] Landing page copy and one-line pitch
-5. [S] Real-world task list with checkboxes
-6. [M] Weight sliders re-rank shortlist             <-- Laurie
+3. [S] Landing page copy and one-line pitch
+4. [S] Real-world task list with checkboxes
+5. [M] Weight sliders re-rank shortlist             <-- Laurie
    - Plain code re-sorts, no model call
    - formloop infers weights; Workbench doesn't yet
-7. [S] Live "options remaining" counter on forms
-8. [M] Map with listing pins
+6. [S] Live "options remaining" counter on forms
+7. [M] Map with listing pins
    - Sandbox blocks network; inline or static
-9. [M] Charts: rents, price versus commute
-10. [L] Synthetic floorplan inside building footprint
-11. [L] C1: Cozy room editor and furniture assets (planned)
+8. [M] Charts: rents, price versus commute
+9. [L] Synthetic floorplan inside building footprint
+10. [L] C1: Cozy room editor and furniture assets (planned)
     - Fixture scenes first; move, rotate, lock, save, reload
     - Own new room UI/renderer files; C0 wires shared UI
     - Use BE's shared run events for the live agent tree
@@ -203,6 +200,8 @@ Works on its own; Workbench (frontend/) can't use it yet.
   - create_blueprint; /plans card index; /plans/view
 - CC0 furniture models on High; textured floors    <-- James
 - 3D SF skyline behind the start page              <-- James
+- Real SF map on start page (MapTiler)             <-- James
+  - maplibre-gl, 3D buildings; skyline fallback without key
 - In-app listing plans and embed card              <-- James
   - /api/listings, /api/plan/<id>, ListingPlanCard
 - Low/High render quality for /plans               <-- James
