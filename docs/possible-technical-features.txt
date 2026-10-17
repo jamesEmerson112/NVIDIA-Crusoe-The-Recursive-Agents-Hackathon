@@ -40,10 +40,8 @@ LATER
 8. [M] Map with listing pins
    - Sandbox blocks network; inline or static
 9. [M] Charts: rents, price versus commute
-10. [M] Plan artifacts open in 3D viewer
-    - Reuse PlanViewer from /plans
-11. [L] Synthetic floorplan inside building footprint
-12. [L] C1: Cozy room editor and furniture assets (planned)
+10. [L] Synthetic floorplan inside building footprint
+11. [L] C1: Cozy room editor and furniture assets (planned)
     - Fixture scenes first; move, rotate, lock, save, reload
     - Own new room UI/renderer files; C0 wires shared UI
     - Use BE's shared run events for the live agent tree
@@ -112,6 +110,8 @@ LATER
 ================ BOTH (demo and submission) ================
 
 NOW
+- [M] Live rendering inside Workbench               <-- Gaelan
+  - Handoff notes in CLAUDE.md (3D blueprints)
 - [S] Pick the demo: Workbench, formloop, or both   <-- James
   - Or feed formloop listings into Workbench
 - [S] Pre-run demo conversation, no live latency
@@ -199,8 +199,12 @@ Works on its own; Workbench (frontend/) can't use it yet.
   - Tokens, cache hits, cost, tools, slow calls
 - Forms and widgets stay embedded after submit     <-- Gaelan
 - Close button on the right panel                  <-- Gaelan
+- Staged 3D blueprints embedded in the chat        <-- Gaelan
+  - create_blueprint; /plans card index; /plans/view
 - CC0 furniture models on High; textured floors    <-- James
 - 3D SF skyline behind the start page              <-- James
+- In-app listing plans and embed card              <-- James
+  - /api/listings, /api/plan/<id>, ListingPlanCard
 - Low/High render quality for /plans               <-- James
   - Auto-detect (M3 Max = High), ?quality= override
   - Shadows, GTAO, SSR, TRAA; SSGI off (hazy)
