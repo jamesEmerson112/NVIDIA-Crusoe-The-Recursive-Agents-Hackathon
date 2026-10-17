@@ -6,6 +6,8 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 Entry for the Crusoe × Cerebral Valley **Recursive Agents Hackathon** (Sat Oct 17, 2026, San Francisco). Theme: a team of agents you can walk away from — agents that take a goal, plan, spawn and delegate to sub-agents, communicate, check their own progress, recover from failures, and keep running. Everything is built on **Crusoe Managed Inference** (OpenAI-compatible serverless API).
 
+Team research lives in `docs/research/` (start with `docs/research/README.md`). It covers building our own Obsidian-style knowledge base for agent memory, GPT-6 Astra vs Claude for Blender and 3D work, and rendering San Francisco buildings in three.js. Read the relevant file before working on any of those.
+
 ## Frontend (`frontend/`)
 
 SvelteKit 3 + Svelte 5 (runes mode forced in `vite.config.ts`), TypeScript, Tailwind 4 with `@tailwindcss/typography`, Vitest, Prettier. Switched from Angular on 2026-10-17 at the user's request. `@sveltejs/adapter-node` because agents run as long-lived server work: all Crusoe calls go through server code (`src/lib/server/`, `+server.ts`, `+page.server.ts`), never the browser, so `CRUSOE_API_KEY` stays out of the bundle.
