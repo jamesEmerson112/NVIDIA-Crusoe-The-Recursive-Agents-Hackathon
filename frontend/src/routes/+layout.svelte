@@ -13,13 +13,11 @@
 		return days === 0 ? 'Today' : days === 1 ? 'Yesterday' : `${days} days ago`;
 	};
 
-	// Deleting asks for a second click inline. Native confirm() is suppressed in embedded browser
-	// panes (it returns false without showing anything), which made the button do nothing.
-	let confirming = $state<string | null>(null);
+	// One click deletes (fine for the demo). Don't add native confirm(): the desktop browser pane
+	// suppresses it (returns false without showing anything), which made the button do nothing.
 	let deleteError = $state('');
 
 	async function remove(id: string) {
-		confirming = null;
 		deleteError = '';
 		const res = await fetch(`/api/conversations/${id}`, { method: 'DELETE' });
 		if (!res.ok) {
@@ -184,13 +182,7 @@
 				class="min-h-0 flex-1 space-y-0.5 overflow-y-auto px-2 pb-3"
 			>
 				{#each data.conversations as c (c.id)}
-					<li
-						data-testid="sidebar-item"
-						class="group relative"
-						onmouseleave={() => {
-							if (confirming === c.id) confirming = null;
-						}}
-					>
+					<li data-testid="sidebar-item" class="group relative">
 						<a
 							data-testid="sidebar-conversation"
 							href="/c/{c.id}"
@@ -207,23 +199,13 @@
 								{when(c.updatedAt)}
 							</span>
 						</a>
-						{#if confirming === c.id}
-							<button
-								data-testid="sidebar-delete-confirm"
-								class="absolute top-1.5 right-1.5 rounded-md bg-rose-600 px-2 py-0.5 text-xs font-medium text-white hover:bg-rose-700"
-								onclick={() => remove(c.id)}
-								onkeydown={(e) => {
-									if (e.key === 'Escape') confirming = null;
-								}}>Delete</button
-							>
-						{:else}
-							<button
-								data-testid="sidebar-delete"
-								class="absolute top-2 right-2 rounded px-1 text-zinc-400 opacity-0 group-hover:opacity-100 hover:text-rose-600 focus-visible:opacity-100"
-								aria-label="Delete conversation"
-								onclick={() => (confirming = c.id)}>✕</button
-							>
-						{/if}
+						<button
+							data-testid="sidebar-delete"
+							class="absolute top-2 right-2 rounded px-1 text-zinc-400 opacity-0 group-hover:opacity-100 hover:text-rose-600 focus-visible:opacity-100"
+							aria-label="Delete conversation"
+							title="Delete conversation"
+							onclick={() => remove(c.id)}>✕</button
+						>
 					</li>
 				{/each}
 			</ul>
