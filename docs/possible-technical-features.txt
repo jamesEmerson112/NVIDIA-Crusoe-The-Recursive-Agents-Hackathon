@@ -8,27 +8,28 @@ POSSIBLE TECHNICAL FEATURES
   - L over 90 min
 - Kept current by the 10-minute doc-sync job
   - Built items move to DONE at bottom
-  - "(in progress: branch)" means someone's on it
+  - "<-- Gaelan" marks backend items, Gaelan's lane
+  - Unmarked NOW items are frontend or shared
 
 
 ==================== TODO ====================
 
 NOW: CUT FOR 5 PM (freeze at 4:00)
-1. [M] Research fan-out tool (spawn_research)
+1. [M] Research fan-out tool (spawn_research)   <-- Gaelan
    - Orchestrator starts N parallel research sub-agents
    - One brief each: neighborhood or price band
    - Each returns a linked document artifact
    - The visible "spawns multiple agents" demo moment
-2. [S] Concurrency cap and model spreading
+2. [S] Concurrency cap and model spreading   <-- Gaelan
    - At most K sub-agents at once
    - Alternate two models; avoid 30 RPM cap
 3. [S] Live agent tree in the UI
    - Shows status, model, cost and time
-4. [M] Rental listings tool over scraped data
+4. [M] Rental listings tool over scraped data   <-- Gaelan
    - Speaker B's Bay Area listings in SQLite
    - Needs the data file first
    - Fallback: DataSF context tool below
-5. [S] Market snapshot: median rent via SQL
+5. [S] Market snapshot: median rent via SQL   <-- Gaelan
 6. [M] Visit list, then visit feedback form
    - Ratings drive the next search round
 7. [S] Side-by-side comparison table of homes
@@ -109,5 +110,7 @@ LATER: SUBMISSION
 - Retry and throttle on rate limits
 - Usage table: cost, tokens, cache hits
 - Offline mock mode: unset CRUSOE_API_KEY
+- npm run set-key and npm run models
+  - Save Crusoe key; list live model IDs
 - Verified end to end on real Crusoe
   - 13 calls, $0.0027, 73% cache hits
