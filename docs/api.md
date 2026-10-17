@@ -2,9 +2,9 @@
 
 The contract between the frontend (Svelte components) and the backend (SvelteKit server code in `frontend/src/lib/server/`). Generated from the code and kept current by the 10-minute API-sync job; if this file and the code disagree, the code wins.
 
-Last synced: `849d8a2` (2026-10-17 13:45).
+Last synced: `36c0d1f` (2026-10-17 14:11).
 
-`<-- Gaelan` marks parts Gaelan (backend) added or changed in the last hour, so the frontend knows what is still moving. The sync job adds and expires these arrows.
+`<-- Name` marks parts a teammate added or changed in the last hour (usually Gaelan, backend), so the frontend knows what is still moving. The sync job adds and expires these arrows.
 
 Shared types live in `frontend/src/lib/types.ts` (import as `#lib/types.ts`). Row shapes come from the Drizzle schema in `frontend/src/lib/server/db/schema.ts`.
 
@@ -33,7 +33,7 @@ Starts one agent run and streams its events. Only one run per conversation at a 
 | `artifact_edit` | `artifactId`, `values?` (forms) or `content?` (documents, html) | User edits an artifact; downstream artifacts go stale |
 | `proposal_reply` | `callId`, `approved: boolean` | Answer a redo proposal; `callId` comes from the proposal message's `meta.callId` `<-- Gaelan` |
 
-400 errors: empty message, `Unknown form`, `Unknown artifact`, `Unknown proposal`, `Already answered`.
+400 errors: `Body must be a JSON object`, `Unknown type`, `artifactId is required` (form_submit, artifact_edit), `callId and approved are required` (proposal_reply), `Empty message`, `Unknown form`, `Unknown artifact`, `Unknown proposal`, `Already answered`. `<-- Gaelan`
 
 Response: `Content-Type: application/x-ndjson`, one JSON `RunEvent` per line:
 
@@ -53,7 +53,7 @@ Response: `Content-Type: application/x-ndjson`, one JSON `RunEvent` per line:
 
 | Route | Load returns | Invalidate with |
 |---|---|---|
-| all pages (`+layout.server.ts`) | `{ conversations: Conversation[], mock: boolean }` (`mock` is true when no Crusoe key is set) | `app:conversations` |
+| all pages (`+layout.server.ts`) | `{ conversations: Conversation[], mock: boolean, model: string \| null }` (`mock` is true when no Crusoe key is set; `model` is `CRUSOE_AGENT_MODEL`, or null in mock mode) | `app:conversations` `<-- James` |
 | `/c/[id]` | `{ state: ConversationState, running: boolean }`; 404 if missing | `app:conversation` |
 | `/library?q=&kind=` | `{ q, kind: ArtifactKind or null, results: LibraryResult[] }` | URL change `<-- Gaelan` |
 
@@ -95,4 +95,5 @@ Timestamps are `Date` objects in `load` data and ISO strings in JSON responses.
 | `artifact` | `artifactId` | Artifact card in chat |
 | `proposal` | `callId`, `artifactIds`, `summary`, `plan`, `costUsd`, `durationMs` | Redo proposal card; answer via `proposal_reply` `<-- Gaelan` |
 | `proposal_reply` | `callId`, `approved` | Approved / declined note `<-- Gaelan` |
+| `check` | `problems: string[]` | Self-check chip: the agent's final reply mentioned artifacts that don't exist, so it was sent back (at most twice per run) `<-- Gaelan` |
 | `error` | none | Error row; excluded from model history |
