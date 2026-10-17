@@ -1,0 +1,31 @@
+# Engine config (not research-owned). Model ids must match GET /v1/models exactly.
+# CRUSOE_BASE_URL and CRUSOE_API_KEY come from the environment (or frontend/.env); never put keys here.
+base_url: https://api.inference.crusoecloud.com/v1
+
+# Requests per minute we allow ourselves per model (Crusoe's limit is 30 without a payment method).
+rpm: 25
+
+roles:
+  # Cheap and fast: role-plays renters filling the form.
+  simulator:
+    model: deepseek-ai/Deepseek-V4-Flash
+    max_tokens: 1200
+    temperature: 0.7
+  # Turns answers, edited questions and importance weights into structured preferences.
+  # A different model from the simulator, so the two roles don't share one rate limit.
+  extractor:
+    model: openai/gpt-oss-120b
+    max_tokens: 1500
+    temperature: 0
+  # Normalizes scraped listing text into the Listing schema.
+  normalizer:
+    model: deepseek-ai/Deepseek-V4-Flash
+    max_tokens: 1500
+    temperature: 0
+  # Stronger model: proposes the next form version from the reaction log and research/NOTES.md.
+  reviewer:
+    model: zai-org/GLM-5.3-Flash
+    max_tokens: 4000
+    temperature: 0.3
+    # GLM defaults to maximum reasoning effort, which burns the token budget on thinking.
+    extra: { reasoning_effort: low }

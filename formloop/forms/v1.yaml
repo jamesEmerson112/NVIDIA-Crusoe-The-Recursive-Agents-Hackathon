@@ -1,0 +1,66 @@
+# Form v1. Written by formloop; edit research/ instead.
+version: 1
+questions:
+  - id: budget
+    text: What's your monthly budget, and how firm is it?
+    type: text
+    maps_to:
+      - price
+    help: e.g. "$3,200, could stretch to $3,500 for the right place"
+  - id: commute
+    text: Where do you go most days, and how do you get there?
+    type: text
+    maps_to:
+      - commute
+    help: e.g. "FiDi, Muni, under 30 minutes" or "Caltrain to Palo Alto"
+  - id: bedrooms
+    text: How many bedrooms do you need? (Or tell us who's moving in.)
+    type: select
+    options:
+      - studio
+      - "1"
+      - "2"
+      - 3+
+    maps_to:
+      - bedrooms
+  - id: move_in
+    text: When would you like to move in?
+    type: text
+    maps_to:
+      - available
+    help: A date or a window, e.g. "early December" or "anytime before Feb 1"
+  - id: last_place_gripe
+    text: What's the one thing you hated about your last place?
+    type: text
+    maps_to:
+      - street_noise
+      - laundry
+      - layout
+      - floor
+    help: Noise, no laundry, a weird layout, too many stairs... anything counts.
+  - id: pets
+    text: Any pets moving in with you?
+    type: select
+    options:
+      - cats
+      - dogs
+      - both
+      - none
+    maps_to:
+      - pets
+  - id: laundry
+    text: What laundry setup works for you?
+    type: select
+    options:
+      - in_unit
+      - in_building
+      - none
+    maps_to:
+      - laundry
+    help: '"none" means you are fine without laundry on site.'
+  - id: parking
+    text: Do you need a parking spot?
+    type: yesno
+    maps_to:
+      - parking
+note: "Seed form: first questions of the bank."

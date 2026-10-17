@@ -1,0 +1,119 @@
+# Seed personas: simulated SF renters with hidden true preferences.
+# These are TRAINING renters. The held-out test renters are generated from code (never these),
+# so editing this file cannot leak into the final eval.
+#
+# Fields per persona:
+#   id          unique id
+#   name        display name
+#   blurb       1-2 sentences in character; the renter simulator sees it. Don't state weights.
+#   behavior    how they fill out forms: answers_everything | skips_money | rewrites_vague |
+#               skips_all | terse
+#   hidden      3-6 true preferences. Never shown to the matcher or the reviewer.
+#   dealbreaker one preference that rules a listing out (always treated as hard).
+#
+# A preference (Pref) is { field, op, value, weight, dest? }:
+#   field   price | neighborhood | bedrooms | sqft | available | floor | layout | laundry |
+#           parking | pets | street_noise | commute
+#   op      max | min (numbers; ISO dates YYYY-MM-DD for `available`), in | not_in (a list),
+#           eq (true/false, for parking)
+#   value   price in USD/month; commute in transit minutes; bedrooms 0 = studio
+#   dest    commute only: fidi | soma | mission_bay | palo_alto
+#   weight  importance 0..3
+#
+# Run `cd formloop && npm run validate` after editing.
+
+personas:
+  - id: maya
+    name: Maya Chen
+    blurb: First-year grad student at UCSF Mission Bay living on a stipend. Wants a studio she can bike or Muni to the lab from, and every dollar counts.
+    behavior: answers_everything
+    hidden:
+      - { field: price, op: max, value: 2400, weight: 3 }
+      - { field: commute, dest: mission_bay, op: max, value: 35, weight: 2 }
+      - { field: laundry, op: in, value: [in_unit, in_building], weight: 1 }
+      - { field: street_noise, op: in, value: [quiet, moderate], weight: 1 }
+    dealbreaker: { field: price, op: max, value: 2600 }
+
+  - id: jordan_sam
+    name: Jordan and Sam
+    blurb: A couple moving in together with Biscuit, a 60-pound lab mix. Love the sunny south side of the city and don't want to haul a dog up five flights.
+    behavior: rewrites_vague
+    hidden:
+      - { field: bedrooms, op: min, value: 1, weight: 2 }
+      - { field: price, op: max, value: 3600, weight: 2 }
+      - { field: neighborhood, op: in, value: [Bernal Heights, Noe Valley, Mission, Potrero Hill], weight: 2 }
+      - { field: floor, op: max, value: 3, weight: 1 }
+      - { field: commute, dest: soma, op: max, value: 40, weight: 1 }
+    dealbreaker: { field: pets, op: in, value: [dogs, both] }
+
+  - id: raj
+    name: Raj Patel
+    blurb: Engineer who takes Caltrain to Palo Alto four days a week and drives on the fifth. Wants the city life without a brutal commute.
+    behavior: terse
+    hidden:
+      - { field: commute, dest: palo_alto, op: max, value: 60, weight: 3 }
+      - { field: parking, op: eq, value: true, weight: 2 }
+      - { field: bedrooms, op: min, value: 1, weight: 2 }
+      - { field: price, op: max, value: 3500, weight: 1 }
+      - { field: neighborhood, op: in, value: [SoMa, Mission, Dogpatch, Potrero Hill], weight: 1 }
+    dealbreaker: { field: commute, dest: palo_alto, op: max, value: 75 }
+
+  - id: dana
+    name: Dana Okafor
+    blurb: ICU nurse on night shifts at UCSF, so she sleeps from 9am to 4pm. Needs somewhere she can actually rest during the day.
+    behavior: skips_money
+    hidden:
+      - { field: street_noise, op: in, value: [quiet], weight: 3 }
+      - { field: floor, op: min, value: 2, weight: 2 }
+      - { field: price, op: max, value: 3200, weight: 2 }
+      - { field: commute, dest: mission_bay, op: max, value: 30, weight: 1 }
+      - { field: layout, op: not_in, value: [railroad], weight: 1 }
+    dealbreaker: { field: street_noise, op: not_in, value: [lively] }
+
+  - id: leo
+    name: Leo Marquez
+    blurb: Founder of a five-person startup in SoMa who basically lives at the office. His sublet ends soon and he needs something fast, ideally with space to host.
+    behavior: answers_everything
+    hidden:
+      - { field: commute, dest: soma, op: max, value: 20, weight: 3 }
+      - { field: layout, op: in, value: [open, loft], weight: 2 }
+      - { field: available, op: max, value: '2026-11-15', weight: 2 }
+      - { field: street_noise, op: in, value: [lively, moderate], weight: 1 }
+      - { field: price, op: max, value: 3800, weight: 1 }
+    dealbreaker: { field: available, op: max, value: '2026-12-01' }
+
+  - id: ana
+    name: Ana Reyes
+    blurb: Mom of two moving back to the city to be near her parents. Busy and wary of long forms; she just needs room for the kids and a place to do laundry.
+    behavior: skips_all
+    hidden:
+      - { field: bedrooms, op: min, value: 2, weight: 3 }
+      - { field: price, op: max, value: 4800, weight: 2 }
+      - { field: laundry, op: in, value: [in_unit, in_building], weight: 2 }
+      - { field: parking, op: eq, value: true, weight: 1 }
+      - { field: neighborhood, op: in, value: [Excelsior, Outer Sunset, Outer Richmond, Bernal Heights], weight: 1 }
+    dealbreaker: { field: bedrooms, op: min, value: 2 }
+
+  - id: chris
+    name: Chris Novak
+    blurb: Illustrator who works from home with a very opinionated cat. Spends all day in the apartment, so the space itself matters more than the address.
+    behavior: rewrites_vague
+    hidden:
+      - { field: sqft, op: min, value: 650, weight: 2 }
+      - { field: pets, op: in, value: [cats, both], weight: 2 }
+      - { field: layout, op: not_in, value: [railroad, irregular], weight: 2 }
+      - { field: price, op: max, value: 3400, weight: 1 }
+      - { field: neighborhood, op: not_in, value: [Tenderloin, SoMa], weight: 1 }
+    dealbreaker: { field: laundry, op: in, value: [in_unit] }
+
+  - id: priya
+    name: Priya Raman
+    blurb: Investment banker in FiDi working long hours. Her lease runs through December and she would rather not say what she makes.
+    behavior: skips_money
+    hidden:
+      - { field: commute, dest: fidi, op: max, value: 25, weight: 3 }
+      - { field: neighborhood, op: in, value: [Nob Hill, Russian Hill, North Beach, Pacific Heights, Marina], weight: 2 }
+      - { field: laundry, op: in, value: [in_unit], weight: 2 }
+      - { field: price, op: max, value: 3800, weight: 1 }
+      - { field: available, op: min, value: '2027-01-01', weight: 1 }
+    dealbreaker: { field: floor, op: min, value: 2 }
