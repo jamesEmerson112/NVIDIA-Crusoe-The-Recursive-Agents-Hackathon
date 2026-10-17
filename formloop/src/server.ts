@@ -1,6 +1,8 @@
 // Demo server: two-pane page (editable form | live listing cards) over the same agent and matcher.
 //   npm run serve   then open http://localhost:5190
 import { createServer, type IncomingMessage, type ServerResponse } from 'node:http';
+import { execFileSync } from 'node:child_process';
+import { existsSync, readdirSync } from 'node:fs';
 import { readFileSync } from 'node:fs';
 import { appendFileSync, mkdirSync } from 'node:fs';
 import { join } from 'node:path';
@@ -15,7 +17,8 @@ import { DEST_LABEL } from './phrases.ts';
 import { proposeFollowups } from './followups.ts';
 import { listingPlan } from './plan3d.ts';
 import { formloopDir } from './config.ts';
-import { logsDir } from './outer.ts';
+import { generationLog, logsDir, reactionLog } from './outer.ts';
+import { versions } from './forms.ts';
 import type { Answer, Listing, Pref, Question } from './types.ts';
 
 const PORT = Number(process.env.PORT ?? 5190);
@@ -65,7 +68,7 @@ function formFor(version?: number) {
 	return { ...f, questions, extra };
 }
 
-type Body = { version?: number; answers?: Answer[]; followups?: Question[]; ranking?: string[]; reactions?: { listing_id: string; liked: boolean; reason?: string }[] };
+type Body = { offline?: boolean; version?: number; answers?: Answer[]; followups?: Question[]; ranking?: string[]; reactions?: { listing_id: string; liked: boolean; reason?: string }[] };
 
 /** Every question the page may show: the form version, extra bank fields and this visitor's follow-ups. */
 function allQuestions(body: Body): Question[] {
@@ -80,13 +83,15 @@ async function recommend(body: Body) {
 	// Rewritten questions travel with their answers, so the agent reads the renter's wording.
 	const questions = allQuestions(body);
 	const answers = (body.answers ?? []).filter((a) => questions.some((q) => q.id === a.question_id));
-	const key = JSON.stringify(answers.map((a) => [a.question_id, a.action, a.value, a.rewritten_text, a.importance]));
-	let mode: 'live' | 'offline' = live ? 'live' : 'offline';
+	// Demo mode forces rules + cache-only so every step works with the network off.
+	const useLive = live && !body.offline;
+	const key = JSON.stringify([useLive, answers.map((a) => [a.question_id, a.action, a.value, a.rewritten_text, a.importance])]);
+	let mode: 'live' | 'offline' = useLive ? 'live' : 'offline';
 	let extracted = prefCache.get(key);
 	if (!extracted) {
 		// The page may ground new factors live (cache first); YDC_CACHE_ONLY=1 keeps it offline for the demo.
 		try {
-			extracted = await extractWithFactors(questions, answers, { offline: !live, cacheOnly: ydcCacheOnly() });
+			extracted = await extractWithFactors(questions, answers, { offline: !useLive, cacheOnly: !useLive || ydcCacheOnly() });
 		} catch (e) {
 			console.warn(`extractor failed, using rules: ${(e as Error).message}`);
 			extracted = await extractWithFactors(questions, answers, { offline: true, cacheOnly: true });
@@ -107,10 +112,10 @@ async function recommend(body: Body) {
 		}
 		passed.add(l.id);
 		if (!r.reason?.trim()) continue;
-		const rk = `${l.id}|${r.reason}`;
+		const rk = `${useLive}|${l.id}|${r.reason}`;
 		if (!reactionCache.has(rk)) {
 			try {
-				reactionCache.set(rk, await prefFromReaction(r.reason, l, { offline: !live }));
+				reactionCache.set(rk, await prefFromReaction(r.reason, l, { offline: !useLive }));
 			} catch {
 				reactionCache.set(rk, await prefFromReaction(r.reason, l, { offline: true }));
 			}
@@ -132,11 +137,70 @@ async function recommend(body: Body) {
 		weights: Object.fromEntries([...new Set(prefs.map((p) => p.from).filter(Boolean) as string[])].map((id) => [id, Math.max(...prefs.filter((p) => p.from === id).map((p) => p.weight))])),
 		top: ranked.slice(0, cfg.top_k).map((l) => card(l, all)),
 		liked: liked.map((l) => card(l, all)),
+		// Fit of every listing for the map: utility 0..1, -1 = breaks a dealbreaker, null = passed/liked already.
+		fits: Object.fromEntries(listings.map((l) => [l.id, exclude.has(l.id) ? null : Number(utility(l, all).toFixed(3))])),
 		remaining,
 		total: listings.length,
 		calls: usageLog.length,
 		cost: Number(usageLog.reduce((a, u) => a + u.cost, 0).toFixed(4))
 	};
+}
+
+const words = (t: string) => new Set(t.toLowerCase().replace(/[^a-z0-9 ]/g, ' ').split(/\s+/).filter((w) => w.length > 2));
+const similar = (a: string, b: string) => {
+	const A = words(a), B = words(b);
+	const inter = [...A].filter((w) => B.has(w)).length;
+	return inter / Math.max(1, new Set([...A, ...B]).size);
+};
+
+/** v1 vs the latest accepted form, question by question, plus one line per generation. */
+function evolution() {
+	const v1 = loadForm(1);
+	const latest = latestForm(bank, cfg);
+	const rewrites = existsSync(reactionLog)
+		? readFileSync(reactionLog, 'utf8').split('\n').filter(Boolean).map((l) => JSON.parse(l).rewritten_text).filter(Boolean) as string[]
+		: [];
+	const byRenter = (text: string) => rewrites.some((r) => similar(r, text) >= 0.5);
+	const latestIdx = new Map(latest.questions.map((q, i) => [q.id, i]));
+	const v1Idx = new Map(v1.questions.map((q, i) => [q.id, i]));
+	const before = v1.questions.map((q, i) => {
+		const j = latestIdx.get(q.id);
+		return { id: q.id, text: q.text, from: i + 1, status: j === undefined ? 'dropped' : 'kept', to: j === undefined ? null : j + 1 };
+	});
+	const after = latest.questions.map((q, j) => {
+		const i = v1Idx.get(q.id);
+		const old = i === undefined ? null : v1.questions[i];
+		const reworded = old && old.text !== q.text;
+		const isNew = i === undefined;
+		return {
+			id: q.id,
+			text: q.text,
+			old_text: reworded ? old!.text : null,
+			from: i === undefined ? null : i + 1,
+			to: j + 1,
+			status: isNew ? 'new' : reworded ? 'reworded' : 'kept',
+			moved: i !== undefined && i !== j,
+			by_renter: Boolean(q.resolved) || ((isNew || Boolean(reworded)) && byRenter(q.text)),
+			grounded: q.resolved?.factor ?? null
+		};
+	});
+	const commits = new Map<number, string>();
+	try {
+		const log = execFileSync('git', ['log', '--format=%h %s', '--grep=^Form v', '--', 'forms'], { cwd: formloopDir, encoding: 'utf8' });
+		for (const line of log.split('\n')) {
+			const m = line.match(/^(\w+) Form v(\d+):/);
+			if (m) commits.set(Number(m[2]), m[1]);
+		}
+	} catch {
+		// Not a git checkout: history still comes from the generation log.
+	}
+	const history = existsSync(generationLog)
+		? readFileSync(generationLog, 'utf8').split('\n').filter(Boolean).map((l) => {
+				const r = JSON.parse(l);
+				return { generation: r.generation, from: r.from, candidate: r.candidate, accepted: r.accepted, before: r.score_before, after: r.score_after, delta: Number((r.score_after - r.score_before).toFixed(3)), note: r.note, commit: r.accepted ? commits.get(r.candidate) ?? null : null };
+			})
+		: [];
+	return { v1: { version: 1, questions: before }, latest: { version: latest.version, note: latest.note, questions: after }, history, versions: versions() };
 }
 
 /** Real visitors' reactions go to the same log the reviewer learns from. */
@@ -180,6 +244,25 @@ createServer(async (req, res) => {
 			const form = formFor(v ? Number(v) : undefined);
 			return send(res, 200, { ...form, mode: live ? 'live' : 'offline', listings: listings.length, top_k: cfg.top_k });
 		}
+		if (req.method === 'GET' && url.pathname === '/api/areas') {
+			// Read from research/ files only (cache-only: no network). Loaded per request so edits show on reload.
+			try {
+				const { loadAreas } = await import('./areas.ts');
+				return send(res, 200, loadAreas());
+			} catch (e) {
+				return send(res, 200, { error: (e as Error).message, areas: [] });
+			}
+		}
+		if (req.method === 'GET' && url.pathname === '/api/evolution') return send(res, 200, evolution());
+		if (req.method === 'GET' && url.pathname === '/api/results') {
+			// The newest held-out eval exactly as saved: never recomputed or rounded here.
+			const dir = join(formloopDir, '..', 'results');
+			const latest = existsSync(dir) ? readdirSync(dir).filter((f) => f.endsWith('.json')).sort().pop() : undefined;
+			if (!latest) return send(res, 404, { error: 'no results yet; run npm run eval' });
+			return send(res, 200, { file: `results/${latest}`, ...JSON.parse(readFileSync(join(dir, latest), 'utf8')) });
+		}
+		if (req.method === 'GET' && url.pathname === '/api/listings')
+			return send(res, 200, listings.map((l) => ({ id: l.id, neighborhood: l.neighborhood, price: l.price, bedrooms: l.bedrooms, title: l.title })));
 		if (req.method === 'POST' && url.pathname === '/api/recommend') return send(res, 200, await recommend(await readJSON(req)));
 		if (req.method === 'POST' && url.pathname === '/api/followups') {
 			const body = (await readJSON(req)) as Body;

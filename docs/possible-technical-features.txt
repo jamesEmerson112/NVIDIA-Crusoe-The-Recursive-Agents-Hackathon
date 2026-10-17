@@ -190,3 +190,4 @@ Works on its own; Workbench (frontend/) can't use it yet.
 - Run log of every model call, ?panel=log           <-- James
   - Tokens, cache hits, cost, tools, slow calls
 - Forms and widgets stay embedded after submit      <-- Gaelan
+- CC0 furniture models on High; textured floors   <-- James

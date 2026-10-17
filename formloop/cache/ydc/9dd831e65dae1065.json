@@ -1,0 +1,49 @@
+{
+  "query": "near the 14 bus San Francisco neighborhoods",
+  "fetched_at": "2026-10-17T22:08:37.106Z",
+  "results": [
+    {
+      "url": "https://en.wikipedia.org/wiki/14_Mission",
+      "title": "14 Mission - Wikipedia",
+      "description": "The route runs almost entirely along Mission Street between the San Francisco Ferry Building Plaza and Mission and San Jose Streets in Daly City. Outbound buses run on Otis Street for the one-way segment of Mission near the Central Freeway.",
+      "snippets": [
+        "This service utilized regular buses due to lack of overhead line on the non-Mission segments. The 14X was suspended as part of the city's COVID-19 response in April 2020, and remains temporarily out of service as of 2025. Taking over from a previous horsecar operation, the Market Street Railway electrified streetcar line along Mission Boulevard opened on September 15, 1894. Following the 1906 San ",
+        "Rush hour service ran as far south as South San Francisco. Holy Cross Cemetery in Colma served as a southern terminus on certain holidays, and cars ran to Tanforan Racetrack in San Bruno during the racing season. All Sunday cars continued to Holy Cross starting in April 1948. Streetcar service ended on January 15, 1949, with buses operating the route until 1952 when the line was fully converted to",
+        "Bay Area Rapid Transit construction on Mission Street greatly disrupted 14 Mission operations throughout the late 1960s. San Francisco Municipal Transportation Agency installed bus lanes along Mission Street in 2016 to speed travel times for the 14 bus."
+      ]
+    },
+    {
+      "url": "https://www.sfmta.com/routes/14r-mission-rapid",
+      "title": "14R Mission Rapid | SFMTA",
+      "description": "The 14R Mission Rapid runs during the daytime and early evening only. Inbound Daly City BART Station to Mission & Main: From BART via BART access road, left on John Daly, left on Mission left on Main, right on Market, right on Steuart, right on Mission to Main.",
+      "snippets": [
+        "RAPID BUS · Share this: Facebook Twitter LinkedIn · SFMTA.com/14R · 5 a.m. - 10 p.m. daily · Stop status is updated every 30 minutes on the hour. Live Map · Service Frequencies · North of Mission & Lowell (short route) South of Mission & Lowell (long route) See below for detailed schedule information and live data. Neighborhoods ·",
+        "Mission & Main to Daly City BART Station: Via Mission, Otis, Mission, right on Flournoy, left on San Jose, Mission, right on John Daly, right on De Long, left on BART Access Rd to Daly City BART."
+      ]
+    },
+    {
+      "url": "https://www.sfmta.com/routes/14-mission",
+      "title": "14 Mission | SFMTA",
+      "description": "Inbound Mission and San Jose Avenue via Mission, Main, Market, Steuart to Mission. Outbound Steuart, Mission, Otis, Mission, Flournoy, San Jose, Mission to terminal. Owl Service: Same as daytime service.",
+      "snippets": []
+    },
+    {
+      "url": "https://moovitapp.com/index/en/public_transit-line-14-SF_Bay_Area_CA-22-185-767686-0",
+      "title": "MUNI 14 bus Route Map - 30th & Mission",
+      "description": "See the full schedule and route on map for line 14 by MUNI (Bus), arrival times for your station, service alerts for the line and more!",
+      "snippets": [
+        "On the go? See why over 1.5 million users trust Moovit as the best public transit app. Moovit gives you MUNI (Bus) suggested routes, real-time bus tracker, live directions, line route maps in San Francisco - San Jose, CA, and helps to find the closest 14 bus stops near you.",
+        "Get a real-time map view of 14 (30th & Mission) and track the bus as it moves on the map. Download the app for all MUNI info now. No cash, no credit cards, no prepaid physical cards - just pay with the Moovit app. Moovit Pay is the smartest, safest, and most affordable way to buy transit tickets in San Francisco - San Jose, CA.",
+        "MUNI (Bus) 14 (30th & Mission) prices may change based on several factors. For more information about MUNI (Bus) tickets costs please check the Moovit app or MUNI’s official website. The Most Popular Urban Mobility App in San Francisco - San Jose, CA."
+      ]
+    },
+    {
+      "url": "https://sfbaytransit.org/sfmuni/route/14-mission",
+      "title": "14-MISSION Bus Route - SF MUNI - SF Bay Transit",
+      "description": "Learn more about the 14-MISSION SF MUNI route and view realtime data.",
+      "snippets": [
+        "UMO Bus Tracking » · Max Stops Served: 91 Stops · Monday-Friday Service: 05:10am ‐ 06:05am - 282 scheduled trips · Saturday Service: 05:10am ‐ 06:05am - 321 scheduled trips · Sunday Service: 05:10am ‐ 06:05am - 321 scheduled trips · Counties Served:San Francisco, San Mateo ·"
+      ]
+    }
+  ]
+}

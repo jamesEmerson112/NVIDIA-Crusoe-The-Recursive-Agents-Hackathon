@@ -3,10 +3,13 @@
 import {
 	AxesHelper,
 	Box3,
+	BoxGeometry,
 	Box3Helper,
 	Color,
 	GridHelper,
 	Group,
+	Mesh,
+	MeshStandardMaterial,
 	PerspectiveCamera,
 	Scene,
 	TextureLoader,
@@ -20,6 +23,7 @@ import Stats from 'stats-gl';
 import type { Plan } from '../types.ts';
 import { area, centroid } from '../validate.ts';
 import { buildPlan, disposeBuild, type BuildResult, type FloorMaps } from './build.ts';
+import { loadFurniture } from './furniture.ts';
 import { createLighting } from './lighting.ts';
 import { createPost, type PostEffect } from './post.ts';
 import { detectQuality, PRESETS, type Quality } from './quality.ts';
@@ -143,8 +147,66 @@ export async function mount(
 		validateMs: 0,
 		buildMs: 0,
 		firstFrameMs: 0,
-		wallPieces: 0
+		wallPieces: 0,
+		furnitureMs: 0,
+		missingModels: 0
 	};
+
+	// High swaps the merged box furniture for CC0 models (furniture.ts). Furniture does not depend
+	// on the cut height or view, so one load is kept per plan; the token discards stale loads.
+	let furnToken = 0;
+	let furnPlan: Plan | null = null;
+	let furn: Awaited<ReturnType<typeof loadFurniture>> | null = null;
+	// Plain boxes for items whose type has no model (the merged box mesh is hidden as a whole).
+	let fallbackBoxes: Mesh[] = [];
+	const fallbackMaterial = new MeshStandardMaterial({ color: '#b0a99f', roughness: 0.7 });
+
+	function clearFurniture() {
+		furnToken++;
+		furn?.dispose();
+		furn = null;
+		for (const m of fallbackBoxes) {
+			m.removeFromParent();
+			m.geometry.dispose();
+		}
+		fallbackBoxes = [];
+		furnPlan = null;
+		stats.furnitureMs = 0;
+		stats.missingModels = 0;
+	}
+
+	function loadModels(p: Plan) {
+		const token = ++furnToken;
+		furnPlan = p;
+		const story = p.stories[0];
+		loadFurniture(story.furniture, { rooms: story.rooms, elevation: story.elevation }).then(
+			(res) => {
+				if (token !== furnToken) return res.dispose();
+				furn = res;
+				scene.add(res.group);
+				// The boxes stand in while the models load; hide them once the models are in.
+				const boxMesh = build?.group.getObjectByName('furniture');
+				if (boxMesh) boxMesh.visible = false;
+				const missing = new Set(res.missing);
+				for (const f of story.furniture) {
+					if (!missing.has(f.type)) continue;
+					const geo = new BoxGeometry(f.w, f.h, f.d);
+					const m = new Mesh(geo, fallbackMaterial);
+					m.position.set(f.x, story.elevation + f.h / 2, -f.y);
+					m.rotation.y = (f.rot * Math.PI) / 180;
+					m.castShadow = m.receiveShadow = true;
+					fallbackBoxes.push(m);
+					scene.add(m);
+				}
+				stats.furnitureMs = res.ms;
+				stats.missingModels = res.missing.length;
+			},
+			(err) => {
+				if (token !== furnToken) return;
+				console.warn('furniture: model load failed, keeping boxes', err);
+			}
+		);
+	}
 
 	let gui: GUI | null = null;
 	let fps: Stats | null = null;
@@ -173,6 +235,7 @@ export async function mount(
 
 	function rebuild() {
 		if (!plan) return;
+		if (furnPlan !== plan) clearFurniture();
 		if (build) {
 			build.group.removeFromParent();
 			disposeBuild(build);
@@ -183,6 +246,11 @@ export async function mount(
 		scene.add(build.group);
 		lighting.fitTo(new Box3().setFromObject(build.group));
 		for (const m of build.materials) m.wireframe = settings.wireframe;
+		const boxMesh = build.group.getObjectByName('furniture');
+		if (floorMaps && boxMesh) {
+			if (furnPlan !== plan) loadModels(plan);
+			boxMesh.visible = !furn;
+		}
 		const story = plan.stories[0];
 		for (const r of story.rooms) {
 			const [cx, cy] = centroid(r.polygon);
@@ -304,7 +372,15 @@ export async function mount(
 			] as const)
 				r.add(stats, key).listen().disable();
 			const b = gui.addFolder('Build (ms)');
-			for (const key of ['fetchMs', 'validateMs', 'buildMs', 'firstFrameMs', 'wallPieces'] as const)
+			for (const key of [
+				'fetchMs',
+				'validateMs',
+				'buildMs',
+				'firstFrameMs',
+				'furnitureMs',
+				'wallPieces',
+				'missingModels'
+			] as const)
 				b.add(stats, key).listen().disable().decimals(2);
 			const t = gui.addFolder('Toggles');
 			t.add(settings, 'wireframe').onChange((v: boolean) =>
@@ -364,6 +440,8 @@ export async function mount(
 					for (const t of Object.values(set)) t.dispose();
 			setDebug(false);
 			clearOverlays();
+			clearFurniture();
+			fallbackMaterial.dispose();
 			if (build) disposeBuild(build);
 			grid.dispose();
 			axes.dispose();

@@ -1,0 +1,18 @@
+{
+  "factor": "near Golden Gate Park",
+  "status": "resolved",
+  "kind": "neighborhoods",
+  "neighborhoods": [
+    "Inner Sunset",
+    "Outer Sunset",
+    "Inner Richmond",
+    "Outer Richmond"
+  ],
+  "confidence": 0.9,
+  "sources": [
+    "https://www.neighborhoods.com/blog/4-neighborhoods-next-door-to-golden-gate-park",
+    "https://mosaikrealestate.com/blog/best-neighborhoods-san-francisco-1",
+    "https://www.timeout.com/san-francisco/neighborhoods/golden-gate-park-sunset-richmond"
+  ],
+  "rationale": "Results explicitly name Sunset (Inner/Outer) and Richmond (Inner/Outer) as adjacent to Golden Gate Park."
+}

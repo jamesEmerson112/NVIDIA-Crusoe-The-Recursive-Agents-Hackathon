@@ -22,6 +22,27 @@ of the final pick under the renter's true preferences: 1 means their best listin
 dealbreaker. Question value is the quality drop when that answer is removed, minus friction.
 Objective = quality − friction weight × friction.
 
+## Run the demo
+
+```
+cd formloop && npm ci && npm run serve
+```
+
+- **http://localhost:5190/?demo=1** is the scripted walkthrough. Press → (or click "Next") to step through it: Maya answers in her own words, rewrites a question (a Dolores Park factor grounded from the cached You.com results), skips one, and passes on a listing with a reason. Then come the form evolution view and the held-out table. It runs on the rules agent and cache-only grounding, so every step works with the network off. Map tiles and the Leaflet script come from the web, so load the page once beforehand.
+- **http://localhost:5190** is the live page. With `CRUSOE_API_KEY` set, Crusoe models do the work.
+- **http://localhost:5190/plans** is the floor plan gallery.
+
+## Data sources
+
+| What | Source | Label on the page |
+| --- | --- | --- |
+| Listings (300 units) | Synthetic, seeded (`src/listings.ts`) | the whole demo is synthetic |
+| Rent by neighborhood (10 of 24 areas) | You.com search results, cited per area in `research/rent_calibration.yaml`. Entries citing rental listing platforms were removed. | sourced |
+| Other rents, units, vacancy, pipeline, YoY | `research/market.yaml`, editable | simulated |
+| Neighborhood profiles, tags, commute minutes | `research/neighborhoods.yaml`, editable estimates | simulated |
+| Renter factors ("walking distance to Dolores Park") | You.com search, cached in `cache/ydc` and `cache/factors` with source URLs | web-grounded, with source links |
+| Map tiles | © OpenStreetMap contributors | |
+
 ## Commands
 
 From `formloop/`, with Node 24.22.0:

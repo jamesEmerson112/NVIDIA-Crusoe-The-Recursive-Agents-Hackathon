@@ -4,6 +4,8 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Formloop</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
 <script src="/floorplan.js"></script>
 <style>
 	:root {
@@ -137,6 +139,73 @@
 	.heard .chip { cursor: default; font-size: 12.5px; }
 	.heard .chip em { font-style: normal; color: var(--faint); margin-left: 6px; font-size: 11.5px; }
 	.heard .chip.hard { border-color: var(--clay); }
+	/* Map */
+	.mapwrap { position: sticky; top: -26px; z-index: 5; margin: -26px -28px 18px; padding: 16px 28px 14px; background: var(--bg); border-bottom: 1px solid var(--line); }
+	#map { height: 250px; border-radius: 14px; border: 1px solid var(--line); background: #e9e5da; }
+	#map.nomap { display: flex; align-items: center; justify-content: center; color: var(--muted); font-size: 13px; }
+	.maprow { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 10px; gap: 10px; flex-wrap: wrap; }
+	.fitcount { font: 500 15px var(--sans); color: var(--muted); }
+	.fitcount strong { font: 600 26px/1 var(--serif); color: var(--green); margin-right: 4px; font-variant-numeric: tabular-nums; }
+	#map .leaflet-tile-pane { filter: grayscale(1) sepia(.25) brightness(1.06) contrast(.88); }
+	.leaflet-interactive { transition: fill-opacity .8s ease, fill .8s ease; }
+	.pulse { display: flex !important; align-items: center; justify-content: center; }
+	.pulse span { position: relative; width: 20px; height: 20px; border-radius: 50%; background: var(--clay); color: #fff; font: 600 11px/20px var(--sans); text-align: center; box-shadow: 0 0 0 2px #fff; }
+	.pulse span::after { content: ""; position: absolute; inset: -2px; border-radius: 50%; border: 2px solid var(--clay); animation: ring 1.6s ease-out infinite; }
+	@keyframes ring { from { transform: scale(1); opacity: .9; } to { transform: scale(2.6); opacity: 0; } }
+	.leaflet-tooltip { font: 12px var(--sans); }
+	.leaflet-tooltip.areatip, .areapop .leaflet-popup-content { padding: 0; margin: 0; }
+	.leaflet-tooltip.areatip { border: 0; border-radius: 12px; box-shadow: 0 10px 30px -8px #0004; white-space: normal; }
+	.areapanel { display: none; position: absolute; top: 58px; right: 40px; z-index: 1200; background: #fff; border-radius: 12px; box-shadow: 0 14px 40px -10px #0005; }
+	.areapanel.show { display: block; }
+	.areapanel .x { position: absolute; top: 6px; right: 10px; color: var(--muted); font-size: 16px; }
+	.ac { width: 270px; padding: 12px 14px; font: 12.5px/1.45 var(--sans); color: var(--ink); }
+	.ac h4 { margin: 0; font: 600 16px/1.2 var(--serif); display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
+	.ac h4 span { font: 600 10.5px var(--sans); letter-spacing: .1em; text-transform: uppercase; color: var(--clay); }
+	.ac p { margin: 4px 0 6px; color: var(--muted); }
+	.ac .tg { display: inline-block; font-size: 11px; background: var(--bg); border-radius: 999px; padding: 1px 8px; margin: 0 4px 6px 0; }
+	.ac table { width: 100%; border-collapse: collapse; margin: 2px 0 4px; }
+	.ac td { padding: 2px 0; font-variant-numeric: tabular-nums; }
+	.ac td:last-child { text-align: right; }
+	.ac .k { font-size: 9.5px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; border-radius: 4px; padding: 0 4px; margin-left: 4px; }
+	.ac .k.sim { background: #efe9dc; color: var(--muted); }
+	.ac .k.src { background: var(--green-soft); color: var(--green); }
+	.ac .sec { font-size: 10.5px; font-weight: 600; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); margin-top: 6px; }
+	.ac .srcs a { color: var(--green); margin-right: 6px; }
+	.card.flash { box-shadow: 0 0 0 3px var(--clay); }
+	/* Views */
+	.tabs { display: flex; gap: 4px; background: var(--bg); border: 1px solid var(--line); border-radius: 999px; padding: 3px; }
+	.tabs button { font-size: 13px; padding: 4px 12px; border-radius: 999px; color: var(--muted); }
+	.tabs button.on { background: var(--ink); color: #fff; }
+	body.evo main { display: none; }
+	#evolution { display: none; flex: 1; overflow: auto; padding: 26px 28px 40px; }
+	body.evo #evolution { display: block; }
+	.evo-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 28px; }
+	@media (max-width: 920px) { .evo-grid { grid-template-columns: 1fr; } }
+	.evo-col h3 { font: 500 22px/1.2 var(--serif); margin: 4px 0 14px; }
+	.evo-q { display: flex; gap: 10px; padding: 11px 0; border-top: 1px solid var(--line); font-size: 15px; }
+	.evo-q .n { font: 500 13px/1.6 var(--serif); color: var(--faint); min-width: 18px; }
+	.evo-q.dropped .t { text-decoration: line-through; color: var(--faint); }
+	.evo-q .old { display: block; font-size: 12.5px; color: var(--faint); text-decoration: line-through; margin-bottom: 2px; }
+	.tagx { display: inline-block; font-size: 11px; border-radius: 999px; padding: 1px 8px; margin: 4px 6px 0 0; background: var(--bg); color: var(--muted); }
+	.tagx.renter { background: var(--clay-soft); color: var(--clay); font-weight: 600; }
+	.tagx.drop { background: #f3e4e0; color: var(--bad); }
+	.tagx.new { background: var(--green-soft); color: var(--green); }
+	.history { margin-top: 26px; font: 13px/1.8 ui-monospace, SFMono-Regular, Menlo, monospace; color: var(--ink); white-space: pre-wrap; }
+	.history .rej { color: var(--muted); }
+	.results { margin-top: 26px; }
+	.results table { border-collapse: collapse; font-size: 13.5px; margin-top: 10px; }
+	.results th, .results td { padding: 6px 12px; border-bottom: 1px solid var(--line); text-align: right; font-variant-numeric: tabular-nums; }
+	.results th:first-child, .results td:first-child { text-align: left; }
+	.results th { font-weight: 600; color: var(--muted); font-size: 12px; }
+	.results.hidden { display: none; }
+	/* Scripted demo */
+	.demo-bar { display: none; position: fixed; left: 20px; bottom: 20px; z-index: 50; max-width: 560px; background: var(--ink); color: #fff; border-radius: 14px; padding: 12px 16px; font-size: 14.5px; line-height: 1.4; box-shadow: 0 10px 30px -10px #0006; }
+	body.demo .demo-bar { display: block; }
+	.demo-bar small { display: block; color: #ffffffa0; font-size: 11.5px; letter-spacing: .08em; text-transform: uppercase; margin-bottom: 3px; }
+	.demo-next { display: block; margin-top: 8px; color: #fff; font-size: 13px; font-weight: 600; opacity: .85; }
+	.demo-next:hover { opacity: 1; }
+	.q.demo-skip { opacity: .45; }
+	.q.demo-skip .q-text::before { content: "skipped · "; color: var(--clay); font-weight: 500; }
 	.toast { position: fixed; bottom: 22px; left: 50%; transform: translate(-50%, 10px); background: var(--green); color: #fff; padding: 10px 16px; border-radius: 999px; font-size: 13.5px; opacity: 0; transition: all .3s; pointer-events: none; }
 	.toast.show { opacity: 1; transform: translate(-50%, 0); }
 </style>
@@ -146,6 +215,7 @@
 	<div class="brand">formloop<span>.</span></div>
 	<div class="tag">An apartment intake form that rewrites itself from how people answer it.</div>
 	<div class="live" id="mode"><i></i><span>…</span></div>
+	<div class="tabs" id="tabs"><button class="on" data-view="match">Matches</button><button data-view="evo">How the form evolved</button></div>
 	<div class="versions" id="versions"><span>form</span></div>
 </header>
 <main>
@@ -153,7 +223,7 @@
 		<div class="eyebrow" id="formEyebrow">Form</div>
 		<h2>What matters to you?</h2>
 		<p class="hint">Answer in your own words and skip anything. The more you say about something, the more it counts. Don't like a question? Click it and rewrite it, or add the one we should have asked.</p>
-		<div class="ask"><button class="btn ghost" id="ask">Ask me better questions</button><span class="count" id="askNote">The agent writes new questions from how you ranked, answered and passed.</span></div>
+		<div class="ask"><button class="btn ghost" id="ask">Ask me better questions</button><span class="count" id="askNote">The agent writes new questions from what you said, edited and passed on.</span></div>
 		<div id="questions"></div>
 		<div class="own">
 			<div class="eyebrow">Add a question we should have asked</div>
@@ -163,10 +233,15 @@
 		<div class="submit"><button class="btn" id="submit">Done, improve the form</button><span id="submitNote"></span></div>
 	</section>
 	<section class="pane" id="right">
-		<div class="matches-head">
-			<div class="eyebrow">Best matches right now</div>
-			<div class="count"><span class="working">agent re-ranking</span> <span id="count"></span></div>
+		<div class="mapwrap">
+			<div class="maprow">
+				<div class="fitcount"><strong id="fitN">300</strong>of <span id="fitTotal">300</span> homes still fit</div>
+				<div class="count"><span class="working">agent re-ranking</span> <span id="count"></span></div>
+			</div>
+			<div id="map"></div>
+			<div class="areapanel" id="areaPanel"></div>
 		</div>
+		<div class="matches-head"><div class="eyebrow">Best matches right now</div></div>
 		<div id="saved" class="saved"></div>
 		<div id="cards"></div>
 		<div class="heard">
@@ -175,7 +250,17 @@
 		</div>
 	</section>
 </main>
+<section id="evolution">
+	<div class="eyebrow">The outer loop</div>
+	<h2 style="font:500 26px/1.15 var(--serif);margin:6px 0 4px">How the form evolved</h2>
+	<p class="hint" id="evoNote"></p>
+	<div class="evo-grid"><div class="evo-col" id="evoV1"></div><div class="evo-col" id="evoLatest"></div></div>
+	<div class="eyebrow" style="margin-top:28px">Every generation (from the generation log and git)</div>
+	<div class="history" id="evoHistory"></div>
+	<div class="results hidden" id="results"><div class="eyebrow">Held-out renters: v1 vs latest</div><div id="resultsBody"></div></div>
+</section>
 <div id="toast" class="toast"></div>
+<div class="demo-bar" id="demoBar"><small id="demoStep"></small><span id="demoSay"></span><button id="demoNext" class="demo-next">Next →</button></div>
 <script>
 const QUICK = ['too expensive', 'commute is too long', 'street is too loud', 'I need in-unit laundry', "don't like the layout", 'floor is too low', 'not this neighborhood'];
 const state = { form: null, latest: 1, answers: {}, reactions: [], followups: [], order: [], fresh: new Set(), weights: {}, seq: 0 };
@@ -210,7 +295,8 @@ function payload() {
 }
 // Questions ordered by how much the renter revealed they care (inferred server-side from their answers).
 const ranking = () => [...state.order].sort((a, b) => (state.weights[b] ?? 0) - (state.weights[a] ?? 0));
-const requestBody = () => ({ version: state.form.version, answers: payload(), ranking: ranking(), followups: state.followups, reactions: state.reactions });
+const DEMO = new URLSearchParams(location.search).get('demo') === '1';
+const requestBody = () => ({ offline: DEMO || undefined, version: state.form.version, answers: payload(), ranking: ranking(), followups: state.followups, reactions: state.reactions });
 function touch(id) { const a = ans(id); a.seconds = Math.min(120, (Date.now() - a.started) / 1000); schedule(); }
 
 function chips(q, a, multi) {
@@ -330,6 +416,114 @@ function card(c, i) {
 	return node;
 }
 
+// Approximate neighborhood centres; listings sit at a small fixed jitter around theirs.
+const HOODS = { 'Mission': [37.7599, -122.4148], 'SoMa': [37.7785, -122.4056], 'Hayes Valley': [37.7759, -122.4245], 'Nob Hill': [37.7930, -122.4161], 'Pacific Heights': [37.7925, -122.4382], 'Marina': [37.8030, -122.4368], 'Inner Sunset': [37.7602, -122.4689], 'Outer Sunset': [37.7553, -122.4950], 'Inner Richmond': [37.7802, -122.4645], 'Outer Richmond': [37.7775, -122.4936], 'Noe Valley': [37.7502, -122.4337], 'Castro': [37.7609, -122.4350], 'Bernal Heights': [37.7389, -122.4152], 'Potrero Hill': [37.7587, -122.3990], 'Dogpatch': [37.7577, -122.3891], 'Tenderloin': [37.7847, -122.4141], 'North Beach': [37.8061, -122.4103], 'Russian Hill': [37.8011, -122.4194], 'Lower Haight': [37.7717, -122.4310], 'Excelsior': [37.7244, -122.4272] };
+const FIT = 0.6; // display only: "still fits" = no dealbreaker broken and at least 60% of weighted preferences met
+const mapState = { map: null, dots: new Map(), pulses: [], areas: [], shown: 300 };
+function hash(s) { let h = 2166136261; for (const c of s) h = Math.imul(h ^ c.charCodeAt(0), 16777619) >>> 0; return h; }
+
+async function initMap() {
+	const box = $('#map');
+	if (!window.L) { box.classList.add('nomap'); box.textContent = 'Map tiles need the network; matching still works.'; return; }
+	const map = L.map(box, { zoomControl: true, scrollWheelZoom: false, attributionControl: true }).setView([37.764, -122.443], 12);
+	L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '© OpenStreetMap contributors', maxZoom: 17 }).addTo(map);
+	const listings = await (await fetch('/api/listings')).json();
+	for (const l of listings) {
+		const [la, ln] = HOODS[l.neighborhood] || [37.764, -122.443];
+		const h = hash(l.id);
+		const lat = la + ((h % 997) / 997 - 0.5) * 0.010;
+		const lng = ln + ((Math.floor(h / 997) % 991) / 991 - 0.5) * 0.013;
+		const m = L.circleMarker([lat, lng], { radius: 4.5, weight: 0, fillColor: '#1f3a2e', fillOpacity: 0.65 }).addTo(map);
+		m.bindTooltip(`${l.title} · ${money(l.price)}`, { direction: 'top' });
+		mapState.dots.set(l.id, { m, lat, lng });
+	}
+	$('#fitTotal').textContent = listings.length;
+	const bounds = L.latLngBounds([...mapState.dots.values()].map((d) => [d.lat, d.lng]));
+	// The map is laid out after fonts and the form render; re-measure before fitting, and on resize.
+	const fit = () => { map.invalidateSize(); map.setView(bounds.getCenter(), 12); };
+	setTimeout(fit, 50);
+	setTimeout(fit, 600);
+	addEventListener('resize', fit);
+	mapState.map = map;
+	if (mapState.pending) updateMap(mapState.pending);
+	addAreaCards(map);
+}
+
+// Area hover cards: research/neighborhoods.yaml + market.yaml (simulated) + rent_calibration.yaml (You.com, sourced).
+const kindTag = (k) => `<span class="k ${k === 'sourced' ? 'src' : 'sim'}">${k === 'sourced' ? 'sourced' : 'simulated'}</span>`;
+function areaCard(a, withLinks) {
+	const r = a.rent || {};
+	const rentRow = (label, x) => x && x.value != null ? `<tr><td>${label}</td><td>${money(x.value)}${kindTag(x.kind)}</td></tr>` : '';
+	const c = a.commute || {};
+	const num = (x, f) => x && x.value != null ? `${f(x.value)}${kindTag(x.kind)}` : '–';
+	return `<div class="ac"><h4>${a.name}<span>${({ sf: 'San Francisco', east_bay: 'East Bay', marin: 'Marin', peninsula: 'Peninsula' })[a.region] || ''}</span></h4>
+		<p>${a.profile || ''}</p>${(a.tags || []).map((t) => `<span class="tg">${t}</span>`).join('')}
+		<div class="sec">Median rent</div><table>${rentRow('Studio', r.studio)}${rentRow('1 bedroom', r.one_br)}${rentRow('2 bedrooms', r.two_br)}
+		<tr><td>Year over year</td><td>${num(a.yoy_pct, (v) => `${v > 0 ? '+' : ''}${v}%`)}</td></tr></table>
+		<div class="sec">Market</div><table><tr><td>Available units</td><td>${num(a.units, (v) => v.toLocaleString('en-US'))}</td></tr>
+		<tr><td>Vacancy</td><td>${num(a.vacancy_pct, (v) => `${v}%`)}</td></tr><tr><td>In the pipeline</td><td>${num(a.pipeline, (v) => `${v.toLocaleString('en-US')} units`)}</td></tr></table>
+		<div class="sec">Transit minutes${kindTag(c.kind || 'simulated')}</div><div>FiDi ${c.fidi ?? '–'} · Mission ${c.mission ?? '–'} · SoMa ${c.soma ?? '–'} · Palo Alto ${c.palo_alto ?? '–'}</div>
+		${a.sources?.length ? `<div class="sec">Sources</div><div class="srcs">${withLinks ? a.sources.map((u, i) => `<a href="${u}" target="_blank" rel="noopener">${i + 1}</a>`).join('') : `${a.sources.length} cited (click the area for links)`}</div>` : ''}</div>`;
+}
+let areaPinned = null;
+function showArea(a, pin) {
+	const panel = $('#areaPanel');
+	if (pin) areaPinned = a.id;
+	else if (areaPinned && areaPinned !== a.id) return;
+	panel.innerHTML = (pin ? '<button class="x" title="Close">×</button>' : '') + areaCard(a, pin);
+	panel.classList.add('show');
+	panel.querySelector('.x')?.addEventListener('click', () => { areaPinned = null; panel.classList.remove('show'); });
+}
+async function addAreaCards(map) {
+	let data;
+	try { data = await (await fetch('/api/areas')).json(); } catch { return; }
+	const areas = Array.isArray(data) ? data : data.areas || [];
+	for (const a of areas) {
+		if (!a.center) continue;
+		const ring = L.circleMarker(a.center, { radius: a.region === 'sf' ? 10 : 14, color: '#b8562f', weight: 1.5, fillColor: '#b8562f', fillOpacity: 0.08, dashArray: '3 3' }).addTo(map);
+		ring.on('mouseover', () => showArea(a, false));
+		ring.on('mouseout', () => { if (!areaPinned) $('#areaPanel').classList.remove('show'); });
+		ring.on('click', () => showArea(a, true));
+	}
+}
+
+function tweenCount(to) {
+	const el = $('#fitN'), from = mapState.shown, t0 = performance.now();
+	mapState.shown = to;
+	const step = (t) => { const k = Math.min(1, (t - t0) / 700); el.textContent = Math.round(from + (to - from) * (1 - Math.pow(1 - k, 3))); if (k < 1) requestAnimationFrame(step); };
+	requestAnimationFrame(step);
+}
+
+function updateMap(d) {
+	let fit = 0;
+	const hasPrefs = d.prefs.length > 0;
+	for (const [id, u] of Object.entries(d.fits || {})) if (u !== null && u >= 0 && (!hasPrefs || u >= FIT)) fit++;
+	tweenCount(fit);
+	const { map, dots } = mapState;
+	if (!map) { mapState.pending = d; return; }
+	for (const [id, { m }] of dots) {
+		const u = d.fits?.[id];
+		let op = 0.65, color = '#1f3a2e';
+		if (u === null || u === undefined) { op = 0.04; color = '#b7b3a8'; }
+		else if (u < 0) { op = 0.05; color = '#b8562f'; }
+		else if (hasPrefs) { op = u >= FIT ? 0.85 : 0.06 + 0.4 * Math.max(0, (u - 0.3) / (FIT - 0.3)); }
+		m.setStyle({ fillOpacity: op, fillColor: color });
+	}
+	mapState.pulses.forEach((p) => p.remove());
+	mapState.pulses = d.top.map((c, i) => {
+		const p = dots.get(c.listing.id);
+		if (!p) return null;
+		return L.marker([p.lat, p.lng], { icon: L.divIcon({ className: 'pulse', html: `<span>${i + 1}</span>`, iconSize: [22, 22] }), zIndexOffset: 1000 })
+			.addTo(map)
+			.on('click', () => { const card = document.querySelectorAll('.card')[i]; if (card) { card.scrollIntoView({ behavior: 'smooth', block: 'center' }); card.classList.add('flash'); setTimeout(() => card.classList.remove('flash'), 1200); } });
+	}).filter(Boolean);
+	// Neighborhoods a web-grounded factor resolved to.
+	mapState.areas.forEach((a) => a.remove());
+	mapState.areas = [];
+	for (const p of d.prefs.filter((p) => p.factor && p.field === 'neighborhood' && Array.isArray(p.value)))
+		for (const h of p.value) if (HOODS[h]) mapState.areas.push(L.circle(HOODS[h], { radius: 750, color: '#b8562f', weight: 1.5, dashArray: '5 5', fillColor: '#b8562f', fillOpacity: 0.1 }).addTo(map).bindTooltip(`${p.factor.text} → ${h} (You.com)`));
+}
+
 let timer;
 function schedule(ms = 650) { clearTimeout(timer); timer = setTimeout(recommend, ms); }
 
@@ -340,11 +534,13 @@ async function recommend() {
 		const res = await fetch('/api/recommend', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(requestBody()) });
 		const d = await res.json();
 		if (seq !== state.seq) return;
+		state.lastTop = d.top;
 		if (d.error) throw new Error(d.error);
 		setMode(d.mode);
+		updateMap(d);
 		state.weights = d.weights || {};
 		document.querySelectorAll('.q').forEach((r) => { const w = state.weights[r.dataset.id]; const lab = r.querySelector('.weight'); if (lab) lab.textContent = w ? (w >= 2.5 ? 'cares a lot' : w >= 1.5 ? 'cares' : 'mild') : ''; });
-		$('#count').innerHTML = `<strong>${d.remaining}</strong> of ${d.total} homes fit your dealbreakers${d.calls ? ` · ${d.calls} model calls · $${d.cost.toFixed(4)}` : ''}`;
+		$('#count').textContent = d.calls ? `${d.calls} model calls · $${d.cost.toFixed(4)}` : '';
 		$('#cards').replaceChildren(...(d.top.length ? d.top.map(card) : [el('div', { class: 'empty' }, 'Nothing fits every dealbreaker. Loosen one on the left.')]));
 		$('#saved').replaceChildren(...d.liked.map((c) => el('span', {}, `♥ ${c.listing.neighborhood} · ${money(c.listing.price)}`)));
 		const unverified = (d.factors || []).filter((f) => f.status !== 'resolved').map((f) => el('span', { class: 'chip unverified', title: f.reason || '' }, f.text, el('em', {}, 'couldn’t verify, ignored')));
@@ -363,6 +559,7 @@ function setMode(mode) {
 }
 
 async function load(version) {
+	// (returns once the form is rendered, so demo mode can start)
 	const form = await (await fetch('/api/form' + (version ? `?version=${version}` : ''))).json();
 	if (!version) state.latest = form.version;
 	state.form = form;
@@ -423,7 +620,92 @@ $('#submit').addEventListener('click', async () => {
 	toast('Thanks. Your answers go into the next review.');
 });
 
-load();
+async function showEvolution() {
+	const d = await (await fetch('/api/evolution')).json();
+	const v1 = d.v1, lt = d.latest;
+	$('#evoNote').textContent = `Reviewer's note on v${lt.version}: ${lt.note || ''}`;
+	$('#evoV1').replaceChildren(el('div', { class: 'eyebrow' }, 'Where it started'), el('h3', {}, `v1 · ${v1.questions.length} questions`),
+		...v1.questions.map((q) => el('div', { class: 'evo-q' + (q.status === 'dropped' ? ' dropped' : '') }, el('span', { class: 'n' }, q.from),
+			el('div', {}, el('span', { class: 't' }, q.text), el('div', {}, q.status === 'dropped' ? el('span', { class: 'tagx drop' }, 'dropped') : q.to !== q.from ? el('span', { class: 'tagx' }, `moved to #${q.to}`) : null)))));
+	$('#evoLatest').replaceChildren(el('div', { class: 'eyebrow' }, 'Latest accepted'), el('h3', {}, `v${lt.version} · ${lt.questions.length} questions`),
+		...lt.questions.map((q) => el('div', { class: 'evo-q' }, el('span', { class: 'n' }, q.to),
+			el('div', {}, q.old_text ? el('span', { class: 'old' }, q.old_text) : null, el('span', { class: 't' }, q.text),
+				el('div', {}, q.status === 'new' ? el('span', { class: 'tagx new' }, 'new') : null, q.status === 'reworded' ? el('span', { class: 'tagx' }, 'reworded') : null,
+					q.moved ? el('span', { class: 'tagx' }, `moved from #${q.from}`) : null, q.by_renter ? el('span', { class: 'tagx renter' }, 'suggested by a renter') : null,
+					q.grounded ? el('span', { class: 'tagx' }, `grounded: ${q.grounded}`) : null)))));
+	$('#evoHistory').replaceChildren(...d.history.map((h) => el('div', { class: h.accepted ? '' : 'rej' },
+		`generation ${h.generation}  v${h.from} → v${h.candidate}  ${h.accepted ? 'ACCEPTED' : 'rejected'}  objective ${h.before.toFixed(3)} → ${h.after.toFixed(3)} (${h.delta >= 0 ? '+' : ''}${h.delta.toFixed(3)})${h.commit ? `  commit ${h.commit}` : ''}`)));
+}
+
+async function showResults() {
+	const r = await (await fetch('/api/results')).json();
+	if (r.error) { $('#resultsBody').textContent = r.error; }
+	else {
+		const pct = (x) => `${Math.round(100 * x)}%`;
+		const cols = [['form', (x) => x.form], ['match quality', (x) => x.match_quality.toFixed(3)], ['dealbreaker misses', (x) => x.dealbreaker_misses], ['questions asked', (x) => x.questions_asked], ['skip rate', (x) => pct(x.skip_rate)], ['rewrite rate', (x) => pct(x.rewrite_rate)], ['friction', (x) => x.friction.toFixed(2)], ['objective', (x) => x.objective.toFixed(3)]];
+		$('#resultsBody').replaceChildren(el('table', {}, el('tr', {}, cols.map(([h]) => el('th', {}, h))), ...r.rows.map((x) => el('tr', {}, cols.map(([, f]) => el('td', {}, f(x)))))), el('div', { class: 'count', style: 'margin-top:8px' }, `${r.perRenter?.length ?? ''} held-out renters · ${r.file}`));
+	}
+	$('#results').classList.remove('hidden');
+	$('#results').scrollIntoView({ behavior: 'smooth' });
+}
+
+function setView(v) {
+	document.body.classList.toggle('evo', v === 'evo');
+	document.querySelectorAll('#tabs button').forEach((b) => b.classList.toggle('on', b.dataset.view === v));
+	if (v === 'evo') showEvolution();
+	else if (mapState.map) setTimeout(() => mapState.map.invalidateSize(), 50);
+}
+document.querySelectorAll('#tabs button').forEach((b) => b.addEventListener('click', () => setView(b.dataset.view)));
+
+// ?demo=1: a fixed renter, rules + cache only (works with the network off). → advances one step.
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+async function typeInto(id, text) {
+	const input = document.querySelector(`.q[data-id="${id}"] input`);
+	const a = ans(id);
+	if (input) { input.scrollIntoView({ behavior: 'smooth', block: 'center' }); input.focus(); const stepN = Math.max(2, Math.ceil(text.length / 40)); for (let i = stepN; i < text.length; i += stepN) { input.value = text.slice(0, i); await sleep(16); } input.value = text; }
+	a.value = text;
+	touch(id);
+	schedule(0);
+}
+function rewriteQ(id, text) { ans(id).rewritten_text = text; renderQuestions(); }
+function markSkip(id) { const row = document.querySelector(`.q[data-id="${id}"]`); if (row) { row.classList.add('demo-skip'); row.scrollIntoView({ behavior: 'smooth', block: 'center' }); } }
+function passTop(reason) {
+	const top = state.lastTop?.[0];
+	if (!top) return;
+	const card = document.querySelector('.card');
+	if (card) { card.classList.add('asking'); const inp = card.querySelector('.reasons input'); if (inp) inp.value = reason; }
+	setTimeout(() => { state.reactions.push({ listing_id: top.listing.id, liked: false, reason }); toast(`Passed: "${reason}". Re-ranking…`); schedule(0); }, 900);
+}
+const DEMO_STEPS = [
+	['Meet Maya', 'First-year grad student at UCSF Mission Bay, on a stipend. Every listing in SF is on the map.', () => {}],
+	['Answer in her own words', 'She answers the budget question. "Firm" tells the agent it matters a lot.', () => typeInto('budget', "$2,400 max, that's firm")],
+	['Edit a question', 'The commute question doesn\'t fit her, so she rewrites it and answers her version. "Dolores Park" is grounded with You.com search.', async () => { rewriteQ('commute', 'How far is it to UCSF Mission Bay, and how do you get there?'); await sleep(300); await typeInto('commute', 'UCSF Mission Bay by bike or Muni, under 25 minutes. Walking distance to Dolores Park would be amazing') }],
+	['Skip one', 'Every question is optional. A skip is signal too.', () => markSkip('last_place_gripe')],
+	['React to a listing', 'She passes on the top match and says why. The agent turns the reason into a preference and re-ranks.', () => { document.querySelector('#right')?.scrollTo({ top: 0, behavior: 'smooth' }); passTop('the street is too loud'); }],
+	['The outer loop', 'Renters\' skips, edits and rewrites taught a reviewer agent to rewrite the form. Each version had to beat the last on renters it never saw.', () => setView('evo')],
+	['Held-out result', 'v1 vs the latest form on held-out renters, exactly as the eval produced it.', () => showResults()]
+];
+let demoAt = -1;
+async function demoNext() {
+	if (demoAt >= DEMO_STEPS.length - 1) return;
+	demoAt++;
+	const [title, say, run] = DEMO_STEPS[demoAt];
+	$('#demoStep').textContent = `Step ${demoAt + 1} of ${DEMO_STEPS.length} · ${title}`;
+	$('#demoSay').textContent = say;
+	$('#demoNext').style.display = demoAt >= DEMO_STEPS.length - 1 ? 'none' : '';
+	await run();
+}
+if (DEMO) {
+	document.body.classList.add('demo');
+	$('#demoNext').addEventListener('click', () => demoNext());
+	addEventListener('keydown', (e) => {
+		if (e.target.closest?.('input, textarea, [contenteditable]') && e.key !== 'ArrowRight') return;
+		if (e.key === 'ArrowRight' || e.key === ' ') { e.preventDefault(); e.target.blur?.(); demoNext(); }
+	});
+}
+
+initMap();
+load().then(() => { if (DEMO) demoNext(); });
 </script>
 </body>
 </html>

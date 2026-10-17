@@ -1,0 +1,15 @@
+{
+  "factor": "away from freeway noise",
+  "status": "resolved",
+  "kind": "neighborhoods",
+  "neighborhoods": [
+    "Outer Sunset",
+    "Noe Valley"
+  ],
+  "confidence": 0.6,
+  "sources": [
+    "https://www.reddit.com/r/AskSF/comments/1kkh5n8/some_quiet_street_suggestions_we_are_moving_in_3/",
+    "https://www.neighborhoods.com/blog/the-6-quietest-neighborhoods-in-san-francisco"
+  ],
+  "rationale": "Results mention Outer Sunset and Noe Valley as quiet, but not specifically freeway noise; partial match."
+}
