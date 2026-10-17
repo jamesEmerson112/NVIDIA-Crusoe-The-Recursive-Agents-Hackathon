@@ -125,25 +125,30 @@
 			rooms.push({ name: 'BATH', r: rect(0, top, W * 0.4, H - top) });
 			rooms.push({ name: 'KITCHEN', r: rect(W * 0.4, top, W * 0.6, H - top), open: layout === 'open' || layout === 'loft' });
 		} else {
-			// Bedrooms stacked on the left, living over kitchen on the right, bath(s) between.
-			W = Math.sqrt(sqft * 0.85) * FT;
+			// Bedrooms stacked on the left, then bath(s), then a W/D or closet by the entry; living over kitchen on the right.
+			W = Math.sqrt(sqft * 1.15) * FT;
 			H = (sqft * FT * FT) / W;
-			const leftW = W * (beds >= 2 ? 0.48 : 0.44);
-			const bathH = Math.min(H * 0.24, 9 * FT);
-			const bedH = (H - bathH * (baths > 1 && beds > 1 ? 2 : 1)) / beds;
+			const leftW = W * (beds >= 2 ? 0.5 : 0.46);
+			const ensuite = baths > 1 && beds > 1;
+			const bathH = Math.min(H * 0.3, 8 * FT);
+			const free = H - bathH * (ensuite ? 2 : 1);
+			const bedH = Math.min(free / beds, Math.max(10 * FT, Math.min(14 * FT, free / beds)));
 			let y = 0;
 			for (let i = 0; i < beds; i++) {
 				rooms.push({ name: 'BEDROOM', r: rect(0, y, leftW, bedH), bed: true });
 				y += bedH;
-				if (i === 0 && baths > 1 && beds > 1) {
-					rooms.push({ name: 'ENSUITE', r: rect(0, y, leftW * 0.62, bathH), bath: true });
+				if (i === 0 && ensuite) {
+					rooms.push({ name: 'ENSUITE', r: rect(0, y, leftW, bathH), bath: true });
 					y += bathH;
 				}
 			}
-			rooms.push({ name: 'BATH', r: rect(0, y, leftW * 0.62, H - y), bath: true });
-			if (l.laundry === 'in_unit') extras.push({ name: 'W/D', r: rect(leftW * 0.62, H - 5 * FT, leftW * 0.38, 5 * FT) });
+			const rest = H - y - bathH;
+			const bathR = rect(0, y, leftW, rest > 3.5 * FT ? bathH : H - y);
+			rooms.push({ name: 'BATH', r: bathR, bath: true });
+			if (rest > 3.5 * FT) rooms.push({ name: l.laundry === 'in_unit' ? 'W/D' : 'CLOSET', r: rect(0, y + bathH, leftW, rest), small: true });
 			const livingH = H * (layout === 'open' ? 0.62 : 0.58);
-			rooms.push({ name: layout === 'open' ? 'LIVING / DINING' : 'LIVING / DINING', r: rect(leftW, 0, W - leftW, livingH) });
+			const living = rect(leftW, 0, W - leftW, livingH);
+			rooms.push({ name: living.w < 17 * FT ? 'LIVING' : 'LIVING / DINING', r: living });
 			rooms.push({ name: 'KITCHEN', r: rect(leftW, livingH, W - leftW, H - livingH), open: layout === 'open' || layout === 'loft', kitchenRight: true });
 		}
 		if (beds === 0 && l.laundry === 'in_unit') extras.push({ name: 'W/D', r: rect(0, H - 5 * FT, 5 * FT, 5 * FT) });
@@ -158,20 +163,22 @@
 			? `M 0 ${c} L ${c} 0 L ${W - c} 0 L ${W} ${c} L ${W} ${H} L 0 ${H} Z`
 			: `M 0 0 L ${W} 0 L ${W} ${H} L 0 ${H} Z`;
 		let body = '';
-		for (const { name, r, open, bath: isBath, bed, kitchenRight } of p.rooms) {
+		for (const { name, r, open, bath: isBath, bed, kitchenRight, small } of p.rooms) {
 			const dashed = p.layout === 'loft' && (bed || name === 'LOFT');
 			if (!open) body += `<rect x="${r.x}" y="${r.y}" width="${r.w}" height="${r.h}" class="fp-wall${dashed ? ' fp-half' : ''}"/>`;
 			else body += `<line x1="${r.x}" y1="${r.y}" x2="${r.x}" y2="${r.y + r.h}" class="fp-wall"/>`;
-			if (name.includes('BATH') || name === 'ENSUITE' || isBath) body += bath(r, p.rnd);
+			if (isBath || name === 'BATH') body += bath(r, p.rnd);
 			if (name === 'KITCHEN') body += kitchen(r, kitchenRight ? 'right' : 'bottom');
 			if (bed) body += closets(r);
 			if (r.y <= 0.5) body += windows(r, 'top');
 			else if (r.x <= 0.5 && (bed || name === 'LIVING') && p.layout !== 'railroad') body += windows(r, 'left');
 			// Doors: bedrooms and baths open toward the living side.
-			if (bed || isBath || name === 'ENSUITE') body += door(r.x + r.w, r.y + Math.min(r.h - 4, 3.2 * FT), 2.8 * FT, 'sw');
+			if (bed || isBath || name === 'BATH' || small) body += door(r.x + r.w, r.y + Math.min(r.h - 4, 3.2 * FT), 2.8 * FT, 'sw');
 			if (p.layout === 'railroad' && r.y > 0.5) body += door(r.x + r.w * 0.7, r.y, 2.6 * FT, 'se');
 			const sub = name === 'BEDROOM' ? `${Math.round(r.w / FT)}' × ${Math.round(r.h / FT)}'` : '';
-			body += label(r, name, sub);
+			if (small) body += `<text x="${r.x + r.w / 2}" y="${r.y + r.h / 2 + 3}" class="fp-mini">${name}</text>`;
+			else if (isBath || name === 'BATH') body += `<text x="${r.x + r.w / 2}" y="${r.y + 13}" class="fp-label">${name}</text>`;
+			else body += label(r, name, sub);
 		}
 		for (const { name, r } of p.extras) body += `<rect x="${r.x}" y="${r.y}" width="${r.w}" height="${r.h}" class="fp-wall"/><text x="${r.x + r.w / 2}" y="${r.y + r.h / 2 + 3}" class="fp-mini">${name}</text>`;
 		// Entry: a gap and arrow at the bottom edge.
