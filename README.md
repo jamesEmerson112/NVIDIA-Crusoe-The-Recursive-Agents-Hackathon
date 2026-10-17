@@ -60,13 +60,16 @@ Use these npm scripts rather than `npx`. Only npm commands check the Node versio
 
 ## Crusoe API key
 
-Each of us uses our own key from the [Crusoe Console](https://console.crusoecloud.com). Keys can contain `$`, so quote them with single quotes:
+Each of us uses our own key from the [Crusoe Console](https://console.crusoecloud.com) (Intelligence Foundry → Inference → Create API Key; it is shown only once). From `frontend/`:
 
 ```bash
-export CRUSOE_API_KEY='paste-your-key-here'
+npm run set-key   # paste the key at the hidden prompt; writes frontend/.env
+npm run models    # verifies the key and the configured model IDs
 ```
 
-You can also put it in a `.env` file, which is gitignored. Never commit the key or put it in frontend code: anything in the browser bundle is public. Details are in section 3 of `.claude/skills/crusoe-recursive-agents-hackathon/SKILL.md`.
+Then restart the dev server. Without a key the app runs a scripted mock agent.
+
+Don't edit the key into `.env` by hand: keys can contain `$`, and Vite expands `$name` in `.env` values even inside single quotes, which silently corrupts the key (401/403). `set-key` writes each `$` as `\$`. Never commit the key or put it in frontend code: anything in the browser bundle is public. Details are in section 3 of `.claude/skills/crusoe-recursive-agents-hackathon/SKILL.md`.
 
 ## Working with Claude Code
 

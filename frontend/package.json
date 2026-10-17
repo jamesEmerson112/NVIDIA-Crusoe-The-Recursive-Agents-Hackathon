@@ -31,7 +31,9 @@
 		"db:push": "drizzle-kit push",
 		"db:generate": "drizzle-kit generate",
 		"db:migrate": "drizzle-kit migrate",
-		"db:studio": "drizzle-kit studio"
+		"db:studio": "drizzle-kit studio",
+		"set-key": "node scripts/set-key.mjs",
+		"models": "node scripts/models.mjs"
 	},
 	"devDependencies": {
 		"@sveltejs/adapter-node": "^6.0.0",

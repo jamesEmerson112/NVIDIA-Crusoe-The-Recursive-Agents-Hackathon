@@ -1,12 +1,13 @@
 import { defineEnvVars } from '@sveltejs/kit/env';
 
-const optional = (value: string | undefined) => value || undefined;
+const optional = (value: string | undefined) =>
+	value && value !== 'paste-your-key-here' ? value : undefined;
 
 export const variables = defineEnvVars({
 	DATABASE_URL: { description: 'The database connection string.' },
 	CRUSOE_API_KEY: {
 		description:
-			'Crusoe Managed Inference key. Quote it with single quotes in .env (keys can contain $). Without it the app runs a scripted mock agent.',
+			'Crusoe Managed Inference key. Set it with `npm run set-key`: Vite expands $ in .env even inside quotes, so each $ must be written as \\$. Without it the app runs a scripted mock agent.',
 		schema: optional
 	},
 	CRUSOE_AGENT_MODEL: {

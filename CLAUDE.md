@@ -54,6 +54,8 @@ Commands, from `frontend/`:
 - `npm test`: all unit tests once; `npm test -- src/lib/foo.spec.ts` for one file
 - `npm run lint` / `npm run format`: Prettier check / write
 - `npm run db:push`: apply `schema.ts` to the local database (run it after pulling schema changes)
+- `npm run set-key`: store the Crusoe key in `frontend/.env` (hidden input; escapes `$` for Vite). Restart the dev server afterwards.
+- `npm run models`: check the key against `GET /v1/models`, list models with context/tools/prices, and verify `CRUSOE_AGENT_MODEL` / `CRUSOE_FAST_MODEL` exist and accept `tools`
 
 Browser preview in the Claude desktop app: the preview runner can't read `~/Documents` (macOS privacy), so start the dev server from Bash in the background (`npm start -- --port 5180 --strictPort`) and point a gitignored `.claude/launch.json` entry at it with `"url": "http://localhost:5180"` and no command. (`db:generate` / `db:migrate` for migrations, `db:studio` to browse)
 
@@ -66,7 +68,7 @@ Invoke this project skill (`.claude/skills/crusoe-recursive-agents-hackathon/SKI
 - **Base URL** is `https://api.inference.crusoecloud.com/v1`. Old hostnames (`api.crusoe.ai`, `managed-inference-api-proxy.crusoecloud.com`) cause 404/429. §3.1, §3.5
 - **Model IDs are exact and case-sensitive**, and Crusoe's web pages often spell them differently from the API (`Deepseek-V4-Flash` vs `DeepSeek`, `zai-org/` vs `zai/`, `Qwen/` vs `qwen/`). Copy `id` from `GET /v1/models`; a wrong ID returns `404 model_not_found`. §4.1, §5
 - **Deprecated models still appear in official examples** (e.g. `meta-llama/Llama-3.3-70B-Instruct`, Kimi K2.6, GLM-5.1/5.2). Don't use them. §4.3
-- **API keys can contain `$`**: export with single quotes (`export CRUSOE_API_KEY='...'`); double quotes silently corrupt the key → 401/403. §3.3
+- **API keys can contain `$`**: in a shell, export with single quotes (`export CRUSOE_API_KEY='...'`); double quotes silently corrupt the key → 401/403. §3.3 **In `frontend/.env` single quotes don't help**: Vite (and so SvelteKit) expands `$name` inside .env values even when quoted, so each `$` must be `\$`. Use `npm run set-key` (hidden input, escapes for you), then `npm run models` to verify.
 - **Rate limits are per project *per model***, resetting each minute: 30 RPM / 500K TPM without a payment method, 600 RPM / 2M TPM with one. Every agent-loop turn is a request, so parallel sub-agents hit 30 RPM fast. Spread roles across different models, throttle on the `x-ratelimit-remaining-*` headers, and retry 429/503 with jittered exponential backoff. §6
 - **Reasoning models spend `max_tokens` on thinking.** Use ≥1024 and check `finish_reason == "length"` when `content` is empty. Read both `reasoning_content` and `reasoning`. Toggle thinking via `extra_body={"chat_template_kwargs": {...}}`; DeepSeek's native `"thinking": {"type": "enabled"}` returns 403. Toggles differ per model — check `supported_parameters` in `/v1/models`. §4.6, §7.2
 - **Tool calling**: append the assistant message containing `tool_calls` *before* the `role: "tool"` results, or you get a 400. §7.3
