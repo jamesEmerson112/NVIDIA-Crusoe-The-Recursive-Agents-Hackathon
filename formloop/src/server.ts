@@ -11,6 +11,7 @@ import { hasCrusoeKey, usageLog } from './crusoe.ts';
 import { extractPrefs, prefFromReaction } from './agent.ts';
 import { rank, satisfaction, utility, violates } from './utility.ts';
 import { DEST_LABEL } from './phrases.ts';
+import { proposeFollowups } from './followups.ts';
 import { formloopDir } from './config.ts';
 import { logsDir } from './outer.ts';
 import type { Answer, Listing, Pref, Question } from './types.ts';
@@ -55,14 +56,26 @@ const reactionCache = new Map<string, Pref | null>();
 
 function formFor(version?: number) {
 	const f = version ? loadForm(version) : latestForm(bank, cfg);
-	return { ...f, questions: f.questions.slice(0, cfg.questions_shown) };
+	const questions = f.questions.slice(0, cfg.questions_shown);
+	// The rest of the bank, offered as optional extra fields on the page.
+	const extra = bank.filter((q) => !questions.some((x) => x.id === q.id));
+	return { ...f, questions, extra };
 }
 
-async function recommend(body: { version?: number; answers?: Answer[]; reactions?: { listing_id: string; liked: boolean; reason?: string }[] }) {
+type Body = { version?: number; answers?: Answer[]; followups?: Question[]; ranking?: string[]; reactions?: { listing_id: string; liked: boolean; reason?: string }[] };
+
+/** Every question the page may show: the form version, extra bank fields and this visitor's follow-ups. */
+function allQuestions(body: Body): Question[] {
 	const form = formFor(body.version);
-	const answers = (body.answers ?? []).filter((a) => form.questions.some((q) => q.id === a.question_id));
+	const followups = (body.followups ?? []).filter((q) => q && typeof q.id === 'string' && q.id.startsWith('fu_') && Array.isArray(q.maps_to));
+	return [...form.questions, ...form.extra, ...followups];
+}
+
+async function recommend(body: Body) {
+	const form = formFor(body.version);
 	// Rewritten questions travel with their answers, so the agent reads the renter's wording.
-	const questions: Question[] = form.questions;
+	const questions = allQuestions(body);
+	const answers = (body.answers ?? []).filter((a) => questions.some((q) => q.id === a.question_id));
 	const key = JSON.stringify(answers.map((a) => [a.question_id, a.action, a.value, a.rewritten_text, a.importance]));
 	let mode: 'live' | 'offline' = live ? 'live' : 'offline';
 	let prefs = prefCache.get(key);
@@ -118,10 +131,11 @@ async function recommend(body: { version?: number; answers?: Answer[]; reactions
 }
 
 /** Real visitors' reactions go to the same log the reviewer learns from. */
-function logSubmission(body: { version?: number; answers?: Answer[] }) {
+function logSubmission(body: Body) {
 	mkdirSync(logsDir, { recursive: true });
 	const at = new Date().toISOString();
-	const lines = (body.answers ?? []).map((a) => JSON.stringify({ at, generation: 'ui', form: body.version, persona: 'web', ...a }));
+	const rank = new Map((body.ranking ?? []).map((id, i) => [id, i + 1]));
+	const lines = (body.answers ?? []).map((a) => JSON.stringify({ at, generation: 'ui', form: body.version, persona: 'web', rank: rank.get(a.question_id), ...a }));
 	if (lines.length) appendFileSync(join(logsDir, 'ui_reactions.jsonl'), lines.join('\n') + '\n');
 }
 
@@ -150,6 +164,16 @@ createServer(async (req, res) => {
 			return send(res, 200, { ...form, mode: live ? 'live' : 'offline', listings: listings.length, top_k: cfg.top_k });
 		}
 		if (req.method === 'POST' && url.pathname === '/api/recommend') return send(res, 200, await recommend(await readJSON(req)));
+		if (req.method === 'POST' && url.pathname === '/api/followups') {
+			const body = (await readJSON(req)) as Body;
+			const questions = allQuestions(body);
+			const passes = (body.reactions ?? []).filter((r) => !r.liked && r.reason).map((r) => r.reason!);
+			const followups = await proposeFollowups(
+				{ questions, answers: body.answers ?? [], ranking: body.ranking ?? questions.map((q) => q.id), passes, bank },
+				{ offline: !live }
+			);
+			return send(res, 200, { followups, calls: usageLog.length });
+		}
 		if (req.method === 'POST' && url.pathname === '/api/submit') {
 			logSubmission(await readJSON(req));
 			return send(res, 200, { ok: true });
