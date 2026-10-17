@@ -1,7 +1,8 @@
 import type { ToolSchema, Usage } from '../crusoe';
-import type { FormSpec, MessageMeta, StepStatus } from '#lib/types.ts';
+import type { MessageMeta, StepStatus } from '#lib/types.ts';
 import * as store from '../store';
 import { runQuickEdit } from './subagent';
+import { normalizeFormSpec } from '#lib/forms.ts';
 
 export interface ToolContext {
 	conversationId: string;
@@ -10,6 +11,11 @@ export interface ToolContext {
 	usage: Usage;
 	signal?: AbortSignal;
 	emit: (event: import('#lib/types.ts').RunEvent) => void;
+	/**
+	 * Artifacts this run is working from: the form submitted or artifact edited to start it, plus
+	 * anything read_artifact returned. Used as lineage when a model forgets depends_on.
+	 */
+	sources: Set<string>;
 }
 
 export interface ToolOutput {
@@ -175,7 +181,8 @@ export const TOOL_SCHEMAS: ToolSchema[] = [
 				type: 'object',
 				properties: {
 					artifact_id: { type: 'string' },
-					instruction: { type: 'string', description: 'Exactly what to change and why.' }
+					instruction: { type: 'string', description: 'Exactly what to change and why.' },
+					title: { type: 'string', description: 'New title, only if the old one no longer fits.' }
 				},
 				required: ['artifact_id', 'instruction']
 			}
@@ -225,6 +232,10 @@ export const TOOL_SCHEMAS: ToolSchema[] = [
 const ok = (data: Record<string, unknown>) => JSON.stringify({ ok: true, ...data });
 const fail = (error: string) => JSON.stringify({ ok: false, error });
 
+/**
+ * Run one tool call. Never throws: a bad call becomes an error result the model can read and
+ * correct, so one malformed argument can't end an unattended run.
+ */
 export async function runTool(
 	name: string,
 	rawArgs: string,
@@ -232,10 +243,46 @@ export async function runTool(
 ): Promise<ToolOutput> {
 	let args: Record<string, any>;
 	try {
-		args = rawArgs.trim() ? JSON.parse(rawArgs) : {};
+		args = coerceArgs(rawArgs.trim() ? JSON.parse(rawArgs) : {});
 	} catch {
 		return { content: fail(`Arguments were not valid JSON: ${rawArgs.slice(0, 200)}`) };
 	}
+	try {
+		return await execute(name, args, ctx);
+	} catch (err) {
+		if (ctx.signal?.aborted) throw err;
+		const message = (err as Error).message;
+		ctx.emit({ type: 'tool', name, summary: `${name} failed: ${message.slice(0, 80)}` });
+		return {
+			content: fail(
+				`${name} failed: ${message}. Check the arguments against the schema and try again.`
+			)
+		};
+	}
+}
+
+/** Models sometimes send arrays or objects as JSON-encoded strings ("[{...}]"); decode those. */
+export function coerceArgs(args: unknown): Record<string, any> {
+	if (!args || typeof args !== 'object' || Array.isArray(args)) return {};
+	return Object.fromEntries(
+		Object.entries(args).map(([k, v]) => {
+			if (typeof v === 'string' && /^\s*[[{]/.test(v)) {
+				try {
+					return [k, JSON.parse(v)];
+				} catch {
+					// Not JSON after all; keep the string.
+				}
+			}
+			return [k, v];
+		})
+	);
+}
+
+async function execute(
+	name: string,
+	args: Record<string, any>,
+	ctx: ToolContext & { callId: string }
+): Promise<ToolOutput> {
 	const { conversationId: cid } = ctx;
 	const provenance = {
 		author: 'agent' as const,
@@ -246,7 +293,7 @@ export async function runTool(
 
 	switch (name) {
 		case 'set_plan': {
-			const plan = (args.steps ?? []).map((s: any) => ({
+			const plan = (Array.isArray(args.steps) ? args.steps : []).map((s: any) => ({
 				title: String(s.title),
 				status: s.status as StepStatus
 			}));
@@ -268,11 +315,11 @@ export async function runTool(
 			return { content: ok({ step: row.position, status: row.status }) };
 		}
 		case 'create_form': {
-			const spec: FormSpec = {
+			const spec = normalizeFormSpec({
 				description: args.description,
-				fields: args.fields ?? [],
+				fields: args.fields,
 				submitLabel: args.submit_label
-			};
+			});
 			if (!spec.fields.length) return { content: fail('A form needs at least one field') };
 			const { id } = await store.createArtifact({
 				conversationId: cid,
@@ -297,18 +344,28 @@ export async function runTool(
 		case 'create_artifact': {
 			if (!['document', 'html'].includes(args.kind))
 				return { content: fail('kind must be document or html') };
+			const given: string[] = Array.isArray(args.depends_on) ? args.depends_on : [];
+			const inferred = !given.length && ctx.sources.size > 0;
 			const { id, linked } = await store.createArtifact({
 				conversationId: cid,
 				kind: args.kind,
 				title: String(args.title),
 				content: String(args.content ?? ''),
 				step: args.step,
-				dependsOn: args.depends_on,
+				dependsOn: inferred ? [...ctx.sources] : given,
 				provenance
 			});
 			ctx.emit({ type: 'tool', name, summary: `Created ${args.title}` });
 			return {
-				content: ok({ artifact_id: id, depends_on: linked }),
+				content: ok({
+					artifact_id: id,
+					depends_on: linked,
+					...(inferred
+						? {
+								note: 'depends_on was missing, so it was linked to the inputs of this run. Pass depends_on explicitly next time.'
+							}
+						: {})
+				}),
 				meta: { kind: 'artifact', artifactId: id }
 			};
 		}
@@ -340,6 +397,7 @@ export async function runTool(
 		case 'read_artifact': {
 			const a = await store.getArtifact(cid, args.artifact_id);
 			if (!a) return { content: fail(`No artifact ${args.artifact_id}`) };
+			ctx.sources.add(a.id);
 			return {
 				content: ok({
 					artifact_id: a.id,
@@ -361,11 +419,13 @@ export async function runTool(
 			await store.setArtifactStatus([a.id], 'updating');
 			ctx.emit({ type: 'changed' });
 			try {
-				const result = await runQuickEdit(cid, a.id, String(args.instruction), ctx.signal);
+				const title =
+					typeof args.title === 'string' && args.title.trim() ? args.title.trim() : undefined;
+				const result = await runQuickEdit(cid, a.id, String(args.instruction), ctx.signal, title);
 				ctx.emit({
 					type: 'tool',
 					name,
-					summary: `Sub-agent updated ${a.title} to v${result.version}`
+					summary: `Sub-agent updated ${title ?? a.title} to v${result.version}`
 				});
 				return {
 					content: ok({

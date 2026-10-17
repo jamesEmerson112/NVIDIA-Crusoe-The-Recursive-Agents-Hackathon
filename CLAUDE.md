@@ -16,7 +16,7 @@ Persistence is SQLite through Node's built-in `node:sqlite` with Drizzle ORM (sc
 
 Imports through `#lib/...` (Node subpath imports in `package.json`) need the file extension: `#lib/types.ts`, not `#lib/types`.
 
-Env vars are declared in `src/env.ts` (`defineEnvVars`) and read from `$app/env/private`: `DATABASE_URL`, `CRUSOE_API_KEY` (optional: unset runs the scripted mock agent in `agent/mock.ts`, so the UI works offline), `CRUSOE_AGENT_MODEL` (default `openai/gpt-oss-120b`), `CRUSOE_FAST_MODEL` (default `deepseek-ai/Deepseek-V4-Flash`).
+Env vars are declared in `src/env.ts` (`defineEnvVars`) and read from `$app/env/private`: `DATABASE_URL`, `CRUSOE_API_KEY` (optional: unset runs the scripted mock agent in `agent/mock.ts`, so the UI works offline), `CRUSOE_AGENT_MODEL` (default `zai-org/GLM-5.3-Flash` since 2026-10-17; `openai/gpt-oss-120b` is the cheaper, faster, terser alternative), `CRUSOE_FAST_MODEL` (default `deepseek-ai/Deepseek-V4-Flash`).
 
 ## Product: Workbench (in progress)
 
@@ -37,7 +37,16 @@ A ChatGPT-desktop-style chat where the agent also builds a **process**: a number
 - **Svelte/Kit 3 gotchas hit so far**: `browser` comes from `$app/env` (`$app/environment` is deprecated and untyped); `goto` options are `reset`/`replace`, not `noScroll`/`keepFocus`; `page.url.searchParams` is read-only (copy via `new URLSearchParams(page.url.search)`); don't name a prop `state` (it clashes with the `$state` rune).
 - **Mock agent** (`agent/mock.ts`) stands in for the model's judgment: editing `goal` or `audience` triggers `propose_redo`, other fields a `quick_edit`. Its tool call ids are random so proposal replies stay unique across restarts.
 - **Real agent (gpt-oss-120b) behavior seen 2026-10-17**: calls one tool per turn (so ~3-7 model calls per user action, ~4-6s), follows the edit policy (small edit → parallel `quick_edit`s on V4 Flash; changed cuisine → `propose_redo`), 58-78% prompt-cache hits, about $0.001-0.002 per user action. It has no web access and will invent venues/phone numbers unless told; the prompt now requires labeling real-world specifics as unverified.
-- **`zai-org/GLM-5.3-Flash` as agent (tested 2026-10-17, `CRUSOE_AGENT_MODEL=zai-org/GLM-5.3-Flash`)**: works with the same tools, and is more proactive: after one form it ran every remaining step (3 linked documents, 36s). It's about 2× the cost of gpt-oss ($0.011 vs ~$0.006 for the same flow) and 3-6× slower per action (7-36s), with 0% cache hits on the first turn. It skipped `propose_redo` on a cuisine change (patched everything with `quick_edit` instead) and claimed a retitle that `quick_edit` can't do. gpt-oss-120b stays the default.
+- **`zai-org/GLM-5.3-Flash` as agent (tested 2026-10-17, `CRUSOE_AGENT_MODEL=zai-org/GLM-5.3-Flash`)**: works with the same tools, and is more proactive: after one form it ran every remaining step (3 linked documents, 36s). It's about 2× the cost of gpt-oss ($0.011 vs ~$0.006 for the same flow) and 3-6× slower per action (7-36s), with 0% cache hits on the first turn. It skipped `propose_redo` on a cuisine change (patched everything with `quick_edit` instead) and claimed a retitle that `quick_edit` can't do. It was made the default afterwards, with the hardening below.
+- **Hardening from real runs** (any model may break the tool schema; the server repairs or rejects instead of trusting it):
+  - `runTool` never throws: a failing tool returns `{ ok: false, error }` to the model so it can retry, instead of ending the run. `coerceArgs` decodes arrays/objects sent as JSON strings.
+  - `create_form` passes fields through `normalizeFormSpec` (`#lib/forms.ts`): missing labels come from the name, unknown types become `text`, choice fields without options are downgraded, unnamed/duplicate fields dropped (GLM omitted a required `label`).
+  - Lineage fallback: if `create_artifact` has no `depends_on`, it links to the run's `sources` (the form submitted/artifact edited that started the run, plus anything `read_artifact` returned). GLM omitted `depends_on`, so edits marked nothing stale.
+  - The `[Edit]` message itself carries the SMALL/LARGE rule (the newest message outweighs the system prompt); with it GLM proposes redos for cuisine/location changes and patches times/budgets.
+  - `estimateRedo` uses the costliest non-user version (the real generation), not the latest cheap `quick_edit` patch.
+  - `quick_edit` and `update_artifact` both take an optional `title`.
+  - The run endpoint validates bodies (400 for invalid JSON, missing `artifactId`/`callId`, unknown `type`).
+  - The system prompt's first line `Reasoning: medium` is gpt-oss syntax; other models ignore it.
 - **Layout**: below `xl` the process/artifact panel overlays the chat and starts closed; below `md` the sidebar is hidden.
 - **Status (2026-10-17)**: verified end to end with the mock agent and the real Crusoe agent: goal → plan + inline form → submit → brief → small edit patched by a sub-agent; large edit → proposal → approve (redo) or decline (stays stale); version diffs; library search. Both default model IDs are confirmed against `/v1/models`.
 

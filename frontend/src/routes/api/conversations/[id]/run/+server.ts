@@ -21,18 +21,31 @@ export async function POST({ params, request }) {
 	if (!(await getConversation(cid))) error(404, 'Not found');
 	if (isRunning(cid)) error(409, 'The agent is already working in this conversation');
 
-	const body = (await request.json()) as Body;
+	const body = (await request.json().catch(() => null)) as Body | null;
+	if (!body || typeof body !== 'object') error(400, 'Body must be a JSON object');
 	let input: { content: string; meta?: MessageMeta };
 	try {
+		if (
+			body.type !== 'message' &&
+			body.type !== 'proposal_reply' &&
+			typeof body.artifactId !== 'string'
+		) {
+			error(400, 'artifactId is required');
+		}
 		if (body.type === 'message') {
 			if (!body.content?.trim()) error(400, 'Empty message');
 			input = { content: body.content.trim() };
 		} else if (body.type === 'form_submit') {
 			input = await submitForm(cid, body.artifactId, body.values);
 		} else if (body.type === 'proposal_reply') {
+			if (typeof body.callId !== 'string' || typeof body.approved !== 'boolean') {
+				error(400, 'callId and approved are required');
+			}
 			input = await replyToProposal(cid, body.callId, body.approved);
-		} else {
+		} else if (body.type === 'artifact_edit') {
 			input = await editArtifact(cid, body.artifactId, body);
+		} else {
+			error(400, 'Unknown type');
 		}
 	} catch (err) {
 		if ((err as { status?: number }).status) throw err;

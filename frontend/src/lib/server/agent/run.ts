@@ -35,6 +35,11 @@ export async function runAgent(
 	const llm = hasApiKey() ? chat : mockChat;
 	let pendingCalls: string[] = [];
 	let checks = 0;
+	const sources = new Set<string>(
+		input.meta?.kind === 'form_submit' || input.meta?.kind === 'artifact_edit'
+			? [input.meta.artifactId]
+			: []
+	);
 
 	try {
 		const conversation = await store.getConversation(conversationId);
@@ -110,7 +115,7 @@ export async function runAgent(
 			// Tools run in call order (a form may reference a step set_plan just created), except
 			// that consecutive quick_edit sub-agents run in parallel. Results are appended in call
 			// order, right after the assistant message (skill §7.3).
-			const ctx = { conversationId, model, usage: share, signal, emit };
+			const ctx = { conversationId, model, usage: share, signal, emit, sources };
 			const outputs: ToolOutput[] = [];
 			for (let i = 0; i < result.toolCalls.length;) {
 				let j = i + 1;

@@ -351,7 +351,11 @@ export async function estimateRedo(conversationId: string, ids: string[]) {
 		const a = await getArtifact(conversationId, id);
 		if (!a) continue;
 		const versions = await listVersions(id);
-		const produced = versions.find((v) => v.author !== 'user') ?? a.versionInfo;
+		// A full redo costs about what the most expensive generation did, not the last cheap patch.
+		const made = versions.filter((v) => v.author !== 'user');
+		const produced = made.length
+			? made.reduce((m, v) => (v.costUsd > m.costUsd ? v : m))
+			: a.versionInfo;
 		items.push({
 			id,
 			title: a.title,

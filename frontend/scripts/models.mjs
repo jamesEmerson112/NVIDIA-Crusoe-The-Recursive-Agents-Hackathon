@@ -8,7 +8,7 @@ const root = fileURLToPath(new URL('..', import.meta.url));
 const env = loadEnv('development', root, '');
 const key = env.CRUSOE_API_KEY;
 const configured = {
-	CRUSOE_AGENT_MODEL: env.CRUSOE_AGENT_MODEL || 'openai/gpt-oss-120b',
+	CRUSOE_AGENT_MODEL: env.CRUSOE_AGENT_MODEL || 'zai-org/GLM-5.3-Flash',
 	CRUSOE_FAST_MODEL: env.CRUSOE_FAST_MODEL || 'deepseek-ai/Deepseek-V4-Flash'
 };
 

@@ -13,7 +13,8 @@ export async function runQuickEdit(
 	conversationId: string,
 	artifactId: string,
 	instruction: string,
-	signal?: AbortSignal
+	signal?: AbortSignal,
+	title?: string
 ) {
 	const artifact = await store.getArtifact(conversationId, artifactId);
 	if (!artifact) throw new Error(`No artifact ${artifactId}`);
@@ -46,10 +47,16 @@ export async function runQuickEdit(
 	if (!content) throw new Error(`Empty output (finish_reason ${result.finishReason})`);
 
 	await store.recordUsage(conversationId, model, 'subagent', result.usage);
+	if (title && title !== artifact.title) await store.renameArtifact(artifactId, title);
 	const { version } = await store.addVersion(
 		conversationId,
 		artifactId,
-		{ content, note: `Sub-agent: ${instruction}` },
+		{
+			content,
+			note:
+				`Sub-agent: ${instruction}` +
+				(title && title !== artifact.title ? ` (renamed from "${artifact.title}")` : '')
+		},
 		{
 			author: 'subagent',
 			model,

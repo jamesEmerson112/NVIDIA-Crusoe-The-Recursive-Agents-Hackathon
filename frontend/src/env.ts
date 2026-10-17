@@ -13,7 +13,7 @@ export const variables = defineEnvVars({
 	CRUSOE_AGENT_MODEL: {
 		description:
 			'Model for the main agent loop. Must support tools; copy the id from GET /v1/models.',
-		schema: (value) => value || 'openai/gpt-oss-120b'
+		schema: (value) => value || 'zai-org/GLM-5.3-Flash'
 	},
 	CRUSOE_FAST_MODEL: {
 		description: 'Cheap model for quick artifact edits run as sub-agents.',

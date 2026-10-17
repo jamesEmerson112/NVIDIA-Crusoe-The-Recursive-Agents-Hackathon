@@ -81,7 +81,11 @@ export async function editArtifact(
 		...staleLines,
 		...(staleIds.length
 			? [
-					`Redo estimate if all are regenerated: ~${money(estimate.costUsd)}, ~${secs(estimate.durationMs)}.`
+					`Redo estimate if all are regenerated: ~${money(estimate.costUsd)}, ~${secs(estimate.durationMs)}.`,
+					'',
+					'Before calling any other tool, decide whether this is SMALL or LARGE and say which in one short sentence:',
+					'- SMALL: the stale artifacts keep their subject and structure; only some values or wording change (a number, a date, a name, tone). Patch them with quick_edit, or mark_fresh the unaffected ones.',
+					'- LARGE: the change alters what an artifact is about or invalidates its research or recommendations (e.g. a different cuisine, audience, goal, product or location), or would need a new title. Call propose_redo and stop; do not edit anything until I approve.'
 				]
 			: [])
 	].join('\n');
