@@ -72,3 +72,4 @@ You can also put it in a `.env` file, which is gitignored. Never commit the key 
 
 - `CLAUDE.md`, `.claude/skills/` and `.claude/settings.json` are committed, so every collaborator's agent gets the same instructions, skills and permission allowlist. The allowlist covers only safe commands: install from the lockfile, build, type-check, test, lint and read-only git.
 - Put personal settings in `.claude/settings.local.json`, which is gitignored.
+- Each of us edits `CLAUDE.md` on our own branch, so the copies drift. A SessionStart hook (`.claude/hooks/main-drift.mjs`) fetches `origin/main` when a Claude session starts and warns if main has `CLAUDE.md` or `.claude/` changes your checkout lacks. When you see it, pull main or rebase onto it. Docs and the code they describe sync when the branch merges into main, so merge small and often.
