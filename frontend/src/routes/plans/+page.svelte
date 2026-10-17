@@ -132,6 +132,12 @@
 				>
 			{/each}
 		</div>
+		<a
+			data-testid="plans-photo-link"
+			href="/plans/photo?{listing ? `listing=${listing}` : `plan=${planId}`}"
+			class="rounded-lg border border-zinc-300 px-3 py-1 text-sm hover:bg-zinc-100 dark:border-zinc-700 dark:hover:bg-zinc-800"
+			title="Path-traced photo mode (prototype)">Photo mode</a
+		>
 		<button
 			data-testid="plans-debug-toggle"
 			class="rounded-lg border border-zinc-300 px-3 py-1 text-sm dark:border-zinc-700 {debug
