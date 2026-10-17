@@ -59,5 +59,9 @@
 	"allowScripts": {
 		"esbuild": false,
 		"fsevents": false
+	},
+	"dependencies": {
+		"dompurify": "^3.4.17",
+		"marked": "^18.1.1"
 	}
 }

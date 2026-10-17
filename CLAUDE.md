@@ -12,6 +12,21 @@ SvelteKit 3 + Svelte 5 (runes mode forced in `vite.config.ts`), TypeScript, Tail
 
 Persistence is SQLite through Node's built-in `node:sqlite` with Drizzle ORM (schema in `src/lib/server/db/schema.ts`, database path from `DATABASE_URL` in `frontend/.env`, default `local.db`). `drizzle-orm` and `drizzle-kit` are pinned to `1.0.0-rc.4`: the `node-sqlite` driver doesn't exist in stable 0.45, and 1.0 takes `drizzle({ client })`, not `drizzle(client, { schema })`. Using `node:sqlite` avoids native builds, so install scripts can stay blocked.
 
+Imports through `#lib/...` (Node subpath imports in `package.json`) need the file extension: `#lib/types.ts`, not `#lib/types`.
+
+Env vars are declared in `src/env.ts` (`defineEnvVars`) and read from `$app/env/private`: `DATABASE_URL`, `CRUSOE_API_KEY` (optional: unset runs the scripted mock agent in `agent/mock.ts`, so the UI works offline), `CRUSOE_AGENT_MODEL` (default `openai/gpt-oss-120b`), `CRUSOE_FAST_MODEL` (default `deepseek-ai/Deepseek-V4-Flash`).
+
+## Product: Workbench (in progress)
+
+A ChatGPT-desktop-style chat where the agent also builds a **process**: a numbered plan of steps plus typed, versioned **artifacts** (forms, markdown documents, sandboxed HTML) with lineage. Users come back later and click artifacts to recall details; editing an earlier form marks everything built from it stale, and the agent either patches cheaply with parallel sub-agents or asks before an expensive redo.
+
+- **Schema** (`src/lib/server/db/schema.ts`): `conversations`; `messages` (OpenAI chat format, append-only for prefix caching; `meta` is UI-only and never sent to the model; `meta.kind = 'error'` rows are filtered out of history); `steps`; `artifacts` + `artifact_versions` (every change is a version; `data` holds form answers; each version records cost and duration of the work that produced it); `artifact_deps` (upstream → downstream lineage); `usage` (one row per model call).
+- **Data access**: `src/lib/server/store.ts`, including `downstreamOf` (transitive stale set) and `estimateRedo` (sums the cost/duration of the last non-user version of each stale artifact).
+- **Crusoe client** (`src/lib/server/crusoe.ts`): streaming fetch, jittered backoff on 429/503 before the first byte, per-model throttle on `x-ratelimit-remaining-requests`, reads `reasoning_content`/`reasoning`, price table for cost.
+- **Agent** (`src/lib/server/agent/`): `prompt.ts` (stable system prompt; edit-policy rules), `tools.ts` (`set_plan`, `update_step`, `create_form`, `create_artifact`, `update_artifact`, `read_artifact`, `quick_edit`, `mark_fresh`; schema order is part of the cached prefix), `run.ts` (loop, max 12 turns, one run per conversation, tool calls run concurrently and results are appended in call order), `subagent.ts` (`quick_edit` on the fast model), `edits.ts` (form submit / user edit → `[Form submitted]` / `[Edit]` messages with diff, stale list and redo estimate).
+- **API**: `POST /api/conversations`; `GET|DELETE /api/conversations/[id]`; `POST /api/conversations/[id]/run` (body `message` | `form_submit` | `artifact_edit`; streams NDJSON `RunEvent`s from `#lib/types.ts`); `POST /api/conversations/[id]/cancel`.
+- **UI** (being built): `src/lib/client/run.svelte.ts` holds live run state and invalidates `app:conversation` / `app:conversations` on `changed`; components in `src/lib/components/`. HTML artifacts render in an iframe with `sandbox="allow-scripts"` and no same-origin; markdown is sanitized with DOMPurify in the browser.
+
 ## Environment and commands
 
 This is a team repo, and collaborators work through their own Claude agents, so everyone must run identical tooling:
@@ -30,7 +45,7 @@ Commands, from `frontend/`:
 - `npm run check`: svelte-check type checking
 - `npm test`: all unit tests once; `npm test -- src/lib/foo.spec.ts` for one file
 - `npm run lint` / `npm run format`: Prettier check / write
-- `npm run db:push`: apply `schema.ts` to the local database (`db:generate` / `db:migrate` for migrations, `db:studio` to browse)
+- `npm run db:push`: apply `schema.ts` to the local database (run it after pulling schema changes) (`db:generate` / `db:migrate` for migrations, `db:studio` to browse)
 
 ## Source of truth: the `crusoe-recursive-agents-hackathon` skill
 
