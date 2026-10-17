@@ -38,7 +38,7 @@ A ChatGPT-desktop-style chat where the agent also builds a **process**: a number
 - **Mock agent** (`agent/mock.ts`) stands in for the model's judgment: editing `goal` or `audience` triggers `propose_redo`, other fields a `quick_edit`. Its tool call ids are random so proposal replies stay unique across restarts.
 - **Real agent (gpt-oss-120b) behavior seen 2026-10-17**: calls one tool per turn (so ~3-7 model calls per user action, ~4-6s), follows the edit policy (small edit → parallel `quick_edit`s on V4 Flash; changed cuisine → `propose_redo`), 58-78% prompt-cache hits, about $0.001-0.002 per user action. It has no web access and will invent venues/phone numbers unless told; the prompt now requires labeling real-world specifics as unverified.
 - **Layout**: below `xl` the process/artifact panel overlays the chat and starts closed; below `md` the sidebar is hidden.
-- **Status (2026-10-17)**: verified end to end with the mock agent and the real Crusoe agent: goal → plan + inline form → submit → brief → small edit patched by a sub-agent; large edit → proposal → approve (redo) or decline (stays stale); version diffs; library search. Not yet run against the real Crusoe API (no key in this environment); model IDs `openai/gpt-oss-120b` and `deepseek-ai/Deepseek-V4-Flash` are confirmed in the skill doc but not yet against `/v1/models`.
+- **Status (2026-10-17)**: verified end to end with the mock agent and the real Crusoe agent: goal → plan + inline form → submit → brief → small edit patched by a sub-agent; large edit → proposal → approve (redo) or decline (stays stale); version diffs; library search. Both default model IDs are confirmed against `/v1/models`.
 
 ## Environment and commands
 
