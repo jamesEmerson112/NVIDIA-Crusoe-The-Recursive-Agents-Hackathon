@@ -1,17 +1,13 @@
 import type { FieldType, FormField, FormSpec } from '#lib/types.ts';
 
-const TYPES: FieldType[] = [
-	'text',
-	'textarea',
-	'number',
-	'email',
-	'date',
-	'select',
-	'radio',
-	'checkbox',
-	'checkboxes'
-];
-const CHOICE: FieldType[] = ['select', 'radio', 'checkboxes'];
+/** Answers are stored as text; older forms may hold booleans or lists. */
+export function answerText(v: unknown): string {
+	if (v === undefined || v === null) return '';
+	if (Array.isArray(v)) return v.map(String).join(', ');
+	if (v === true) return 'Yes';
+	if (v === false) return 'No';
+	return String(v);
+}
 
 const humanize = (name: string) => {
 	const words = name
@@ -39,23 +35,33 @@ export function normalizeFormSpec(input: {
 		if (!name || seen.has(name)) continue;
 		seen.add(name);
 
-		let type: FieldType = TYPES.includes(f.type as FieldType) ? (f.type as FieldType) : 'text';
-		const options = Array.isArray(f.options)
-			? f.options
-					.filter((o): o is string | number => typeof o === 'string' || typeof o === 'number')
-					.map(String)
-			: undefined;
-		if (CHOICE.includes(type) && !options?.length)
-			type = type === 'checkboxes' ? 'textarea' : 'text';
+		// Everything is free text now. Choice types keep their options as suggestion chips;
+		// yes/no becomes Yes / No suggestions; checkboxes allow several suggestions at once.
+		const legacy = typeof f.type === 'string' ? f.type : 'text';
+		const type: FieldType = legacy === 'textarea' ? 'textarea' : 'text';
+		let options = Array.isArray(f.options)
+			? [
+					...new Set(
+						f.options
+							.filter((o) => typeof o === 'string' || typeof o === 'number')
+							.map(String)
+							.map((o) => o.trim())
+							.filter(Boolean)
+					)
+				]
+			: [];
+		if (legacy === 'checkbox' && !options.length) options = ['Yes', 'No'];
+		const multiple = f.multiple === true || legacy === 'checkboxes';
 
 		fields.push({
 			name,
 			label: typeof f.label === 'string' && f.label.trim() ? f.label.trim() : humanize(name),
 			type,
-			...(CHOICE.includes(type) ? { options } : {}),
+			...(options.length ? { options } : {}),
+			...(multiple && options.length ? { multiple: true } : {}),
 			...(typeof f.placeholder === 'string' ? { placeholder: f.placeholder } : {}),
 			...(typeof f.help === 'string' ? { help: f.help } : {}),
-			...(f.default !== undefined ? { default: f.default } : {})
+			...(f.default !== undefined && f.default !== null ? { default: answerText(f.default) } : {})
 		});
 	}
 	return {

@@ -109,7 +109,8 @@ export async function cancelRun(cid: string) {
 export async function saveQuestions(
 	cid: string,
 	artifactId: string,
-	spec: import('#lib/types.ts').FormSpec
+	spec: import('#lib/types.ts').FormSpec,
+	{ refresh = true } = {}
 ) {
 	const res = await fetch(`/api/conversations/${cid}/artifacts/${artifactId}`, {
 		method: 'PUT',
@@ -118,5 +119,5 @@ export async function saveQuestions(
 	});
 	if (!res.ok)
 		throw new Error((await res.json().catch(() => null))?.message ?? `Save failed (${res.status})`);
-	await invalidate('app:conversation');
+	if (refresh) await invalidate('app:conversation');
 }

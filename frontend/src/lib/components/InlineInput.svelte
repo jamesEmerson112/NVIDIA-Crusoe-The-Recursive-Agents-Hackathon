@@ -3,7 +3,6 @@
 	import type { ConversationState } from '#lib/server/store.ts';
 	import type { FormSpec, WidgetSpec } from '#lib/types.ts';
 	import FormView from './FormView.svelte';
-	import QuestionEditor from './QuestionEditor.svelte';
 	import StatusBadge from './StatusBadge.svelte';
 	import Widget from './Widget.svelte';
 
@@ -13,18 +12,17 @@
 		artifact: a,
 		cid,
 		busy,
-		run,
-		onopen
+		run
 	}: {
 		/** A form or widget, embedded in the chat where the agent asked for it. */
 		artifact: Artifact;
 		cid: string;
 		busy: boolean;
 		run: (body: RunBody) => void;
-		onopen: () => void;
 	} = $props();
 
-	let mode = $state<'view' | 'answers' | 'questions'>('view');
+	/** 'edit' makes an answered form's questions and answers editable together. */
+	let mode = $state<'view' | 'edit'>('view');
 	let error = $state('');
 
 	const v = $derived(a.versions.find((x) => x.version === a.currentVersion) ?? a.versions[0]);
@@ -32,24 +30,27 @@
 	const form = $derived(a.kind === 'form' ? (JSON.parse(v.content) as FormSpec) : null);
 	const widget = $derived(a.kind === 'widget' ? (JSON.parse(v.content) as WidgetSpec) : null);
 
-	// Answers go through form_submit either way; for an answered artifact the server turns it into an edit.
-	function submit(values: Record<string, unknown>) {
-		mode = 'view';
-		run({ type: 'form_submit', artifactId: a.id, values });
+	// Question edits on an unanswered form save as they happen (no agent run). Submitting waits
+	// for any save still in flight so the agent sees the final questions.
+	let saving: Promise<unknown> = Promise.resolve();
+	function saveSpec(spec: FormSpec) {
+		error = '';
+		saving = saveQuestions(cid, a.id, spec, { refresh: false }).catch((err) => {
+			error = (err as Error).message;
+		});
 	}
 
-	async function saveSpec(spec: FormSpec) {
-		error = '';
+	async function submit(values: Record<string, unknown>, spec?: FormSpec) {
 		if (pending) {
-			try {
-				await saveQuestions(cid, a.id, spec);
-				mode = 'view';
-			} catch (err) {
-				error = (err as Error).message;
-			}
-		} else {
+			await saving;
+			run({ type: 'form_submit', artifactId: a.id, values });
+		} else if (spec) {
 			mode = 'view';
-			run({ type: 'artifact_edit', artifactId: a.id, spec });
+			run({ type: 'artifact_edit', artifactId: a.id, values, spec });
+		} else {
+			// Answers only: on an answered artifact the server turns this into an edit.
+			mode = 'view';
+			run({ type: 'form_submit', artifactId: a.id, values });
 		}
 	}
 
@@ -77,43 +78,26 @@
 		{#if mode === 'view'}
 			{#if !pending}
 				<button
-					data-testid="inline-input-edit-answers"
+					data-testid="inline-input-edit"
 					class={link}
 					disabled={busy}
-					onclick={() => (mode = 'answers')}
+					onclick={() => (mode = 'edit')}
 				>
-					{a.kind === 'widget' ? 'Change' : 'Edit answers'}
+					{a.kind === 'widget' ? 'Change' : 'Edit'}
 				</button>
 			{/if}
-			{#if form}
-				<button
-					data-testid="inline-input-edit-questions"
-					class={link}
-					disabled={busy}
-					onclick={() => ((error = ''), (mode = 'questions'))}
-				>
-					Edit questions
-				</button>
-			{/if}
-			<button data-testid="inline-input-open" class={link} onclick={onopen}>Open</button>
 		{/if}
 	</div>
 
 	{#key `${v.id}-${mode}`}
-		{#if form && mode === 'questions'}
-			<QuestionEditor
-				spec={form}
-				saveLabel={pending ? 'Save questions' : 'Save and tell the agent'}
-				disabled={busy}
-				onsave={saveSpec}
-				oncancel={() => (mode = 'view')}
-			/>
-		{:else if form}
+		{#if form}
 			<FormView
 				spec={form}
 				values={v.data}
+				editQuestions={pending || mode === 'edit'}
 				submitLabel={pending ? (form.submitLabel ?? 'Submit') : 'Save and tell the agent'}
-				disabled={busy || (!pending && mode !== 'answers')}
+				disabled={busy || (!pending && mode !== 'edit')}
+				onspec={pending ? saveSpec : undefined}
 				onsubmit={submit}
 				oncancel={pending ? undefined : () => (mode = 'view')}
 			/>
@@ -122,17 +106,15 @@
 				spec={widget}
 				title={a.title}
 				initial={v.data}
-				live={!busy && (pending || mode === 'answers')}
-				onsubmit={submit}
+				live={!busy && (pending || mode === 'edit')}
+				onsubmit={(values) => submit(values)}
 			/>
-			{#if mode === 'answers'}
+			{#if mode === 'edit'}
 				<button
 					data-testid="inline-input-cancel"
 					class="mt-2 text-xs text-zinc-500 hover:text-zinc-800 dark:hover:text-zinc-200"
-					onclick={() => (mode = 'view')}
+					onclick={() => (mode = 'view')}>Cancel</button
 				>
-					Cancel
-				</button>
 			{/if}
 		{/if}
 	{/key}

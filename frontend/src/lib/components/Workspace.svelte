@@ -199,7 +199,7 @@
 					{:else if m.role === 'tool' && meta?.kind === 'artifact'}
 						{@const a = byId.get(meta.artifactId)}
 						{#if a && inlineInputs.has(m.id)}
-							<InlineInput artifact={a} {cid} {busy} {run} onopen={() => open(a.id)} />
+							<InlineInput artifact={a} {cid} {busy} {run} />
 						{:else if a}
 							<ArtifactCard
 								artifact={a}

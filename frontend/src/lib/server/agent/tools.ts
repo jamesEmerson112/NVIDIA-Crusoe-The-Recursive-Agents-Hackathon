@@ -83,7 +83,11 @@ export const TOOL_SCHEMAS: ToolSchema[] = [
 				properties: {
 					title: { type: 'string' },
 					step: { type: 'integer', description: 'Step number this form belongs to.' },
-					description: { type: 'string' },
+					description: {
+						type: 'string',
+						description:
+							'Usually omit. One short line only if it tells the user something the questions do not. Never say that questions are optional.'
+					},
 					fields: {
 						type: 'array',
 						items: {
@@ -93,21 +97,26 @@ export const TOOL_SCHEMAS: ToolSchema[] = [
 								label: { type: 'string' },
 								type: {
 									type: 'string',
-									enum: [
-										'text',
-										'textarea',
-										'number',
-										'email',
-										'date',
-										'select',
-										'radio',
-										'checkbox',
-										'checkboxes'
-									]
+									enum: ['text', 'textarea'],
+									description: 'Every answer is free text. textarea for longer answers.'
 								},
-								options: { type: 'array', items: { type: 'string' } },
+								options: {
+									type: 'array',
+									items: { type: 'string' },
+									description:
+										'Suggested answers, shown as one-click chips. The user can always type something else (e.g. "not sure").'
+								},
+								multiple: {
+									type: 'boolean',
+									description:
+										'Chips toggle into a comma-separated list instead of replacing the answer.'
+								},
 								placeholder: { type: 'string' },
-								help: { type: 'string' },
+								help: {
+									type: 'string',
+									description:
+										'Rarely needed; only when the question is ambiguous. Prefer placeholder examples.'
+								},
 								default: {}
 							},
 							required: ['name', 'label', 'type']

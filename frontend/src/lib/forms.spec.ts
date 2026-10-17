@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { diffSpecs, fieldName, normalizeFormSpec } from './forms';
+import { answerText, diffSpecs, fieldName, normalizeFormSpec } from './forms';
 
 describe('normalizeFormSpec', () => {
 	it('derives a missing label from the field name', () => {
@@ -7,17 +7,26 @@ describe('normalizeFormSpec', () => {
 		expect(spec.fields[0].label).toBe('Location preference');
 	});
 
-	it('repairs unknown types and choice fields without options', () => {
+	it('turns every legacy type into free text, keeping choices as suggestions', () => {
 		const spec = normalizeFormSpec({
 			fields: [
 				{ name: 'a', label: 'A', type: 'slider' },
-				{ name: 'b', label: 'B', type: 'select' },
-				{ name: 'c', label: 'C', type: 'checkboxes', options: [] },
-				{ name: 'd', label: 'D', type: 'radio', options: ['x', 2, null] }
+				{ name: 'b', label: 'B', type: 'select', options: ['x', 2, null] },
+				{ name: 'c', label: 'C', type: 'checkboxes', options: ['p', 'q'] },
+				{ name: 'd', label: 'D', type: 'checkbox' },
+				{ name: 'e', label: 'E', type: 'textarea' },
+				{ name: 'f', label: 'F', type: 'date', default: false }
 			]
 		});
-		expect(spec.fields.map((f) => f.type)).toEqual(['text', 'text', 'textarea', 'radio']);
-		expect(spec.fields[3].options).toEqual(['x', '2']);
+		expect(spec.fields.map((f) => [f.type, f.options, f.multiple])).toEqual([
+			['text', undefined, undefined],
+			['text', ['x', '2'], undefined],
+			['text', ['p', 'q'], true],
+			['text', ['Yes', 'No'], undefined],
+			['textarea', undefined, undefined],
+			['text', undefined, undefined]
+		]);
+		expect(spec.fields[5].default).toBe('No');
 	});
 
 	it('drops unnamed and duplicate fields', () => {
@@ -46,7 +55,7 @@ describe('diffSpecs', () => {
 	const base = {
 		fields: [
 			{ name: 'time', label: 'Time', type: 'text' as const },
-			{ name: 'vibe', label: 'Vibe', type: 'radio' as const, options: ['Quiet', 'Lively'] }
+			{ name: 'vibe', label: 'Vibe', type: 'text' as const, options: ['Quiet', 'Lively'] }
 		]
 	};
 
@@ -54,12 +63,12 @@ describe('diffSpecs', () => {
 		const after = {
 			fields: [
 				{ name: 'time', label: 'Dinner time', type: 'text' as const },
-				{ name: 'parking', label: 'Parking?', type: 'checkbox' as const }
+				{ name: 'parking', label: 'Parking?', type: 'textarea' as const }
 			]
 		};
 		expect(diffSpecs(base, after)).toEqual([
 			'- reworded "Time" → "Dinner time" (time)',
-			'- added question "Parking?" (parking, checkbox)',
+			'- added question "Parking?" (parking, textarea)',
 			'- removed question "Vibe" (vibe)'
 		]);
 		const opts = {
@@ -75,5 +84,17 @@ describe('diffSpecs', () => {
 		expect(diffSpecs(base, { fields: [base.fields[1], base.fields[0]] })).toEqual([
 			'- questions reordered'
 		]);
+	});
+});
+
+describe('answerText', () => {
+	it('renders legacy answers as text', () => {
+		expect([
+			answerText(['a', 'b']),
+			answerText(true),
+			answerText(false),
+			answerText(null),
+			answerText(3)
+		]).toEqual(['a, b', 'Yes', 'No', '', '3']);
 	});
 });

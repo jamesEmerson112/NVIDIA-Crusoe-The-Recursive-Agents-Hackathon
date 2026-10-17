@@ -28,22 +28,19 @@ export type MessageMeta =
 	| { kind: 'check'; problems: string[] }
 	| { kind: 'error' };
 
-export type FieldType =
-	| 'text'
-	| 'textarea'
-	| 'number'
-	| 'email'
-	| 'date'
-	| 'select'
-	| 'radio'
-	| 'checkbox'
-	| 'checkboxes';
+/**
+ * Every answer is free text, so "idk" or "flexible" always fits. `options` are suggestions shown as
+ * one-click chips; with `multiple`, chips toggle in a comma-separated list. Older specs used more
+ * types (select, radio, date, …); `normalizeFormSpec` converts them.
+ */
+export type FieldType = 'text' | 'textarea';
 
 export interface FormField {
 	name: string;
 	label: string;
 	type: FieldType;
 	options?: string[];
+	multiple?: boolean;
 	placeholder?: string;
 	help?: string;
 	default?: unknown;
