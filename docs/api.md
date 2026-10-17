@@ -2,7 +2,7 @@
 
 The contract between the frontend (Svelte components) and the backend (SvelteKit server code in `frontend/src/lib/server/`). Generated from the code and kept current by the 10-minute API-sync job; if this file and the code disagree, the code wins.
 
-Last synced: `4bca1a6` (2026-10-17 15:32).
+Last synced: `471bfca` (2026-10-17 15:39).
 
 `<-- Name` marks parts a teammate added or changed in the last hour (usually Gaelan, backend), so the frontend knows what is still moving. The sync job adds and expires these arrows.
 
