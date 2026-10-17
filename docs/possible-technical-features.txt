@@ -1,0 +1,113 @@
+POSSIBLE TECHNICAL FEATURES
+- Hackathon day, 2026-10-17; submission 5:00 PM
+- Product: generic "help me solve this" agent platform
+  - Chat plus agent-built forms, plans, artifacts
+  - Demo story: "find me a home" in SF
+- Effort: S under 30 min
+  - M 30 to 90 min
+  - L over 90 min
+- Kept current by the 10-minute doc-sync job
+  - Built items move to DONE at bottom
+  - "(in progress: branch)" means someone's on it
+
+
+==================== TODO ====================
+
+NOW: CUT FOR 5 PM (freeze at 4:00)
+1. [M] Research fan-out tool (spawn_research)
+   - Orchestrator starts N parallel research sub-agents
+   - One brief each: neighborhood or price band
+   - Each returns a linked document artifact
+   - The visible "spawns multiple agents" demo moment
+2. [S] Concurrency cap and model spreading
+   - At most K sub-agents at once
+   - Alternate two models; avoid 30 RPM cap
+3. [S] Live agent tree in the UI
+   - Shows status, model, cost and time
+4. [M] Rental listings tool over scraped data
+   - Speaker B's Bay Area listings in SQLite
+   - Needs the data file first
+   - Fallback: DataSF context tool below
+5. [S] Market snapshot: median rent via SQL
+6. [M] Visit list, then visit feedback form
+   - Ratings drive the next search round
+7. [S] Side-by-side comparison table of homes
+8. [S] Pre-run demo conversation, no live latency
+9. [M] Backup screen recording of full flow
+
+
+LATER: ORCHESTRATION
+- [M] Sub-agents call data tools themselves
+- [M] Verifier agent checks definition of done
+  - Scores artifacts against user's criteria
+  - Failures get sent back for one retry
+- [L] Recursive delegation with depth limit
+- [M] Budget guard per conversation
+  - Plans within cap, stops cleanly
+
+LATER: DATA
+- [S] DataSF context tool, free, no key
+  - Land use and units: c5ge-t6pj
+  - Year built and stories: wv5m-vpq2
+  - Housing production since 2005: xdht-4php
+- [S] Commute estimate from listing to work
+  - Straight-line distance; routing APIs need keys
+- [M] Cached neighborhood profiles, built by sub-agents
+
+LATER: USER PREFERENCE LOOP
+- [S] All answers optional; skips are signal
+- [M] Users can reword or delete questions
+  - Agent treats edits as preference data
+- [M] Weight sliders re-rank shortlist
+  - Plain code re-sorts, no model call
+- [S] Preference profile artifact
+  - What user wants versus what they said
+- [S] Live "options remaining" counter on forms
+
+LATER: VISUALS
+- [M] Map with listing pins
+  - Sandbox blocks network; inline or static
+- [M] Charts: rents, price versus commute
+- [L] 3D buildings or floorplan via three.js
+  - See floorplan-2d-to-3d.md, sf-buildings-3d.md
+- [L] Synthetic floorplan inside building footprint
+- [L] Energy and sun exposure per listing
+  - See building-performance-simulation.md
+
+LATER: LONG-RUNNING
+- [M] Background runs survive closed browser
+  - Server already continues after client disconnects
+- [M] Daily re-check flags new listings
+  - Demo can fake it with a button
+- [S] Resume failed runs from last step
+- [S] Real-world task list with checkboxes
+
+LATER: RELIABILITY
+- [S] Run log of every call
+- [S] Fallback model after repeated errors
+- [S] Validate tool arguments; return errors
+- [M] Eval script replays a fixed scenario
+
+LATER: SUBMISSION
+- [S] Landing page copy and one-line pitch
+- [S] Verify README setup from fresh clone
+  - Include copying .env.example to .env
+
+
+==================== DONE ====================
+
+- Agent plans and updates its own steps
+- quick_edit sub-agents patch stale artifacts
+  - Run in parallel on fast model
+- Redo approval shows cost before big changes
+- Agent-built forms embedded in chat
+- Form edits mark downstream artifacts stale
+- Markdown and sandboxed HTML artifacts
+  - Versioned, with lineage between them
+- Artifact library and version diffs
+- Everything persists in SQLite
+- Retry and throttle on rate limits
+- Usage table: cost, tokens, cache hits
+- Offline mock mode: unset CRUSOE_API_KEY
+- Verified end to end on real Crusoe
+  - 13 calls, $0.0027, 73% cache hits

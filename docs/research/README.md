@@ -1,6 +1,6 @@
 # Research
 
-Background research for the team, compiled 2026-10-17 by parallel research agents and fact-checked against primary sources. Every file labels its claims (official docs, independent benchmark, vendor claim, press, inference) and ends with its sources. Each one also has a "Fit with our stack" section tied to the Angular + three.js frontend.
+Background research for the team, compiled 2026-10-17 by parallel research agents and fact-checked against primary sources. Every file labels its claims (official docs, independent benchmark, vendor claim, press, inference) and ends with its sources. Each one also has a "Fit with our stack" section. The first five were written for the original Angular + three.js frontend; the last three target the SvelteKit Workbench app, which has no three.js yet.
 
 | File | Topic |
 |---|---|
@@ -9,6 +9,9 @@ Background research for the team, compiled 2026-10-17 by parallel research agent
 | [claude-3d-sculpting.md](claude-3d-sculpting.md) | How Claude does 3D modeling and sculpting |
 | [astra-vs-claude-for-3d.md](astra-vs-claude-for-3d.md) | Which jobs to give Astra and which to give Claude, plus a bake-off plan |
 | [sf-buildings-3d.md](sf-buildings-3d.md) | Existing San Francisco buildings in 3D with three.js |
+| [floorplan-datasets-formats.md](floorplan-datasets-formats.md) | Open floorplan datasets, their licenses, exchange formats, and whether real SF floorplans are obtainable |
+| [floorplan-2d-to-3d.md](floorplan-2d-to-3d.md) | Turning a floorplan into walls, doors and rooms in three.js, and synthetic interiors inside SF footprints |
+| [building-performance-simulation.md](building-performance-simulation.md) | Energy, daylight and thermal comfort simulation for SF buildings |
 
 ## Summaries
 
@@ -30,3 +33,9 @@ Agents read and write the same files through tool functions. Browser-only storag
 - **Run the bake-off** in that file before committing to a split.
 
 **SF buildings in 3D.** The base layer is DataSF Building Footprints (`ynuv-fyni`): public domain, 177,023 buildings, each with a LiDAR height and a parcel number that joins to land use (unit counts) and assessor data (year built). Preprocess once into a roughly 10 MB binary. In the browser, extrude in a Web Worker into chunked meshes, color by housing attributes, and pick buildings by raycasting. The data's weakness is age: heights come from a 2010 model, so newer towers are missing or too short. Google's photorealistic 3D Tiles are a stretch option, needing attribution and free for 1,000 sessions a month.
+
+**Floorplan datasets and formats.** Use Swiss Dwellings v3.0.0 (Zenodo, CC BY 4.0): about 45k apartments as polygons in metres, with window sizes and precomputed sun and daylight per room. The well-known sets are non-commercial (CubiCasa5k) or gated behind applications (ZInD, RPLAN, Structured3D, 3D-FRONT). Real SF floorplans aren't practical: DBI copies need the owner's notarized consent, $152 and up to 30 days. Keep an internal JSON of levels, rooms, walls and openings in metres, and emit gbXML or HPXML only for energy runs.
+
+**Floorplan 2D to 3D.** Build walls as box segments around openings in plain three.js; a 3-story SF flat with 45 openings is about 1,600 triangles, built in about 15 ms, which beats CSG. Copy openPlan3D's plan JSON (MIT, SvelteKit + three.js, ships an LLM plan-authoring skill). In Workbench the plan is an artifact, rendered by a lazily loaded Svelte component. Interiors inside SF footprints are synthetic templates and must be labelled as such.
+
+**Building performance simulation.** EnergyPlus 26.2.0 runs headless on an M1 in 1.2–6.5 s per annual simulation, and `geomeppy` (MIT) builds a model from an SF footprint, height and story count in 0.6 s. Ground truth: SF's benchmarking data (`4ua7-5sfx`, public domain, 30,483 rows) joins to 89.5% of footprints; ResStock/ComStock medians (CC BY 4.0) cover the rest. Have the LLM pick model parameters, not write EnergyPlus files. Ladybug/honeybee is AGPL-3.0. NREL is now the National Laboratory of the Rockies (`NatLabRockies` on GitHub).
