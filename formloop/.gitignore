@@ -1,0 +1,3 @@
+# Scraped listing cache: third-party listing content, keep it out of the public repo.
+data/listings.youcom.json
+.env
