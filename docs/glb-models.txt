@@ -1,0 +1,41 @@
+AVAILABLE GLB MODELS
+- Location: frontend/static/models/ (served at /models/<file>)
+- Loaded by frontend/src/lib/floorplan/three/furniture.ts on High
+- All CC0 (public domain); credits in frontend/static/models/CREDITS.md
+- Plan "type" picks the model; each is fitted into its furniture box
+- Total: 11 files, 5.8 MB
+
+
+PHOTOREAL (Poly Haven, 1k textures)
+- sofa.glb           415.6 KB   type: sofa
+  - "Sofa 02" by Kirill Sannikov, tufted leather
+- table.glb         2228.7 KB   type: table (0.6 m or taller)
+  - "Dining Table" by Aron Lyczek
+- table-coffee.glb  1299.1 KB   type: table (under 0.6 m)
+  - "Modern Coffee Table 01" by Amin
+- wardrobe.glb      1814.1 KB   type: wardrobe
+  - "Painted Wooden Cabinet" by Kirill Sannikov
+  - Stretched to 2 m tall; looks off, replace later
+
+
+LOW-POLY (Kenney Furniture Kit 2.0, placeholders)
+- bed.glb             22.8 KB   type: bed
+- counter.glb         10.2 KB   type: counter
+  - Tiled into ~0.55 m cabinets along the run
+- fridge.glb          29.9 KB   type: fridge
+- tub.glb             34.7 KB   type: tub
+- toilet.glb          17.7 KB   type: toilet
+- sink.glb            22.0 KB   type: sink
+- washer.glb          47.0 KB   type: washer
+
+
+NO MODEL YET (renders as a box)
+- Any other plan furniture type (e.g. chair, desk, tv, plant, rug, lamp)
+- Wanted next for photoreal: chairs, TV and console, plants, rug, lamps, art
+
+
+ADDING A MODEL
+- Put <type>.glb in frontend/static/models/
+- Add its spec to SPECS in furniture.ts
+- Add source, author and licence to CREDITS.md
+- Prefer CC0 (Poly Haven, Kenney); CC-BY needs on-screen credit
