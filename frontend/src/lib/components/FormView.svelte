@@ -9,6 +9,7 @@
 		submitLabel,
 		disabled = false,
 		editQuestions = false,
+		saveWhenChanged = false,
 		onsubmit,
 		onspec,
 		oncancel
@@ -23,6 +24,11 @@
 		 * Clearing a question's text removes it.
 		 */
 		editQuestions?: boolean;
+		/**
+		 * For an answered form that stays editable: the save button (and Discard) only appear once
+		 * something actually changed.
+		 */
+		saveWhenChanged?: boolean;
 		/** Answers (all text), plus the new questions if they were edited. */
 		onsubmit: (values: Record<string, string>, spec?: FormSpec) => void;
 		/** A question edit was committed (on blur). */
@@ -37,7 +43,6 @@
 		label: string;
 		long: boolean;
 		options: string[];
-		multiple: boolean;
 		help: string;
 		placeholder?: string;
 		default?: unknown;
@@ -55,7 +60,6 @@
 			label: f.label,
 			long: f.type === 'textarea',
 			options: f.options ?? [],
-			multiple: f.multiple ?? false,
 			help: f.help ?? '',
 			placeholder: f.placeholder,
 			default: f.default
@@ -92,7 +96,6 @@
 				label: r.label.trim(),
 				type: r.long ? 'textarea' : 'text',
 				...(options.length ? { options } : {}),
-				...(options.length && r.multiple ? { multiple: true } : {}),
 				...(r.help.trim() ? { help: r.help.trim() } : {})
 			};
 		});
@@ -106,6 +109,11 @@
 	const valid = $derived(rows.length > 0 && rows.every((r) => r.label.trim()));
 	let committed = JSON.stringify(buildSpec());
 	const changed = () => JSON.stringify(buildSpec()) !== committed;
+	const initialSpec = committed;
+	const initialValues = JSON.stringify(values);
+	const dirty = $derived(
+		JSON.stringify(buildSpec()) !== initialSpec || JSON.stringify(values) !== initialValues
+	);
 
 	/** Hand finished question edits to the parent (unanswered forms save them right away). */
 	function commit() {
@@ -132,7 +140,6 @@
 			label: '',
 			long: false,
 			options: [],
-			multiple: false,
 			help: ''
 		};
 		rows.push(r);
@@ -147,16 +154,15 @@
 			.split(',')
 			.map((p) => p.trim())
 			.filter(Boolean);
-	const picked = (r: Row, o: string) =>
-		r.multiple ? parts(values[slot(r)] ?? '').includes(o) : values[slot(r)] === o;
+	const picked = (r: Row, o: string) => parts(values[slot(r)] ?? '').includes(o);
 
-	/** A suggestion chip fills the answer; with `multiple` it toggles in a comma-separated list. */
+	/**
+	 * Suggestion chips toggle in a comma-separated answer, on every field: several can be picked,
+	 * clicking a picked chip removes it, and anything typed around them is kept. (Models rarely
+	 * set a multi-pick flag reliably, so this doesn't depend on one.)
+	 */
 	function pick(r: Row, o: string) {
 		const key = slot(r);
-		if (!r.multiple) {
-			values[key] = values[key] === o ? '' : o;
-			return;
-		}
 		const current = parts(values[key] ?? '');
 		values[key] = (current.includes(o) ? current.filter((p) => p !== o) : [...current, o]).join(
 			', '
@@ -294,7 +300,7 @@
 		>
 	{/if}
 
-	{#if !disabled}
+	{#if !disabled && (!saveWhenChanged || dirty)}
 		<div class="flex items-center gap-2">
 			<button
 				data-testid="form-submit"
@@ -306,7 +312,7 @@
 					data-testid="form-cancel"
 					type="button"
 					class="rounded-lg px-4 py-2 text-sm text-zinc-600 hover:bg-zinc-100 dark:text-zinc-300 dark:hover:bg-zinc-800"
-					onclick={oncancel}>Cancel</button
+					onclick={oncancel}>{saveWhenChanged ? 'Discard' : 'Cancel'}</button
 				>
 			{/if}
 			{#if editQuestions && !valid}

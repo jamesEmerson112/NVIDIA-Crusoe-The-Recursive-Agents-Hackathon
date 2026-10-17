@@ -21,8 +21,10 @@
 		run: (body: RunBody) => void;
 	} = $props();
 
-	/** 'edit' makes an answered form's questions and answers editable together. */
+	/** Widgets only: 'edit' makes an answered widget live again. Forms are always editable. */
 	let mode = $state<'view' | 'edit'>('view');
+	/** Bumped to throw away unsaved changes in an answered form (remounts it). */
+	let reset = $state(0);
 	let error = $state('');
 
 	const v = $derived(a.versions.find((x) => x.version === a.currentVersion) ?? a.versions[0]);
@@ -45,7 +47,6 @@
 			await saving;
 			run({ type: 'form_submit', artifactId: a.id, values });
 		} else if (spec) {
-			mode = 'view';
 			run({ type: 'artifact_edit', artifactId: a.id, values, spec });
 		} else {
 			// Answers only: on an answered artifact the server turns this into an edit.
@@ -68,14 +69,14 @@
 		<h3 data-testid="inline-input-title" class="min-w-0 flex-1 truncate font-semibold">
 			{a.title}
 		</h3>
-		{#if !pending && mode === 'view'}
+		{#if !pending && (form || mode === 'view')}
 			<span
 				data-testid="inline-input-answered"
 				class="mr-1 text-xs text-emerald-700 dark:text-emerald-400">✓ Answered</span
 			>
 		{/if}
 		{#if a.status === 'stale' || a.status === 'updating'}<StatusBadge status={a.status} />{/if}
-		{#if mode === 'view'}
+		{#if widget && mode === 'view'}
 			{#if !pending}
 				<button
 					data-testid="inline-input-edit"
@@ -83,23 +84,24 @@
 					disabled={busy}
 					onclick={() => (mode = 'edit')}
 				>
-					{a.kind === 'widget' ? 'Change' : 'Edit'}
+					Change
 				</button>
 			{/if}
 		{/if}
 	</div>
 
-	{#key `${v.id}-${mode}`}
+	{#key `${v.id}-${mode}-${reset}`}
 		{#if form}
 			<FormView
 				spec={form}
 				values={v.data}
-				editQuestions={pending || mode === 'edit'}
+				editQuestions
+				saveWhenChanged={!pending}
 				submitLabel={pending ? (form.submitLabel ?? 'Submit') : 'Save and tell the agent'}
-				disabled={busy || (!pending && mode !== 'edit')}
+				disabled={busy}
 				onspec={pending ? saveSpec : undefined}
 				onsubmit={submit}
-				oncancel={pending ? undefined : () => (mode = 'view')}
+				oncancel={pending ? undefined : () => reset++}
 			/>
 		{:else if widget}
 			<Widget

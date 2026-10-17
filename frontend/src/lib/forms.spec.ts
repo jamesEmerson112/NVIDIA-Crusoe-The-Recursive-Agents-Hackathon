@@ -18,13 +18,13 @@ describe('normalizeFormSpec', () => {
 				{ name: 'f', label: 'F', type: 'date', default: false }
 			]
 		});
-		expect(spec.fields.map((f) => [f.type, f.options, f.multiple])).toEqual([
-			['text', undefined, undefined],
-			['text', ['x', '2'], undefined],
-			['text', ['p', 'q'], true],
-			['text', ['Yes', 'No'], undefined],
-			['textarea', undefined, undefined],
-			['text', undefined, undefined]
+		expect(spec.fields.map((f) => [f.type, f.options])).toEqual([
+			['text', undefined],
+			['text', ['x', '2']],
+			['text', ['p', 'q']],
+			['text', ['Yes', 'No']],
+			['textarea', undefined],
+			['text', undefined]
 		]);
 		expect(spec.fields[5].default).toBe('No');
 	});

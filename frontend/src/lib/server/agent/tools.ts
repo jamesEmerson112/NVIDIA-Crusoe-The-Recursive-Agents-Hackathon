@@ -77,7 +77,7 @@ export const TOOL_SCHEMAS: ToolSchema[] = [
 		function: {
 			name: 'create_form',
 			description:
-				'Show the user a form to collect structured input. The answers come back as a [Form submitted] message.',
+				'Show the user a compact form, inline in the chat, to collect structured input. The answers come back as a [Form submitted] message. Every answer is free text: combine related values into one field (amount with currency, a range, a date with its flexibility, yes/no with details) and put a concrete example in each placeholder.',
 			parameters: {
 				type: 'object',
 				properties: {
@@ -105,11 +105,6 @@ export const TOOL_SCHEMAS: ToolSchema[] = [
 									items: { type: 'string' },
 									description:
 										'Suggested answers, shown as one-click chips. The user can always type something else (e.g. "not sure").'
-								},
-								multiple: {
-									type: 'boolean',
-									description:
-										'Chips toggle into a comma-separated list instead of replacing the answer.'
 								},
 								placeholder: { type: 'string' },
 								help: {

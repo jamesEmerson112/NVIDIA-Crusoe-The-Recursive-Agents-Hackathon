@@ -36,7 +36,7 @@ export function normalizeFormSpec(input: {
 		seen.add(name);
 
 		// Everything is free text now. Choice types keep their options as suggestion chips;
-		// yes/no becomes Yes / No suggestions; checkboxes allow several suggestions at once.
+		// yes/no becomes Yes / No suggestions.
 		const legacy = typeof f.type === 'string' ? f.type : 'text';
 		const type: FieldType = legacy === 'textarea' ? 'textarea' : 'text';
 		let options = Array.isArray(f.options)
@@ -51,14 +51,12 @@ export function normalizeFormSpec(input: {
 				]
 			: [];
 		if (legacy === 'checkbox' && !options.length) options = ['Yes', 'No'];
-		const multiple = f.multiple === true || legacy === 'checkboxes';
 
 		fields.push({
 			name,
 			label: typeof f.label === 'string' && f.label.trim() ? f.label.trim() : humanize(name),
 			type,
 			...(options.length ? { options } : {}),
-			...(multiple && options.length ? { multiple: true } : {}),
 			...(typeof f.placeholder === 'string' ? { placeholder: f.placeholder } : {}),
 			...(typeof f.help === 'string' ? { help: f.help } : {}),
 			...(f.default !== undefined && f.default !== null ? { default: answerText(f.default) } : {})

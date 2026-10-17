@@ -29,9 +29,9 @@ export type MessageMeta =
 	| { kind: 'error' };
 
 /**
- * Every answer is free text, so "idk" or "flexible" always fits. `options` are suggestions shown as
- * one-click chips; with `multiple`, chips toggle in a comma-separated list. Older specs used more
- * types (select, radio, date, …); `normalizeFormSpec` converts them.
+ * Every answer is free text, so "idk" or "flexible" always fits. `options` are suggestion chips that
+ * toggle in a comma-separated answer. Older specs used more types (select, radio, date, …);
+ * `normalizeFormSpec` converts them.
  */
 export type FieldType = 'text' | 'textarea';
 
@@ -40,7 +40,6 @@ export interface FormField {
 	label: string;
 	type: FieldType;
 	options?: string[];
-	multiple?: boolean;
 	placeholder?: string;
 	help?: string;
 	default?: unknown;
