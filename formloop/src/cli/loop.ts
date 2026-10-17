@@ -33,7 +33,7 @@ const listings = await loadListings(cfg);
 console.log(`Form v${form.version} (${form.questions.length} questions, showing ${Math.min(cfg.questions_shown, form.questions.length)}) · ${listings.length} listings · ${offline ? 'OFFLINE rule-based renter and agent' : 'live Crusoe models'}`);
 console.log(`Renter: ${persona.name} [${persona.id}, ${persona.behavior}] ${persona.blurb}\n`);
 
-const result = await runRenter(persona, form, listings, cfg, { offline, log: console.log });
+const result = await runRenter(persona, form, listings, cfg, { offline, log: console.log, llmReactions: true });
 
 console.log(`\nFirst pick:  ${describeListing(result.firstPick)}`);
 console.log(`Final pick:  ${describeListing(result.final)}`);

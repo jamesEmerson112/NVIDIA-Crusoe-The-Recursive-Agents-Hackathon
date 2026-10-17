@@ -44,7 +44,7 @@ export async function runRenter(
 	form: Form,
 	listings: Listing[],
 	cfg: EvalConfig,
-	opts: { offline: boolean; log?: (line: string) => void }
+	opts: { offline: boolean; log?: (line: string) => void; llmReactions?: boolean }
 ): Promise<RenterResult> {
 	const log = opts.log ?? (() => {});
 	const questions = form.questions.slice(0, cfg.questions_shown);
@@ -76,7 +76,8 @@ export async function runRenter(
 				continue;
 			}
 			passed.add(r.listing_id);
-			const p = r.reason ? await prefFromReaction(r.reason, shown[i], opts) : null;
+			// Batch runs read reasons with rules (they're generated from hidden prefs) to save credits.
+			const p = r.reason ? await prefFromReaction(r.reason, shown[i], { offline: opts.offline || !opts.llmReactions }) : null;
 			if (p) added.push(p);
 		}
 		live.push(...added);
