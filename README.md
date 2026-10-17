@@ -7,7 +7,6 @@ Our entry for the Crusoe × Cerebral Valley Recursive Agents Hackathon (Oct 17, 
 | Path | What |
 |---|---|
 | `frontend/` | Angular 22 app with three.js |
-| `docs/research/` | Background research (start with `fruit-fly-brain/00-overview.md`) |
 | `.claude/skills/` | Claude Code skills, including the Crusoe inference reference |
 | `CLAUDE.md` | Instructions for Claude Code agents working in this repo |
 
