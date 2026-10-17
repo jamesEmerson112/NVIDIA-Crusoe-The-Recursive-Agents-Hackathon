@@ -216,3 +216,5 @@ Works on its own; Workbench (frontend/) can't use it yet.
 - Forms and widgets stay embedded after submit     <-- Gaelan
 - CC0 furniture models on High; textured floors    <-- James
 - 3D SF skyline behind the start page              <-- James
+- Path-traced photo mode prototype                 <-- James
+  - /plans/photo, three-gpu-pathtracer, ?cam=interior
