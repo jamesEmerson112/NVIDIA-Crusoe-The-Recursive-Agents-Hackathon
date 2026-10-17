@@ -4,6 +4,8 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Formloop</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
 <script src="/floorplan.js"></script>
 <style>
 	:root {
@@ -137,6 +139,21 @@
 	.heard .chip { cursor: default; font-size: 12.5px; }
 	.heard .chip em { font-style: normal; color: var(--faint); margin-left: 6px; font-size: 11.5px; }
 	.heard .chip.hard { border-color: var(--clay); }
+	/* Map */
+	.mapwrap { position: sticky; top: -26px; z-index: 5; margin: -26px -28px 18px; padding: 16px 28px 14px; background: var(--bg); border-bottom: 1px solid var(--line); }
+	#map { height: 230px; border-radius: 14px; border: 1px solid var(--line); background: #e9e5da; }
+	#map.nomap { display: flex; align-items: center; justify-content: center; color: var(--muted); font-size: 13px; }
+	.maprow { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 10px; gap: 10px; flex-wrap: wrap; }
+	.fitcount { font: 500 15px var(--sans); color: var(--muted); }
+	.fitcount strong { font: 600 26px/1 var(--serif); color: var(--green); margin-right: 4px; font-variant-numeric: tabular-nums; }
+	#map .leaflet-tile-pane { filter: grayscale(1) sepia(.25) brightness(1.06) contrast(.88); }
+	.leaflet-interactive { transition: fill-opacity .8s ease, fill .8s ease; }
+	.pulse { display: flex !important; align-items: center; justify-content: center; }
+	.pulse span { position: relative; width: 20px; height: 20px; border-radius: 50%; background: var(--clay); color: #fff; font: 600 11px/20px var(--sans); text-align: center; box-shadow: 0 0 0 2px #fff; }
+	.pulse span::after { content: ""; position: absolute; inset: -2px; border-radius: 50%; border: 2px solid var(--clay); animation: ring 1.6s ease-out infinite; }
+	@keyframes ring { from { transform: scale(1); opacity: .9; } to { transform: scale(2.6); opacity: 0; } }
+	.leaflet-tooltip { font: 12px var(--sans); }
+	.card.flash { box-shadow: 0 0 0 3px var(--clay); }
 	.toast { position: fixed; bottom: 22px; left: 50%; transform: translate(-50%, 10px); background: var(--green); color: #fff; padding: 10px 16px; border-radius: 999px; font-size: 13.5px; opacity: 0; transition: all .3s; pointer-events: none; }
 	.toast.show { opacity: 1; transform: translate(-50%, 0); }
 </style>
@@ -153,7 +170,7 @@
 		<div class="eyebrow" id="formEyebrow">Form</div>
 		<h2>What matters to you?</h2>
 		<p class="hint">Answer in your own words and skip anything. The more you say about something, the more it counts. Don't like a question? Click it and rewrite it, or add the one we should have asked.</p>
-		<div class="ask"><button class="btn ghost" id="ask">Ask me better questions</button><span class="count" id="askNote">The agent writes new questions from how you ranked, answered and passed.</span></div>
+		<div class="ask"><button class="btn ghost" id="ask">Ask me better questions</button><span class="count" id="askNote">The agent writes new questions from what you said, edited and passed on.</span></div>
 		<div id="questions"></div>
 		<div class="own">
 			<div class="eyebrow">Add a question we should have asked</div>
@@ -163,10 +180,14 @@
 		<div class="submit"><button class="btn" id="submit">Done, improve the form</button><span id="submitNote"></span></div>
 	</section>
 	<section class="pane" id="right">
-		<div class="matches-head">
-			<div class="eyebrow">Best matches right now</div>
-			<div class="count"><span class="working">agent re-ranking</span> <span id="count"></span></div>
+		<div class="mapwrap">
+			<div class="maprow">
+				<div class="fitcount"><strong id="fitN">300</strong>of <span id="fitTotal">300</span> homes still fit</div>
+				<div class="count"><span class="working">agent re-ranking</span> <span id="count"></span></div>
+			</div>
+			<div id="map"></div>
 		</div>
+		<div class="matches-head"><div class="eyebrow">Best matches right now</div></div>
 		<div id="saved" class="saved"></div>
 		<div id="cards"></div>
 		<div class="heard">
@@ -330,6 +351,75 @@ function card(c, i) {
 	return node;
 }
 
+// Approximate neighborhood centres; listings sit at a small fixed jitter around theirs.
+const HOODS = { 'Mission': [37.7599, -122.4148], 'SoMa': [37.7785, -122.4056], 'Hayes Valley': [37.7759, -122.4245], 'Nob Hill': [37.7930, -122.4161], 'Pacific Heights': [37.7925, -122.4382], 'Marina': [37.8030, -122.4368], 'Inner Sunset': [37.7602, -122.4689], 'Outer Sunset': [37.7553, -122.4950], 'Inner Richmond': [37.7802, -122.4645], 'Outer Richmond': [37.7775, -122.4936], 'Noe Valley': [37.7502, -122.4337], 'Castro': [37.7609, -122.4350], 'Bernal Heights': [37.7389, -122.4152], 'Potrero Hill': [37.7587, -122.3990], 'Dogpatch': [37.7577, -122.3891], 'Tenderloin': [37.7847, -122.4141], 'North Beach': [37.8061, -122.4103], 'Russian Hill': [37.8011, -122.4194], 'Lower Haight': [37.7717, -122.4310], 'Excelsior': [37.7244, -122.4272] };
+const FIT = 0.75; // "still fits": meets at least ~three quarters of the weighted preferences and no dealbreaker
+const mapState = { map: null, dots: new Map(), pulses: [], areas: [], shown: 300 };
+function hash(s) { let h = 2166136261; for (const c of s) h = Math.imul(h ^ c.charCodeAt(0), 16777619) >>> 0; return h; }
+
+async function initMap() {
+	const box = $('#map');
+	if (!window.L) { box.classList.add('nomap'); box.textContent = 'Map tiles need the network; matching still works.'; return; }
+	const map = L.map(box, { zoomControl: false, scrollWheelZoom: false, attributionControl: true }).setView([37.764, -122.443], 12);
+	L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '© OpenStreetMap contributors', maxZoom: 17 }).addTo(map);
+	const listings = await (await fetch('/api/listings')).json();
+	for (const l of listings) {
+		const [la, ln] = HOODS[l.neighborhood] || [37.764, -122.443];
+		const h = hash(l.id);
+		const lat = la + ((h % 997) / 997 - 0.5) * 0.010;
+		const lng = ln + ((Math.floor(h / 997) % 991) / 991 - 0.5) * 0.013;
+		const m = L.circleMarker([lat, lng], { radius: 4.5, weight: 0, fillColor: '#1f3a2e', fillOpacity: 0.65 }).addTo(map);
+		m.bindTooltip(`${l.title} · ${money(l.price)}`, { direction: 'top' });
+		mapState.dots.set(l.id, { m, lat, lng });
+	}
+	$('#fitTotal').textContent = listings.length;
+	const bounds = L.latLngBounds([...mapState.dots.values()].map((d) => [d.lat, d.lng]));
+	// The map is laid out after fonts and the form render; re-measure before fitting, and on resize.
+	const fit = () => { map.invalidateSize(); map.fitBounds(bounds, { padding: [14, 14] }); };
+	setTimeout(fit, 50);
+	setTimeout(fit, 600);
+	addEventListener('resize', fit);
+	mapState.map = map;
+	if (mapState.pending) updateMap(mapState.pending);
+}
+
+function tweenCount(to) {
+	const el = $('#fitN'), from = mapState.shown, t0 = performance.now();
+	mapState.shown = to;
+	const step = (t) => { const k = Math.min(1, (t - t0) / 700); el.textContent = Math.round(from + (to - from) * (1 - Math.pow(1 - k, 3))); if (k < 1) requestAnimationFrame(step); };
+	requestAnimationFrame(step);
+}
+
+function updateMap(d) {
+	let fit = 0;
+	const hasPrefs = d.prefs.length > 0;
+	for (const [id, u] of Object.entries(d.fits || {})) if (u !== null && u >= 0 && (!hasPrefs || u >= FIT)) fit++;
+	tweenCount(fit);
+	const { map, dots } = mapState;
+	if (!map) { mapState.pending = d; return; }
+	for (const [id, { m }] of dots) {
+		const u = d.fits?.[id];
+		let op = 0.65, color = '#1f3a2e';
+		if (u === null || u === undefined) { op = 0.04; color = '#b7b3a8'; }
+		else if (u < 0) { op = 0.05; color = '#b8562f'; }
+		else if (hasPrefs) { op = u >= FIT ? 0.85 : 0.06 + 0.4 * Math.max(0, (u - 0.3) / (FIT - 0.3)); }
+		m.setStyle({ fillOpacity: op, fillColor: color });
+	}
+	mapState.pulses.forEach((p) => p.remove());
+	mapState.pulses = d.top.map((c, i) => {
+		const p = dots.get(c.listing.id);
+		if (!p) return null;
+		return L.marker([p.lat, p.lng], { icon: L.divIcon({ className: 'pulse', html: `<span>${i + 1}</span>`, iconSize: [22, 22] }), zIndexOffset: 1000 })
+			.addTo(map)
+			.on('click', () => { const card = document.querySelectorAll('.card')[i]; if (card) { card.scrollIntoView({ behavior: 'smooth', block: 'center' }); card.classList.add('flash'); setTimeout(() => card.classList.remove('flash'), 1200); } });
+	}).filter(Boolean);
+	// Neighborhoods a web-grounded factor resolved to.
+	mapState.areas.forEach((a) => a.remove());
+	mapState.areas = [];
+	for (const p of d.prefs.filter((p) => p.factor && p.field === 'neighborhood' && Array.isArray(p.value)))
+		for (const h of p.value) if (HOODS[h]) mapState.areas.push(L.circle(HOODS[h], { radius: 750, color: '#b8562f', weight: 1.5, dashArray: '5 5', fillColor: '#b8562f', fillOpacity: 0.1 }).addTo(map).bindTooltip(`${p.factor.text} → ${h} (You.com)`));
+}
+
 let timer;
 function schedule(ms = 650) { clearTimeout(timer); timer = setTimeout(recommend, ms); }
 
@@ -342,9 +432,10 @@ async function recommend() {
 		if (seq !== state.seq) return;
 		if (d.error) throw new Error(d.error);
 		setMode(d.mode);
+		updateMap(d);
 		state.weights = d.weights || {};
 		document.querySelectorAll('.q').forEach((r) => { const w = state.weights[r.dataset.id]; const lab = r.querySelector('.weight'); if (lab) lab.textContent = w ? (w >= 2.5 ? 'cares a lot' : w >= 1.5 ? 'cares' : 'mild') : ''; });
-		$('#count').innerHTML = `<strong>${d.remaining}</strong> of ${d.total} homes fit your dealbreakers${d.calls ? ` · ${d.calls} model calls · $${d.cost.toFixed(4)}` : ''}`;
+		$('#count').textContent = d.calls ? `${d.calls} model calls · $${d.cost.toFixed(4)}` : '';
 		$('#cards').replaceChildren(...(d.top.length ? d.top.map(card) : [el('div', { class: 'empty' }, 'Nothing fits every dealbreaker. Loosen one on the left.')]));
 		$('#saved').replaceChildren(...d.liked.map((c) => el('span', {}, `♥ ${c.listing.neighborhood} · ${money(c.listing.price)}`)));
 		const unverified = (d.factors || []).filter((f) => f.status !== 'resolved').map((f) => el('span', { class: 'chip unverified', title: f.reason || '' }, f.text, el('em', {}, 'couldn’t verify, ignored')));
@@ -423,6 +514,7 @@ $('#submit').addEventListener('click', async () => {
 	toast('Thanks. Your answers go into the next review.');
 });
 
+initMap();
 load();
 </script>
 </body>

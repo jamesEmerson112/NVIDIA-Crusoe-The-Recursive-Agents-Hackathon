@@ -65,7 +65,7 @@ function formFor(version?: number) {
 	return { ...f, questions, extra };
 }
 
-type Body = { version?: number; answers?: Answer[]; followups?: Question[]; ranking?: string[]; reactions?: { listing_id: string; liked: boolean; reason?: string }[] };
+type Body = { offline?: boolean; version?: number; answers?: Answer[]; followups?: Question[]; ranking?: string[]; reactions?: { listing_id: string; liked: boolean; reason?: string }[] };
 
 /** Every question the page may show: the form version, extra bank fields and this visitor's follow-ups. */
 function allQuestions(body: Body): Question[] {
@@ -80,13 +80,15 @@ async function recommend(body: Body) {
 	// Rewritten questions travel with their answers, so the agent reads the renter's wording.
 	const questions = allQuestions(body);
 	const answers = (body.answers ?? []).filter((a) => questions.some((q) => q.id === a.question_id));
-	const key = JSON.stringify(answers.map((a) => [a.question_id, a.action, a.value, a.rewritten_text, a.importance]));
-	let mode: 'live' | 'offline' = live ? 'live' : 'offline';
+	// Demo mode forces rules + cache-only so every step works with the network off.
+	const useLive = live && !body.offline;
+	const key = JSON.stringify([useLive, answers.map((a) => [a.question_id, a.action, a.value, a.rewritten_text, a.importance])]);
+	let mode: 'live' | 'offline' = useLive ? 'live' : 'offline';
 	let extracted = prefCache.get(key);
 	if (!extracted) {
 		// The page may ground new factors live (cache first); YDC_CACHE_ONLY=1 keeps it offline for the demo.
 		try {
-			extracted = await extractWithFactors(questions, answers, { offline: !live, cacheOnly: ydcCacheOnly() });
+			extracted = await extractWithFactors(questions, answers, { offline: !useLive, cacheOnly: !useLive || ydcCacheOnly() });
 		} catch (e) {
 			console.warn(`extractor failed, using rules: ${(e as Error).message}`);
 			extracted = await extractWithFactors(questions, answers, { offline: true, cacheOnly: true });
@@ -107,10 +109,10 @@ async function recommend(body: Body) {
 		}
 		passed.add(l.id);
 		if (!r.reason?.trim()) continue;
-		const rk = `${l.id}|${r.reason}`;
+		const rk = `${useLive}|${l.id}|${r.reason}`;
 		if (!reactionCache.has(rk)) {
 			try {
-				reactionCache.set(rk, await prefFromReaction(r.reason, l, { offline: !live }));
+				reactionCache.set(rk, await prefFromReaction(r.reason, l, { offline: !useLive }));
 			} catch {
 				reactionCache.set(rk, await prefFromReaction(r.reason, l, { offline: true }));
 			}
@@ -132,6 +134,8 @@ async function recommend(body: Body) {
 		weights: Object.fromEntries([...new Set(prefs.map((p) => p.from).filter(Boolean) as string[])].map((id) => [id, Math.max(...prefs.filter((p) => p.from === id).map((p) => p.weight))])),
 		top: ranked.slice(0, cfg.top_k).map((l) => card(l, all)),
 		liked: liked.map((l) => card(l, all)),
+		// Fit of every listing for the map: utility 0..1, -1 = breaks a dealbreaker, null = passed/liked already.
+		fits: Object.fromEntries(listings.map((l) => [l.id, exclude.has(l.id) ? null : Number(utility(l, all).toFixed(3))])),
 		remaining,
 		total: listings.length,
 		calls: usageLog.length,
@@ -180,6 +184,8 @@ createServer(async (req, res) => {
 			const form = formFor(v ? Number(v) : undefined);
 			return send(res, 200, { ...form, mode: live ? 'live' : 'offline', listings: listings.length, top_k: cfg.top_k });
 		}
+		if (req.method === 'GET' && url.pathname === '/api/listings')
+			return send(res, 200, listings.map((l) => ({ id: l.id, neighborhood: l.neighborhood, price: l.price, bedrooms: l.bedrooms, title: l.title })));
 		if (req.method === 'POST' && url.pathname === '/api/recommend') return send(res, 200, await recommend(await readJSON(req)));
 		if (req.method === 'POST' && url.pathname === '/api/followups') {
 			const body = (await readJSON(req)) as Body;
