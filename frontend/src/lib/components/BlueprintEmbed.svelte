@@ -108,7 +108,7 @@
 		<a
 			href="/plans"
 			class="text-zinc-500 hover:text-zinc-800 hover:underline dark:hover:text-zinc-200"
-			>All blueprints</a
+			>Open in Blueprints</a
 		>
 	</div>
 </div>

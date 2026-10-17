@@ -31,6 +31,8 @@
 			const { createRoom } = await import('#lib/room-showcase/scene.ts');
 			if (cancelled) return;
 			const h = await createRoom(container, {
+				// `?ao=0` turns ambient occlusion off, for before/after comparisons.
+				ambientOcclusion: page.url.searchParams.get('ao') !== '0',
 				onProgress: (n, total) => (progress = Math.round((n / total) * 100)),
 				onReady: () => (status = 'ready'),
 				onError: (m) => {

@@ -8,6 +8,10 @@ import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { HDRLoader } from 'three/addons/loaders/HDRLoader.js';
+import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
+import { GTAOPass } from 'three/addons/postprocessing/GTAOPass.js';
+import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
+import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
 import { CAMERA_PRESETS, ROOM, presetById, type CameraPreset } from './presets.ts';
 
 const BASE = '/room';
@@ -26,6 +30,8 @@ export interface RoomOptions {
 	onProgress?(loaded: number, total: number): void;
 	onReady?(): void;
 	onError?(message: string): void;
+	/** Ambient occlusion (soft contact shadows in corners and under furniture). Default true. */
+	ambientOcclusion?: boolean;
 }
 
 interface Place {
@@ -93,9 +99,43 @@ export async function createRoom(
 		camera.aspect = w / h;
 		camera.updateProjectionMatrix();
 	};
-	const ro = new ResizeObserver(resize);
+	// Ambient occlusion: GTAO darkens creases, corners and the floor under furniture, which the
+	// shadow-mapped sun and hemisphere fill alone leave flat. OutputPass then applies the
+	// renderer's tone mapping and colour space, so the look matches the direct render.
+	const composer = opts.ambientOcclusion === false ? null : new EffectComposer(renderer);
+	let gtao: GTAOPass | null = null;
+	if (composer) {
+		composer.addPass(new RenderPass(scene, camera));
+		gtao = new GTAOPass(scene, camera, 1, 1);
+		gtao.output = GTAOPass.OUTPUT.Default;
+		gtao.blendIntensity = 1;
+		gtao.updateGtaoMaterial({
+			radius: 0.5,
+			distanceExponent: 1.5,
+			thickness: 1.2,
+			scale: 1,
+			samples: 16
+		});
+		gtao.updatePdMaterial({
+			lumaPhi: 10,
+			depthPhi: 2,
+			normalPhi: 3,
+			radius: 6,
+			rings: 2,
+			samples: 16
+		});
+		composer.addPass(gtao);
+		composer.addPass(new OutputPass());
+	}
+
+	const ro = new ResizeObserver(() => {
+		resize();
+		composer?.setPixelRatio(renderer.getPixelRatio());
+		composer?.setSize(Math.max(1, container.clientWidth), Math.max(1, container.clientHeight));
+	});
 	ro.observe(container);
 	resize();
+	composer?.setSize(Math.max(1, container.clientWidth), Math.max(1, container.clientHeight));
 
 	// ---------- textures & materials ----------
 	const texLoader = new THREE.TextureLoader();
@@ -528,7 +568,8 @@ export async function createRoom(
 
 	renderer.setAnimationLoop(() => {
 		controls.update();
-		renderer.render(scene, camera);
+		if (composer) composer.render();
+		else renderer.render(scene, camera);
 	});
 
 	return {
@@ -554,6 +595,8 @@ export async function createRoom(
 				}
 			});
 			for (const d of disposables) d.dispose();
+			gtao?.dispose();
+			composer?.dispose();
 			pmrem.dispose();
 			sun.shadow.map?.dispose();
 			renderer.dispose();

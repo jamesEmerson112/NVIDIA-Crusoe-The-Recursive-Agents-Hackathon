@@ -58,16 +58,22 @@
 
 	// Show each pending form inline once, at the point the agent asked for it.
 	// Forms and widgets stay embedded where the agent first asked for them, answered or not.
+	// Forms and widgets stay embedded where the agent first asked; a blueprint is embedded at its
+	// latest mention (showing it again moves the 3D view down to the newest turn).
 	const inlineInputs = $derived.by(() => {
-		const seen = new Set<string>();
-		const out = new Set<string>();
+		const first = new Map<string, string>();
+		const last = new Map<string, string>();
 		for (const m of cs.messages) {
 			const meta = m.meta as MessageMeta | null;
-			if (m.role === 'tool' && meta?.kind === 'artifact' && !seen.has(meta.artifactId)) {
-				seen.add(meta.artifactId);
-				const kind = byId.get(meta.artifactId)?.kind;
-				if (kind === 'form' || kind === 'widget' || kind === 'blueprint') out.add(m.id);
-			}
+			if (m.role !== 'tool' || meta?.kind !== 'artifact') continue;
+			if (!first.has(meta.artifactId)) first.set(meta.artifactId, m.id);
+			last.set(meta.artifactId, m.id);
+		}
+		const out = new Set<string>();
+		for (const [artifactId, messageId] of first) {
+			const kind = byId.get(artifactId)?.kind;
+			if (kind === 'form' || kind === 'widget') out.add(messageId);
+			if (kind === 'blueprint') out.add(last.get(artifactId)!);
 		}
 		return out;
 	});

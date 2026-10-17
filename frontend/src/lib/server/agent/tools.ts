@@ -461,6 +461,24 @@ async function execute(
 				...(text(args.summary) ? { summary: text(args.summary) } : {}),
 				...(highlights.length ? { highlights } : {})
 			};
+			// Asking to "show" a place again should re-embed the existing walkthrough, not duplicate it.
+			const same = (await store.listBlueprints()).find(
+				(b) =>
+					b.conversationId === cid &&
+					b.spec.plan === spec.plan &&
+					(b.spec.address ?? '') === (spec.address ?? '') &&
+					b.title === String(args.title)
+			);
+			if (same) {
+				ctx.emit({ type: 'tool', name, summary: `Showing ${same.title} again` });
+				return {
+					content: ok({
+						artifact_id: same.id,
+						note: 'This blueprint already existed; it is embedded again here.'
+					}),
+					meta: { kind: 'artifact', artifactId: same.id }
+				};
+			}
 			const given: string[] = Array.isArray(args.depends_on) ? args.depends_on : [];
 			const { id, linked } = await store.createArtifact({
 				conversationId: cid,
