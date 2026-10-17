@@ -20,29 +20,24 @@ POSSIBLE TECHNICAL FEATURES
 Ranked: most essential first, most optional last
 
 NOW
-1. [S] Live agent tree in the UI
-   - Shows status, model, cost and time
-   - Needs sub-agent run events from BE
-2. [S] Comparison table view of shortlisted homes
-3. [M] Visit feedback form and visit task view
+1. [S] Comparison table view of shortlisted homes
+2. [M] Visit feedback form and visit task view
    - Ratings feed BE's next search round
 
 LATER
-4. [S] Landing page copy and one-line pitch
-5. [S] Run log view of every call
-6. [S] Real-world task list with checkboxes
-7. [M] Weight sliders re-rank shortlist
+3. [S] Landing page copy and one-line pitch
+4. [S] Run log view of every call
+5. [S] Real-world task list with checkboxes
+6. [M] Weight sliders re-rank shortlist
    - Plain code re-sorts, no model call
-8. [M] Users can reword or delete questions
-   - BE treats edits as preference data
-9. [S] Live "options remaining" counter on forms
-10. [M] Map with listing pins
-    - Sandbox blocks network; inline or static
-11. [M] Charts: rents, price versus commute
-12. [L] 3D buildings or floorplan via three.js
-    - See floorplan-2d-to-3d.md, sf-buildings-3d.md
-13. [L] Synthetic floorplan inside building footprint
-14. [L] C1: Cozy room editor and furniture assets (planned)
+7. [S] Live "options remaining" counter on forms
+8. [M] Map with listing pins
+   - Sandbox blocks network; inline or static
+9. [M] Charts: rents, price versus commute
+10. [M] Plan artifacts open in 3D viewer
+    - Reuse PlanViewer from /plans
+11. [L] Synthetic floorplan inside building footprint
+12. [L] C1: Cozy room editor and furniture assets (planned)
     - Fixture scenes first; move, rotate, lock, save, reload
     - Own new room UI/renderer files; C0 wires shared UI
     - Use BE's shared run events for the live agent tree
@@ -62,7 +57,7 @@ NOW
   - Alternate two models; avoid 30 RPM cap
 - [M] Rental listings tool over scraped data   <-- Gaelan
   - Speaker B's Bay Area listings in SQLite
-  - Needs the data file first
+  - Reuse formloop's You.com listings source
   - Fallback: DataSF context tool below
 - [S] Market snapshot: median rent via SQL     <-- Gaelan
 - [M] Visit list and feedback round in prompt
@@ -83,7 +78,7 @@ LATER
 - [S] Commute estimate from listing to work
   - Straight-line distance; routing APIs need keys
 - [M] Cached neighborhood profiles, built by sub-agents
-- [S] All answers optional; skips are signal
+- [S] Skipped questions read as preference signal
 - [S] Preference profile artifact
   - What user wants versus what they said
 - [L] Energy and sun exposure per listing
@@ -94,7 +89,6 @@ LATER
   - Demo can fake it with a button
 - [S] Resume failed runs from last step
 - [S] Fallback model after repeated errors
-- [S] Validate tool arguments; return errors
 - [M] Eval script replays a fixed scenario
 - [L] C2: Cozy scene validation and persistence (planned)
   - Version checks, locks, idempotent writes, scene endpoints
@@ -147,3 +141,18 @@ LATER: PARALLEL ROOM-DESIGN EXTENSION
 - Live model prices from /v1/models, hourly
 - Verified end to end on real Crusoe
   - 13 calls, $0.0027, 73% cache hits
+- Live agent map, subway-style, ?panel=map
+  - Orchestrator, builder, patch, self-check, redo lanes
+- ChatGPT-style start page with example prompts
+- Collapsible sidebar, collapsed by default
+- data-testid on every element; docs/test-ids.md
+- 3D blueprint viewer at /plans, WebGPU
+  - Debug mode: stats-gl, lil-gui, ?debug=1
+  - Four plans incl. one traced from image
+- Every form question optional and editable
+- Tool errors go back to model; bodies validated
+- Default agent model now GLM-5.3-Flash
+- formloop engine (lsarta), outside Workbench
+  - Listings incl. You.com, renter simulator
+  - Agent, matcher, scorer, reviewer, eval
+  - Two-pane demo: editable form, live listings
