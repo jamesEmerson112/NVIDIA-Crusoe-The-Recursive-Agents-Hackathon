@@ -1,0 +1,45 @@
+# Form v2 (from v1). Written by formloop; edit research/ instead.
+version: 2
+parent: 1
+questions:
+  - id: bedrooms
+    text: How many bedrooms do you need? (Or tell us who's moving in.)
+    type: number
+    maps_to:
+      - bedrooms
+  - id: commute
+    text: Where do you go most days, and how do you get there?
+    type: text
+    maps_to:
+      - commute
+      - neighborhood
+  - id: parking
+    text: Do you need a parking spot?
+    type: yesno
+    maps_to:
+      - parking
+  - id: laundry
+    text: What laundry setup do you need?
+    type: select
+    options:
+      - in-unit
+      - in-building
+      - none
+    maps_to:
+      - laundry
+  - id: budget
+    text: What's your monthly budget, and how firm is it?
+    type: number
+    maps_to:
+      - price
+  - id: last_place_gripe
+    text: What's the one thing you hated about your last place?
+    type: text
+    maps_to:
+      - layout
+      - street_noise
+      - floor
+note: Dropped move_in and pets (both negative value — answers rarely changed the
+  pick), and promoted the renter rewrite of laundry ('need' beats 'works for
+  you'). Reordered so the highest-value questions come first.
+score: 0.6214
