@@ -132,7 +132,7 @@
 				<a
 					data-testid="sidebar-plans"
 					href="/plans"
-					class="grid size-9 place-items-center rounded-lg {page.url.pathname === '/plans'
+					class="grid size-9 place-items-center rounded-lg {page.url.pathname.startsWith('/plans')
 						? 'bg-zinc-200 dark:bg-zinc-800'
 						: 'text-zinc-600 hover:bg-zinc-200 dark:text-zinc-300 dark:hover:bg-zinc-800'}"
 					aria-label="Blueprints"
@@ -168,7 +168,7 @@
 				<a
 					data-testid="sidebar-plans"
 					href="/plans"
-					class="mt-1 block rounded-lg px-3 py-2 text-sm {page.url.pathname === '/plans'
+					class="mt-1 block rounded-lg px-3 py-2 text-sm {page.url.pathname.startsWith('/plans')
 						? 'bg-zinc-200 dark:bg-zinc-800'
 						: 'text-zinc-700 hover:bg-zinc-100 dark:text-zinc-300 dark:hover:bg-zinc-800/60'}"
 					>Blueprints</a

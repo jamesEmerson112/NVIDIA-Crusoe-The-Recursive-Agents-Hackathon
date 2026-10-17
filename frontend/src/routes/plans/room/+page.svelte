@@ -10,6 +10,12 @@
 	let status = $state<'loading' | 'ready' | 'error' | 'unsupported'>('loading');
 	let progress = $state(0);
 	let error = $state('');
+	/** Opened from a blueprint: `?c=<conversation>&a=<artifact>` links back to it. */
+	const fromHref = $derived.by(() => {
+		const c = page.url.searchParams.get('c')?.match(/^[\w-]+$/)?.[0];
+		const a = page.url.searchParams.get('a')?.match(/^[\w-]+$/)?.[0];
+		return c ? `/c/${c}${a ? `?a=${a}` : ''}` : null;
+	});
 
 	onMount(() => {
 		let cancelled = false;
@@ -63,6 +69,11 @@
 		<a data-testid="room-back" href="/plans" class="text-sm text-zinc-500 hover:underline"
 			>&larr; Blueprints</a
 		>
+		{#if fromHref}
+			<a data-testid="room-from" href={fromHref} class="text-sm text-zinc-500 hover:underline"
+				>From conversation</a
+			>
+		{/if}
 		<h1 data-testid="room-heading" class="text-sm font-semibold">Showcase room</h1>
 		<div data-testid="room-presets" class="flex gap-1" role="group" aria-label="Camera">
 			{#each CAMERA_PRESETS as p (p.id)}

@@ -12,7 +12,9 @@ Repeated items (messages, steps, list rows, chips) share one id; pick one by tex
 
 **`lib/components/ArtifactCard.svelte`**: `artifact-card-open`
 
-**`lib/components/ArtifactView.svelte`**: `artifact-view`, `artifact-view-close`, `artifact-view-versions`, `artifact-view-version`, `artifact-view-meta`, `artifact-view-toggle-changes`, `artifact-view-stale-notice`, `artifact-view-awaiting-input`, `artifact-view-answers`, `artifact-view-answer`, `artifact-view-answer-label`, `artifact-view-answer-changed`, `artifact-view-answer-value`, `artifact-view-answer-previous`, `artifact-view-cancel`, `artifact-view-widget-data`, `artifact-view-editor`, `artifact-view-save`, `artifact-view-diff`, `artifact-view-iframe`, `artifact-view-lineage`, `artifact-view-upstream`, `artifact-view-lineage-link`, `artifact-view-downstream`, `artifact-view-edit`, `artifact-view-dependents-notice`
+**`lib/components/ArtifactView.svelte`**: `artifact-view`, `artifact-view-close`, `artifact-view-versions`, `artifact-view-version`, `artifact-view-meta`, `artifact-view-toggle-changes`, `artifact-view-stale-notice`, `artifact-view-awaiting-input`, `artifact-view-answers`, `artifact-view-answer`, `artifact-view-answer-label`, `artifact-view-answer-changed`, `artifact-view-answer-value`, `artifact-view-answer-previous`, `artifact-view-blueprint`, `artifact-view-cancel`, `artifact-view-widget-data`, `artifact-view-editor`, `artifact-view-save`, `artifact-view-diff`, `artifact-view-iframe`, `artifact-view-lineage`, `artifact-view-upstream`, `artifact-view-lineage-link`, `artifact-view-downstream`, `artifact-view-edit`, `artifact-view-dependents-notice`
+
+**`lib/components/BlueprintEmbed.svelte`**: `blueprint-embed`, `blueprint-embed-title`, `blueprint-embed-tabs`, `blueprint-embed-tab-room`, `blueprint-embed-tab-plan`, `blueprint-embed-plan`, `blueprint-embed-summary`, `blueprint-embed-highlights`, `blueprint-embed-fullscreen`
 
 **`lib/components/Composer.svelte`**: `composer`, `composer-input`, `composer-model`, `composer-stop`, `composer-send`
 
@@ -22,11 +24,15 @@ Repeated items (messages, steps, list rows, chips) share one id; pick one by tex
 
 **`lib/components/Markdown.svelte`**: `markdown`
 
+**`lib/components/PlanSketch.svelte`**: `plan-sketch`
+
 **`lib/components/PlanViewer.svelte`**: `plan-viewer`, `plan-viewer-error`, `plan-viewer-loading`
 
 **`lib/components/ProcessPanel.svelte`**: `process-panel`, `process-empty`, `process-step`, `process-step-status`, `process-step-title`, `process-artifact`, `process-usage`
 
 **`lib/components/ProposalCard.svelte`**: `proposal-card`, `proposal-open-artifact`, `proposal-cost`, `proposal-duration`, `proposal-approve`, `proposal-keep`, `proposal-answer`
+
+**`lib/components/RoomScene.svelte`**: `room-scene`, `room-scene-presets`, `room-scene-preset`
 
 **`lib/components/RunLog.svelte`**: `run-log`, `run-log-summary`, `run-log-empty`, `run-log-scroll`, `run-log-table`, `run-log-row`, `run-log-time`, `run-log-role`, `run-log-model`, `run-log-cache-hit`, `run-log-cost`, `run-log-duration`, `run-log-did`, `run-log-artifact`, `run-log-tool`, `run-log-totals`
 
@@ -44,11 +50,13 @@ Repeated items (messages, steps, list rows, chips) share one id; pick one by tex
 
 **`routes/library/+page.svelte`**: `library-root`, `library-heading`, `library-search`, `library-kinds`, `library-kind`, `library-results`, `library-result`, `library-empty`
 
-**`routes/plans/+page.svelte`**: `plans-root`, `plans-heading`, `plans-select`, `plans-option`, `plans-model-collection`, `plans-model-placeholder`, `plans-model-{p.id}`, `plans-views`, `plans-view-{v.id}`, `plans-summary`, `plans-quality`, `plans-quality-{q ?? 'auto'}`, `plans-photo-link`, `plans-debug-toggle`, `plans-showcase-link`, `plans-problems`, `plans-walk-hint`
+**`routes/plans/+page.svelte`**: `blueprints-root`, `blueprints-heading`, `blueprints-grid`, `blueprint-card`, `blueprint-open`, `blueprint-title`, `blueprint-conversation`, `blueprint-floorplan`, `blueprints-empty`
 
 **`routes/plans/photo/+page.svelte`**: `plans-photo-root`, `plans-photo-back`, `plans-photo-heading`, `plans-photo-name`, `plans-photo-cam-{c.id}`, `plans-photo-fullres`, `plans-photo-viewport`, `plans-photo-error`, `plans-photo-hud`, `plans-photo-samples`, `plans-photo-state`
 
-**`routes/plans/room/+page.svelte`**: `room-root`, `room-back`, `room-heading`, `room-presets`, `room-preset-{p.id}`, `room-status`, `room-canvas`
+**`routes/plans/room/+page.svelte`**: `room-root`, `room-back`, `room-from`, `room-heading`, `room-presets`, `room-preset-{p.id}`, `room-status`, `room-canvas`
+
+**`routes/plans/view/+page.svelte`**: `plans-root`, `plans-back`, `plans-from`, `plans-heading`, `plans-select`, `plans-option`, `plans-model-collection`, `plans-model-placeholder`, `plans-model-{p.id}`, `plans-views`, `plans-view-{v.id}`, `plans-summary`, `plans-quality`, `plans-quality-{q ?? 'auto'}`, `plans-photo-link`, `plans-debug-toggle`, `plans-showcase-link`, `plans-problems`, `plans-walk-hint`
 
 **`lib/floorplan/three/photo.ts`**: `plans-photo-canvas`
 

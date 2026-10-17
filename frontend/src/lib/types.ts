@@ -1,6 +1,6 @@
 // Types shared by server and browser code.
 
-export type ArtifactKind = 'form' | 'widget' | 'document' | 'html';
+export type ArtifactKind = 'form' | 'widget' | 'document' | 'html' | 'blueprint';
 export type ArtifactStatus = 'ready' | 'awaiting_input' | 'stale' | 'updating';
 export type StepStatus = 'pending' | 'active' | 'done' | 'stale';
 
@@ -81,4 +81,19 @@ export interface WidgetSpec {
 	html: string;
 	description?: string;
 	schema?: DataSchema;
+}
+
+/**
+ * A staged 3D walkthrough of one (possibly fictional) property, tailored to the conversation.
+ * Two views: the photoreal showcase living room (/plans/room) and the unit's floor plan, a bundled
+ * layout (static/plans/<plan>.json) that opens in the 3D floor-plan viewer (/plans/view).
+ */
+export interface BlueprintSpec {
+	plan: string;
+	/** Fictional street address or listing name. */
+	address?: string;
+	/** One line on why this place fits the user. */
+	summary?: string;
+	/** 2-4 short points tied to the user's answers. */
+	highlights?: string[];
 }

@@ -21,7 +21,7 @@
 		done: 'text-emerald-600',
 		stale: 'text-amber-500'
 	};
-	const kindIcon = { form: '☰', widget: '◈', document: '¶', html: '◇' };
+	const kindIcon = { form: '☰', widget: '◈', document: '¶', html: '◇', blueprint: '⌂' };
 </script>
 
 <div data-testid="process-panel" class="flex h-full flex-col">

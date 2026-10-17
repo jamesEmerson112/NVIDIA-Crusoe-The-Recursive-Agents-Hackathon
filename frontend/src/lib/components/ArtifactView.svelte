@@ -1,9 +1,10 @@
 <script lang="ts">
 	import type { ConversationState } from '#lib/server/store.ts';
 	import { lineDiff, withContext } from '#lib/diff.ts';
-	import type { FormSpec, WidgetSpec } from '#lib/types.ts';
+	import type { BlueprintSpec, FormSpec, WidgetSpec } from '#lib/types.ts';
 	import { saveQuestions } from '#lib/client/run.svelte.ts';
 	import FormView from './FormView.svelte';
+	import PlanSketch from './PlanSketch.svelte';
 	import Widget from './Widget.svelte';
 	import Markdown from './Markdown.svelte';
 	import StatusBadge from './StatusBadge.svelte';
@@ -64,6 +65,9 @@
 	);
 	// Forms and widgets keep their history internally (diffs, estimates) but don't show versions.
 	const isInput = $derived(artifact.kind === 'form' || artifact.kind === 'widget');
+	const blueprintSpec = $derived(
+		artifact.kind === 'blueprint' ? (JSON.parse(version.content) as BlueprintSpec) : null
+	);
 	const widgetSpec = $derived(
 		artifact.kind === 'widget' ? (JSON.parse(version.content) as WidgetSpec) : null
 	);
@@ -95,7 +99,13 @@
 						? '—'
 						: String(v);
 	const authorLabel = { agent: 'Agent', user: 'You', subagent: 'Sub-agent' };
-	const kindLabel = { form: 'Form', widget: 'Widget', document: 'Document', html: 'Interactive' };
+	const kindLabel = {
+		form: 'Form',
+		widget: 'Widget',
+		document: 'Document',
+		html: 'Interactive',
+		blueprint: 'Blueprint'
+	};
 </script>
 
 <div data-testid="artifact-view" class="flex h-full flex-col">
@@ -231,6 +241,22 @@
 					</dl>
 				{/if}
 			{/key}
+		{:else if blueprintSpec}
+			<a
+				data-testid="artifact-view-blueprint"
+				href="/plans/view?plan={encodeURIComponent(
+					blueprintSpec.plan
+				)}&c={artifact.conversationId}&a={artifact.id}"
+				class="block overflow-hidden rounded-xl border border-zinc-200 hover:border-zinc-400 dark:border-zinc-800 dark:hover:border-zinc-600"
+			>
+				<PlanSketch plan={blueprintSpec.plan} class="h-56 bg-zinc-50 p-3 dark:bg-zinc-950" />
+				<p class="border-t border-zinc-200 px-3 py-2 text-sm font-medium dark:border-zinc-800">
+					Open in 3D →
+				</p>
+			</a>
+			{#if blueprintSpec.summary}<p class="mt-3 text-sm text-zinc-600 dark:text-zinc-400">
+					{blueprintSpec.summary}
+				</p>{/if}
 		{:else if widgetSpec}
 			{#key `${version.id}-${editing}`}
 				<Widget
@@ -342,7 +368,7 @@
 				{/if}
 			</div>
 		{/if}
-		{#if !editing && artifact.status !== 'awaiting_input'}
+		{#if !editing && artifact.status !== 'awaiting_input' && artifact.kind !== 'blueprint'}
 			<div class="flex items-center gap-2">
 				<button
 					data-testid="artifact-view-edit"

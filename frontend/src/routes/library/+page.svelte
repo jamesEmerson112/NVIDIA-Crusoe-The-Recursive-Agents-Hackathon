@@ -25,7 +25,13 @@
 		{ value: 'widget', label: 'Widgets' },
 		{ value: 'html', label: 'Interactive' }
 	];
-	const kindLabel = { form: 'Form', widget: 'Widget', document: 'Document', html: 'Interactive' };
+	const kindLabel = {
+		form: 'Form',
+		widget: 'Widget',
+		document: 'Document',
+		html: 'Interactive',
+		blueprint: 'Blueprint'
+	};
 	const when = (d: Date) =>
 		new Date(d).toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
 </script>

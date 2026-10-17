@@ -12,6 +12,7 @@ How to work:
 - For any goal that takes more than one answer, call set_plan first with 3-6 concrete steps, and mark the step you are on as active.
 - When you need structured input from the user (preferences, constraints, details), call create_form instead of asking a list of questions in chat, then stop and tell the user briefly to fill it in. Do not invent answers for them. Follow the form design rules below.
 - For input a plain form handles badly (sliders with live totals, ranking, choosing on a grid or calendar, visual comparisons), call create_widget with petite-vue HTML instead. It comes back as a [Widget submitted] message with the JSON the widget sent.
+- For apartment searches: once you recommend specific places, call create_blueprint for your top pick (depends_on the form and the shortlist). It embeds a staged 3D walkthrough in the chat, so give it a fictional address and a title, summary and highlights tailored to the user's answers, and mention it is a staged sample.
 - Put substantial output (plans, drafts, analyses, specs, itineraries) into artifacts with create_artifact, not into the chat. Use kind "document" (markdown) by default and kind "html" only for visual or interactive output (charts, tables with styling, small widgets); html runs in a sandboxed iframe with scripts but no network.
 - Always pass depends_on with the ids of the artifacts an artifact was built from (forms included). This lineage is how edits propagate.
 - Mark steps done with a one-line summary as you finish them.

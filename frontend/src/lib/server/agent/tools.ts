@@ -1,9 +1,10 @@
 import type { ToolSchema, Usage } from '../crusoe';
-import type { MessageMeta, StepStatus, WidgetSpec } from '#lib/types.ts';
+import type { BlueprintSpec, MessageMeta, StepStatus, WidgetSpec } from '#lib/types.ts';
 import * as store from '../store';
 import { runQuickEdit } from './subagent';
-import { normalizeFormSpec } from '#lib/forms.ts';
+import { normalizeFormSpec, typeable } from '#lib/forms.ts';
 import { normalizeWidget } from '#lib/widgets.ts';
+import { BLUEPRINT_PLANS, isBlueprintPlan } from '#lib/floorplan/catalog.ts';
 
 export interface ToolContext {
 	conversationId: string;
@@ -151,6 +152,42 @@ To fix a widget before the user answers it, call update_artifact with its id and
 					depends_on: dependsOn
 				},
 				required: ['title', 'html']
+			}
+		}
+	},
+	{
+		type: 'function',
+		function: {
+			name: 'create_blueprint',
+			description:
+				'Embed a staged 3D walkthrough of a place in the chat: a photoreal living room plus the unit floor plan, which the user can open in 3D. It also appears on the Blueprints page. Tailor the title, address, summary and highlights to what the user told you. The 3D scene is a staged sample, not the real unit.',
+			parameters: {
+				type: 'object',
+				properties: {
+					title: {
+						type: 'string',
+						description: 'e.g. "Your top pick: sunny 1BR in the Inner Richmond"'
+					},
+					plan: {
+						type: 'string',
+						enum: BLUEPRINT_PLANS.map((p) => p.id),
+						description: 'Closest floor plan layout.'
+					},
+					address: {
+						type: 'string',
+						description: 'Fictional address or listing name, e.g. "742 Clement St, Apt 3"'
+					},
+					summary: { type: 'string', description: 'One short line on why it fits this user.' },
+					highlights: {
+						type: 'array',
+						items: { type: 'string' },
+						description:
+							'2-4 short points tied to their answers, e.g. "In-unit laundry", "Quiet back bedroom"'
+					},
+					step: { type: 'integer', description: 'Step number this blueprint belongs to.' },
+					depends_on: dependsOn
+				},
+				required: ['title', 'plan']
 			}
 		}
 	},
@@ -406,6 +443,40 @@ async function execute(
 				awaitUser: true
 			};
 		}
+		case 'create_blueprint': {
+			if (!isBlueprintPlan(args.plan)) {
+				return {
+					content: fail(`plan must be one of ${BLUEPRINT_PLANS.map((p) => p.id).join(', ')}`)
+				};
+			}
+			const text = (v: unknown) =>
+				typeof v === 'string' && v.trim() ? typeable(v.trim()) : undefined;
+			const highlights = (Array.isArray(args.highlights) ? args.highlights : [])
+				.map(text)
+				.filter((h): h is string => !!h)
+				.slice(0, 4);
+			const spec: BlueprintSpec = {
+				plan: args.plan,
+				...(text(args.address) ? { address: text(args.address) } : {}),
+				...(text(args.summary) ? { summary: text(args.summary) } : {}),
+				...(highlights.length ? { highlights } : {})
+			};
+			const given: string[] = Array.isArray(args.depends_on) ? args.depends_on : [];
+			const { id, linked } = await store.createArtifact({
+				conversationId: cid,
+				kind: 'blueprint',
+				title: String(args.title),
+				content: JSON.stringify(spec),
+				step: args.step,
+				dependsOn: given.length ? given : [...ctx.sources],
+				provenance
+			});
+			ctx.emit({ type: 'tool', name, summary: `Blueprint: ${args.title}` });
+			return {
+				content: ok({ artifact_id: id, depends_on: linked }),
+				meta: { kind: 'artifact', artifactId: id }
+			};
+		}
 		case 'create_artifact': {
 			if (!['document', 'html'].includes(args.kind))
 				return { content: fail('kind must be document or html') };
@@ -468,6 +539,10 @@ async function execute(
 					content: ok({ artifact_id: a.id, version, note: 'The user now sees the fixed widget.' })
 				};
 			}
+			if (a.kind === 'blueprint')
+				return {
+					content: fail('Blueprints point at a bundled layout; create a new blueprint instead')
+				};
 			if (a.kind === 'form' || a.kind === 'widget')
 				return {
 					content: fail(
@@ -513,6 +588,10 @@ async function execute(
 		case 'quick_edit': {
 			const a = await store.getArtifact(cid, args.artifact_id);
 			if (!a) return { content: fail(`No artifact ${args.artifact_id}`) };
+			if (a.kind === 'blueprint')
+				return {
+					content: fail('Blueprints point at a bundled layout; create a new blueprint instead')
+				};
 			if (a.kind === 'form' || a.kind === 'widget')
 				return {
 					content: fail(

@@ -12,6 +12,7 @@
 	import ProcessPanel from './ProcessPanel.svelte';
 	import ProposalCard from './ProposalCard.svelte';
 	import RunLog from './RunLog.svelte';
+	import BlueprintEmbed from './BlueprintEmbed.svelte';
 	import InlineInput from './InlineInput.svelte';
 
 	let { conversation: cs }: { conversation: ConversationState } = $props();
@@ -65,7 +66,7 @@
 			if (m.role === 'tool' && meta?.kind === 'artifact' && !seen.has(meta.artifactId)) {
 				seen.add(meta.artifactId);
 				const kind = byId.get(meta.artifactId)?.kind;
-				if (kind === 'form' || kind === 'widget') out.add(m.id);
+				if (kind === 'form' || kind === 'widget' || kind === 'blueprint') out.add(m.id);
 			}
 		}
 		return out;
@@ -201,7 +202,20 @@
 					{:else if m.role === 'tool' && meta?.kind === 'artifact'}
 						{@const a = byId.get(meta.artifactId)}
 						{#if a && inlineInputs.has(m.id)}
-							<InlineInput artifact={a} {cid} {busy} {run} />
+							{#if a.kind === 'blueprint'}
+								<BlueprintEmbed
+									id={a.id}
+									{cid}
+									title={a.title}
+									status={a.status}
+									spec={JSON.parse(
+										(a.versions.find((x) => x.version === a.currentVersion) ?? a.versions[0])
+											.content
+									)}
+								/>
+							{:else}
+								<InlineInput artifact={a} {cid} {busy} {run} />
+							{/if}
 						{:else if a}
 							<ArtifactCard
 								artifact={a}

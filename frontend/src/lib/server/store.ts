@@ -13,6 +13,7 @@ import type { ChatMessage, Usage } from './crusoe';
 import type {
 	ArtifactKind,
 	ArtifactStatus,
+	BlueprintSpec,
 	MessageMeta,
 	StepStatus,
 	ToolCall
@@ -502,14 +503,19 @@ function snippet(
 	query: string
 ) {
 	const text =
-		kind === 'form' || kind === 'widget'
-			? Object.entries(data ?? {})
-					.filter(([, v]) => v !== '' && v !== null && v !== undefined)
-					.map(([k, v]) => `${k}: ${typeof v === 'object' ? JSON.stringify(v) : v}`)
-					.join(' · ')
-			: kind === 'html'
-				? content.replace(/<(script|style)[\s\S]*?<\/\1>/gi, ' ').replace(/<[^>]+>/g, ' ')
-				: content.replace(/[#*_`>|]/g, '');
+		kind === 'blueprint'
+			? [
+					(JSON.parse(content) as BlueprintSpec).plan,
+					(JSON.parse(content) as BlueprintSpec).summary ?? ''
+				].join(' · ')
+			: kind === 'form' || kind === 'widget'
+				? Object.entries(data ?? {})
+						.filter(([, v]) => v !== '' && v !== null && v !== undefined)
+						.map(([k, v]) => `${k}: ${typeof v === 'object' ? JSON.stringify(v) : v}`)
+						.join(' · ')
+				: kind === 'html'
+					? content.replace(/<(script|style)[\s\S]*?<\/\1>/gi, ' ').replace(/<[^>]+>/g, ' ')
+					: content.replace(/[#*_`>|]/g, '');
 	const flat = text.replace(/\s+/g, ' ').trim();
 	const at = query ? flat.toLowerCase().indexOf(query.toLowerCase()) : -1;
 	const start = Math.max(0, at - 60);
@@ -532,4 +538,32 @@ export async function completeStepIfAnswered(stepId: string | null) {
 			.update(steps)
 			.set({ status: 'done', summary: step.summary ?? 'Input collected' })
 			.where(eq(steps.id, stepId));
+}
+
+// ---------- blueprints (cards on /plans) ----------
+
+/** Every blueprint artifact with its conversation, newest first. */
+export async function listBlueprints() {
+	const rows = await db
+		.select({
+			id: artifacts.id,
+			title: artifacts.title,
+			status: artifacts.status,
+			updatedAt: artifacts.updatedAt,
+			conversationId: conversations.id,
+			conversationTitle: conversations.title,
+			content: artifactVersions.content
+		})
+		.from(artifacts)
+		.innerJoin(conversations, eq(conversations.id, artifacts.conversationId))
+		.innerJoin(
+			artifactVersions,
+			and(
+				eq(artifactVersions.artifactId, artifacts.id),
+				eq(artifactVersions.version, artifacts.currentVersion)
+			)
+		)
+		.where(eq(artifacts.kind, 'blueprint'))
+		.orderBy(desc(artifacts.updatedAt));
+	return rows.map(({ content, ...r }) => ({ ...r, spec: JSON.parse(content) as BlueprintSpec }));
 }

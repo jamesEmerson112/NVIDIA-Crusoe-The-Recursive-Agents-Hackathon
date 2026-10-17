@@ -8,7 +8,13 @@
 		onopen
 	}: { artifact: ConversationState['artifacts'][number]; label: string; onopen: () => void } =
 		$props();
-	const kind = { form: 'Form', widget: 'Widget', document: 'Document', html: 'Interactive' };
+	const kind = {
+		form: 'Form',
+		widget: 'Widget',
+		document: 'Document',
+		html: 'Interactive',
+		blueprint: 'Blueprint'
+	};
 </script>
 
 <button
