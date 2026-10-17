@@ -13,6 +13,7 @@ Background research for the team, compiled 2026-10-17 by parallel research agent
 | [floorplan-2d-to-3d.md](floorplan-2d-to-3d.md) | Turning a floorplan into walls, doors and rooms in three.js, and synthetic interiors inside SF footprints |
 | [building-performance-simulation.md](building-performance-simulation.md) | Energy, daylight and thermal comfort simulation for SF buildings |
 | [you-com-api.md](you-com-api.md) | You.com Search, Contents, Answer and Research APIs: prices, what our $10 buys, and tool designs for live listings and research sub-agents |
+| [photoreal-rendering-plan.md](photoreal-rendering-plan.md) | Roadmap for making the /plans apartment viewer photorealistic: real-time vs path-traced vs baked lighting, assets, phases, and the original brief |
 
 ## Summaries
 
@@ -42,3 +43,5 @@ Agents read and write the same files through tool functions. Browser-only storag
 **Building performance simulation.** EnergyPlus 26.2.0 runs headless on an M1 in 1.2–6.5 s per annual simulation, and `geomeppy` (MIT) builds a model from an SF footprint, height and story count in 0.6 s. Ground truth: SF's benchmarking data (`4ua7-5sfx`, public domain, 30,483 rows) joins to 89.5% of footprints; ResStock/ComStock medians (CC BY 4.0) cover the rest. Have the LLM pick model parameters, not write EnergyPlus files. Ladybug/honeybee is AGPL-3.0. NREL is now the National Laboratory of the Rockies (`NatLabRockies` on GitHub).
 
 **You.com API.** Four REST APIs matter: Search ($5 per 1k calls), Contents ($1 per 1k pages), Answer ($5 per 1k) and Research (`lite` $12 per 1k). Our $10 buys about 2,000 searches or 830 Research `lite` calls; a full demo run is about $0.08. For listings, call Search with `include_domains` set to listing sites, `freshness: month` and highlights: one test returned 7 results in 1.0 s, 5 with street addresses. Use Research `lite` (about 5 s, cited sources) for neighborhood briefs, one call per `spawn_research` sub-agent. The key is `YDC_API_KEY`, which formloop already reads.
+
+**Photoreal rendering plan.** Decided 2026-10-17: the `/plans` viewer looks like a good 3D floor plan, not architectural photography, and assets and lighting model are the gap. Recommendation: keep real-time rendering while the camera moves and add a `three-gpu-pathtracer` photo mode when it stops (photo-level, no baking, seconds to converge, GPU runs hot; it targets `WebGLRenderer`, we use `WebGPURenderer`). Headless Blender Cycles lightmap baking is optional later for hero units. Four phases: one-room Japandi prototype, orbit plus WASD cameras, scene editing aligned with `docs/cozy-implementation-plan.md`, then agent layout operations through APIs. The user's full brief is in the appendix.
