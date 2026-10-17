@@ -149,7 +149,11 @@ Works on its own; Workbench (frontend/) can't use it yet.
 - formloop: agent writes follow-up questions        <-- Laurie
 - formloop: skipped questions dropped by reviewer   <-- Laurie
 - formloop: form v3 beats v1 on unseen renters      <-- Laurie
-  - Quality 0.776 vs 0.741; 5 vs 8 questions
+  - Rerun: objective 0.584 vs 0.552
+- formloop demo: live SF map of listings            <-- Laurie
+  - Narrows as you answer; area market cards
+- formloop demo: form evolution and eval views      <-- Laurie
+- formloop demo: offline ?demo=1 walkthrough        <-- Laurie
 
 
 ==================== DONE ====================
