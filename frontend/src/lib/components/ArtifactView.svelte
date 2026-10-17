@@ -1,5 +1,6 @@
 <script lang="ts">
 	import type { ConversationState } from '#lib/server/store.ts';
+	import { lineDiff, withContext } from '#lib/diff.ts';
 	import type { FormSpec } from '#lib/types.ts';
 	import FormView from './FormView.svelte';
 	import Markdown from './Markdown.svelte';
@@ -26,6 +27,7 @@
 	let selected = $state<number | null>(null);
 	let editing = $state(false);
 	let draft = $state('');
+	let showChanges = $state(false);
 
 	// Reset local view state when another artifact is opened.
 	let lastId = '';
@@ -34,12 +36,29 @@
 			lastId = artifact.id;
 			selected = null;
 			editing = false;
+			showChanges = false;
 		}
 	});
 
 	const version = $derived(
 		artifact.versions.find((v) => v.version === (selected ?? artifact.currentVersion)) ??
 			artifact.versions[0]
+	);
+	const previous = $derived(artifact.versions.find((v) => v.version === version.version - 1));
+	// Answers that differ from the previous version, for forms that had answers before.
+	const changedFields = $derived(
+		new Set(
+			previous?.data && version.data
+				? Object.keys({ ...previous.data, ...version.data }).filter(
+						(k) => JSON.stringify(previous.data?.[k]) !== JSON.stringify(version.data?.[k])
+					)
+				: []
+		)
+	);
+	const diff = $derived(
+		showChanges && previous && artifact.kind !== 'form'
+			? withContext(lineDiff(previous.content, version.content))
+			: []
 	);
 	const isCurrent = $derived(version.version === artifact.currentVersion);
 	const upstream = $derived(all.filter((a) => artifact.upstream.includes(a.id)));
@@ -116,6 +135,15 @@
 				? ` (${version.model})`
 				: ''} · {when(version.createdAt)}
 			{#if version.costUsd > 0}· ${version.costUsd.toFixed(5)}{/if}
+			{#if previous && artifact.kind !== 'form' && !editing}
+				·
+				<button
+					class="font-medium text-zinc-700 underline-offset-2 hover:underline dark:text-zinc-300"
+					onclick={() => (showChanges = !showChanges)}
+				>
+					{showChanges ? 'Hide changes' : `Show changes since v${previous.version}`}
+				</button>
+			{/if}
 		</p>
 
 		{#if artifact.status === 'stale' && isCurrent}
@@ -147,11 +175,25 @@
 				{:else}
 					<dl class="space-y-3">
 						{#each spec.fields as f (f.name)}
-							<div>
-								<dt class="text-xs font-medium text-zinc-500">{f.label}</dt>
+							<div
+								class={changedFields.has(f.name)
+									? '-mx-2 rounded-md bg-amber-500/10 px-2 py-1'
+									: ''}
+							>
+								<dt class="text-xs font-medium text-zinc-500">
+									{f.label}
+									{#if changedFields.has(f.name)}<span class="text-amber-700 dark:text-amber-400">
+											· changed in v{version.version}</span
+										>{/if}
+								</dt>
 								<dd class="text-sm whitespace-pre-wrap">
 									{display(version.data?.[f.name])}
 								</dd>
+								{#if changedFields.has(f.name)}
+									<dd class="text-xs text-zinc-500 line-through">
+										{display(previous?.data?.[f.name])}
+									</dd>
+								{/if}
 							</div>
 						{/each}
 					</dl>
@@ -175,6 +217,19 @@
 					onclick={() => (editing = false)}>Cancel</button
 				>
 			</div>
+		{:else if showChanges}
+			<pre
+				class="overflow-x-auto rounded-lg border border-zinc-200 bg-white py-2 font-mono text-xs leading-5 dark:border-zinc-800 dark:bg-zinc-900">{#each diff as line, i (i)}{#if line === null}<span
+							class="block px-3 text-zinc-400">⋯</span
+						>{:else}<span
+							class="block px-3 whitespace-pre-wrap {line.type === 'add'
+								? 'bg-emerald-500/15 text-emerald-900 dark:text-emerald-200'
+								: line.type === 'del'
+									? 'bg-rose-500/15 text-rose-900 line-through dark:text-rose-200'
+									: ''}"
+							>{line.type === 'add' ? '+ ' : line.type === 'del' ? '− ' : '  '}{line.text ||
+								' '}</span
+						>{/if}{/each}</pre>
 		{:else if artifact.kind === 'html'}
 			<iframe
 				title={artifact.title}

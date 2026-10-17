@@ -9,7 +9,8 @@ export type RunBody =
 			artifactId: string;
 			values?: Record<string, unknown>;
 			content?: string;
-	  };
+	  }
+	| { type: 'proposal_reply'; callId: string; approved: boolean };
 
 /** Live state of the agent run in the open conversation (one at a time per tab). */
 export const live = $state({

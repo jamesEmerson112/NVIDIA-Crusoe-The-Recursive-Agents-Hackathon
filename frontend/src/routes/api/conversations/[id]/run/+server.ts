@@ -1,5 +1,5 @@
 import { error } from '@sveltejs/kit';
-import { editArtifact, submitForm } from '#lib/server/agent/edits.ts';
+import { editArtifact, replyToProposal, submitForm } from '#lib/server/agent/edits.ts';
 import { isRunning, runAgent } from '#lib/server/agent/run.ts';
 import { getConversation } from '#lib/server/store.ts';
 import type { MessageMeta, RunEvent } from '#lib/types.ts';
@@ -12,7 +12,8 @@ type Body =
 			artifactId: string;
 			values?: Record<string, unknown>;
 			content?: string;
-	  };
+	  }
+	| { type: 'proposal_reply'; callId: string; approved: boolean };
 
 /** Start an agent run and stream its events as newline-delimited JSON. */
 export async function POST({ params, request }) {
@@ -28,6 +29,8 @@ export async function POST({ params, request }) {
 			input = { content: body.content.trim() };
 		} else if (body.type === 'form_submit') {
 			input = await submitForm(cid, body.artifactId, body.values);
+		} else if (body.type === 'proposal_reply') {
+			input = await replyToProposal(cid, body.callId, body.approved);
 		} else {
 			input = await editArtifact(cid, body.artifactId, body);
 		}

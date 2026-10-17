@@ -190,6 +190,33 @@ export const TOOL_SCHEMAS: ToolSchema[] = [
 				required: ['artifact_ids']
 			}
 		}
+	},
+	{
+		type: 'function',
+		function: {
+			name: 'propose_redo',
+			description:
+				'Ask the user to approve an expensive redo before doing it. Shows a card with what would be redone and a cost and time estimate, with Approve and Keep buttons. The answer comes back as an [Approved] or [Declined] message.',
+			parameters: {
+				type: 'object',
+				properties: {
+					artifact_ids: {
+						type: 'array',
+						items: { type: 'string' },
+						description: 'Artifacts that would be redone.'
+					},
+					summary: { type: 'string', description: 'One sentence: why a redo is needed.' },
+					plan: { type: 'string', description: 'What exactly would be redone, briefly.' },
+					extra_cost_usd: {
+						type: 'number',
+						description:
+							'Optional cost of work beyond regenerating these artifacts (e.g. new research).'
+					},
+					extra_seconds: { type: 'number', description: 'Optional time for that extra work.' }
+				},
+				required: ['artifact_ids', 'summary', 'plan']
+			}
+		}
 	}
 ];
 
@@ -199,7 +226,7 @@ const fail = (error: string) => JSON.stringify({ ok: false, error });
 export async function runTool(
 	name: string,
 	rawArgs: string,
-	ctx: ToolContext
+	ctx: ToolContext & { callId: string }
 ): Promise<ToolOutput> {
 	let args: Record<string, any>;
 	try {
@@ -348,6 +375,31 @@ export async function runTool(
 			await store.setArtifactStatus(ids, 'ready');
 			ctx.emit({ type: 'tool', name, summary: `Marked ${ids.length} artifact(s) up to date` });
 			return { content: ok({ artifact_ids: ids }) };
+		}
+		case 'propose_redo': {
+			const ids: string[] = args.artifact_ids ?? [];
+			const estimate = await store.estimateRedo(cid, ids);
+			if (!estimate.items.length) return { content: fail('None of those artifacts exist') };
+			const costUsd = estimate.costUsd + Number(args.extra_cost_usd ?? 0);
+			const durationMs = estimate.durationMs + 1000 * Number(args.extra_seconds ?? 0);
+			ctx.emit({ type: 'tool', name, summary: 'Asked you to approve a redo' });
+			return {
+				content: ok({
+					note: 'The proposal is shown to the user. Wait for [Approved] or [Declined].',
+					estimate_usd: Number(costUsd.toFixed(5)),
+					estimate_seconds: Math.round(durationMs / 1000)
+				}),
+				meta: {
+					kind: 'proposal',
+					callId: ctx.callId,
+					artifactIds: estimate.items.map((i) => i.id),
+					summary: String(args.summary ?? ''),
+					plan: String(args.plan ?? ''),
+					costUsd,
+					durationMs
+				},
+				awaitUser: true
+			};
 		}
 		default:
 			return { content: fail(`Unknown tool ${name}`) };

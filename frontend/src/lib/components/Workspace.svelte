@@ -10,6 +10,7 @@
 	import FormView from './FormView.svelte';
 	import Markdown from './Markdown.svelte';
 	import ProcessPanel from './ProcessPanel.svelte';
+	import ProposalCard from './ProposalCard.svelte';
 
 	let { conversation: cs }: { conversation: ConversationState } = $props();
 
@@ -17,6 +18,15 @@
 	const busy = $derived(live.running && live.cid === cid);
 	const openId = $derived(page.url.searchParams.get('a'));
 	const opened = $derived(cs.artifacts.find((a) => a.id === openId));
+	const titles = $derived(new Map(cs.artifacts.map((a) => [a.id, a.title])));
+	const replies = $derived(
+		new Map(
+			cs.messages.flatMap((m) => {
+				const meta = m.meta as MessageMeta | null;
+				return meta?.kind === 'proposal_reply' ? [[meta.callId, meta.approved] as const] : [];
+			})
+		)
+	);
 	const byId = $derived(new Map(cs.artifacts.map((a) => [a.id, a])));
 	let panelOpen = $state(true);
 
@@ -104,6 +114,24 @@
 									: ''}
 							</button>
 						</div>
+					{:else if m.role === 'user' && meta?.kind === 'proposal_reply'}
+						<div class="flex justify-end">
+							<span
+								class="rounded-full bg-zinc-100 px-3 py-1 text-xs text-zinc-600 dark:bg-zinc-800 dark:text-zinc-300"
+							>
+								{meta.approved ? '✓ Approved the redo' : 'Kept the current version'}
+							</span>
+						</div>
+					{:else if m.role === 'tool' && meta?.kind === 'proposal'}
+						<ProposalCard
+							proposal={meta}
+							{titles}
+							answer={replies.get(meta.callId)}
+							{busy}
+							onopen={open}
+							onanswer={(approved) =>
+								run({ type: 'proposal_reply', callId: meta.callId, approved })}
+						/>
 					{:else if m.role === 'user'}
 						<div class="flex justify-end">
 							<div
