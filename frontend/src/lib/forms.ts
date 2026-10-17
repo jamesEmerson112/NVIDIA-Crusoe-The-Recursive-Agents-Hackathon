@@ -53,7 +53,6 @@ export function normalizeFormSpec(input: {
 			label: typeof f.label === 'string' && f.label.trim() ? f.label.trim() : humanize(name),
 			type,
 			...(CHOICE.includes(type) ? { options } : {}),
-			...(f.required === true ? { required: true } : {}),
 			...(typeof f.placeholder === 'string' ? { placeholder: f.placeholder } : {}),
 			...(typeof f.help === 'string' ? { help: f.help } : {}),
 			...(f.default !== undefined ? { default: f.default } : {})
@@ -66,4 +65,50 @@ export function normalizeFormSpec(input: {
 			? { submitLabel: input.submitLabel }
 			: {})
 	};
+}
+
+/** A field name for a new question: snake_case from its label, unique within `taken`. */
+export function fieldName(label: string, taken: Iterable<string>) {
+	const used = new Set(taken);
+	const base =
+		label
+			.toLowerCase()
+			.normalize('NFKD')
+			.replace(/[^a-z0-9]+/g, '_')
+			.replace(/^_+|_+$/g, '')
+			.slice(0, 40) || 'question';
+	let name = base;
+	for (let i = 2; used.has(name); i++) name = `${base}_${i}`;
+	return name;
+}
+
+const show = (v: unknown) => JSON.stringify(v);
+
+/** Human-readable list of what changed between two versions of a form's questions. */
+export function diffSpecs(before: FormSpec, after: FormSpec): string[] {
+	const out: string[] = [];
+	const old = new Map(before.fields.map((f) => [f.name, f]));
+	const now = new Map(after.fields.map((f) => [f.name, f]));
+	for (const f of after.fields) {
+		const o = old.get(f.name);
+		if (!o) {
+			out.push(
+				`- added question "${f.label}" (${f.name}, ${f.type}${f.options ? `: ${f.options.join(' / ')}` : ''})`
+			);
+			continue;
+		}
+		if (o.label !== f.label) out.push(`- reworded "${o.label}" → "${f.label}" (${f.name})`);
+		if (o.type !== f.type) out.push(`- "${f.label}" type ${o.type} → ${f.type}`);
+		if (show(o.options ?? []) !== show(f.options ?? []))
+			out.push(`- "${f.label}" options ${show(o.options ?? [])} → ${show(f.options ?? [])}`);
+		if ((o.help ?? '') !== (f.help ?? '')) out.push(`- "${f.label}" help text changed`);
+	}
+	for (const o of before.fields)
+		if (!now.has(o.name)) out.push(`- removed question "${o.label}" (${o.name})`);
+	const order = (s: FormSpec) =>
+		s.fields.map((f) => f.name).filter((n) => old.has(n) && now.has(n));
+	if (show(order(before)) !== show(order(after))) out.push('- questions reordered');
+	if ((before.description ?? '') !== (after.description ?? ''))
+		out.push('- form description changed');
+	return out;
 }

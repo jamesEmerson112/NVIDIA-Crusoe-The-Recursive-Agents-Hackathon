@@ -105,7 +105,6 @@ export const TOOL_SCHEMAS: ToolSchema[] = [
 									]
 								},
 								options: { type: 'array', items: { type: 'string' } },
-								required: { type: 'boolean' },
 								placeholder: { type: 'string' },
 								help: { type: 'string' },
 								default: {}

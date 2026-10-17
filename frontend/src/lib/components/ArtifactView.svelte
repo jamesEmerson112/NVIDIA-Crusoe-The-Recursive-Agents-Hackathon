@@ -2,7 +2,9 @@
 	import type { ConversationState } from '#lib/server/store.ts';
 	import { lineDiff, withContext } from '#lib/diff.ts';
 	import type { FormSpec } from '#lib/types.ts';
+	import { saveQuestions } from '#lib/client/run.svelte.ts';
 	import FormView from './FormView.svelte';
+	import QuestionEditor from './QuestionEditor.svelte';
 	import Markdown from './Markdown.svelte';
 	import StatusBadge from './StatusBadge.svelte';
 
@@ -21,11 +23,13 @@
 		busy: boolean;
 		onopen: (id: string) => void;
 		onclose: () => void;
-		onedit: (edit: { values?: Record<string, unknown>; content?: string }) => void;
+		onedit: (edit: { values?: Record<string, unknown>; content?: string; spec?: FormSpec }) => void;
 	} = $props();
 
 	let selected = $state<number | null>(null);
 	let editing = $state(false);
+	let editingQuestions = $state(false);
+	let saveError = $state('');
 	let draft = $state('');
 	let showChanges = $state(false);
 
@@ -36,6 +40,7 @@
 			lastId = artifact.id;
 			selected = null;
 			editing = false;
+			editingQuestions = false;
 			showChanges = false;
 		}
 	});
@@ -125,6 +130,7 @@
 				onclick={() => {
 					selected = v.version;
 					editing = false;
+					editingQuestions = false;
 				}}
 			>
 				v{v.version}
@@ -160,11 +166,46 @@
 		{/if}
 
 		{#if spec}
-			{#key `${version.id}-${editing}`}
-				{#if artifact.status === 'awaiting_input'}
+			{#key `${version.id}-${editing}-${editingQuestions}`}
+				{#if editingQuestions}
+					<QuestionEditor
+						{spec}
+						saveLabel={artifact.status === 'awaiting_input'
+							? 'Save questions'
+							: 'Save and tell the agent'}
+						disabled={busy}
+						onsave={async (next) => {
+							if (artifact.status === 'awaiting_input') {
+								try {
+									saveError = '';
+									await saveQuestions(artifact.conversationId, artifact.id, next);
+									editingQuestions = false;
+								} catch (err) {
+									saveError = (err as Error).message;
+								}
+							} else {
+								editingQuestions = false;
+								onedit({ spec: next });
+							}
+						}}
+						oncancel={() => (editingQuestions = false)}
+					/>
+					{#if saveError}<p
+							data-testid="artifact-view-save-error"
+							class="mt-2 text-sm text-rose-600"
+						>
+							{saveError}
+						</p>{/if}
+				{:else if artifact.status === 'awaiting_input'}
 					<p data-testid="artifact-view-awaiting-input" class="text-sm text-zinc-500">
-						Waiting for your answers. Fill in the form in the chat.
+						Waiting for your answers. Fill in the form in the chat, or change its questions first.
 					</p>
+					<button
+						data-testid="artifact-view-edit-questions"
+						class="mt-3 rounded-lg border border-zinc-300 px-3 py-1.5 text-sm font-medium hover:bg-zinc-50 disabled:opacity-50 dark:border-zinc-700 dark:hover:bg-zinc-800"
+						disabled={busy}
+						onclick={() => (editingQuestions = true)}>Edit questions</button
+					>
 				{:else if editing}
 					<FormView
 						{spec}
@@ -291,7 +332,7 @@
 				{/if}
 			</div>
 		{/if}
-		{#if !editing && artifact.status !== 'awaiting_input'}
+		{#if !editing && !editingQuestions && artifact.status !== 'awaiting_input'}
 			<div class="flex items-center gap-2">
 				<button
 					data-testid="artifact-view-edit"
@@ -302,8 +343,20 @@
 						editing = true;
 					}}
 				>
-					{isCurrent ? 'Edit' : `Edit from v${version.version}`}
+					{artifact.kind === 'form' ? 'Edit answers' : 'Edit'}{isCurrent
+						? ''
+						: ` from v${version.version}`}
 				</button>
+				{#if artifact.kind === 'form'}
+					<button
+						data-testid="artifact-view-edit-questions"
+						class="rounded-lg border border-zinc-300 px-3 py-1.5 text-sm font-medium hover:bg-zinc-50 disabled:opacity-50 dark:border-zinc-700 dark:hover:bg-zinc-800"
+						disabled={busy}
+						onclick={() => (editingQuestions = true)}
+					>
+						Edit questions
+					</button>
+				{/if}
 				{#if downstream.length}
 					<span data-testid="artifact-view-dependents-notice" class="text-xs text-zinc-500"
 						>Changes flag {downstream.length} dependent artifact{downstream.length > 1 ? 's' : ''} for

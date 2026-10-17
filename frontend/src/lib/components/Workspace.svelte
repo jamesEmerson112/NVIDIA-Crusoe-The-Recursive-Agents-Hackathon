@@ -1,7 +1,13 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
 	import { page } from '$app/state';
-	import { cancelRun, live, startRun, type RunBody } from '#lib/client/run.svelte.ts';
+	import {
+		cancelRun,
+		live,
+		saveQuestions,
+		startRun,
+		type RunBody
+	} from '#lib/client/run.svelte.ts';
 	import type { ConversationState } from '#lib/server/store.ts';
 	import type { FormSpec, MessageMeta } from '#lib/types.ts';
 	import ArtifactCard from './ArtifactCard.svelte';
@@ -11,6 +17,7 @@
 	import Markdown from './Markdown.svelte';
 	import ProcessPanel from './ProcessPanel.svelte';
 	import ProposalCard from './ProposalCard.svelte';
+	import QuestionEditor from './QuestionEditor.svelte';
 
 	let { conversation: cs }: { conversation: ConversationState } = $props();
 
@@ -29,6 +36,9 @@
 	);
 	const byId = $derived(new Map(cs.artifacts.map((a) => [a.id, a])));
 	let panelOpen = $state(true);
+	/** Id of the pending form whose questions are being edited inline, if any. */
+	let editingForm = $state<string | null>(null);
+	let formError = $state('');
 	// Below xl the panel overlays the chat, so start with it closed there.
 	$effect(() => {
 		if (window.innerWidth < 1280) panelOpen = false;
@@ -184,13 +194,51 @@
 								data-testid="workspace-inline-form"
 								class="max-w-xl rounded-2xl border border-sky-200 bg-white p-5 shadow-sm dark:border-sky-900 dark:bg-zinc-900"
 							>
-								<h3 class="mb-3 font-semibold">{a.title}</h3>
-								<FormView
-									{spec}
-									submitLabel={spec.submitLabel ?? 'Submit'}
-									disabled={busy}
-									onsubmit={(values) => run({ type: 'form_submit', artifactId: a.id, values })}
-								/>
+								<div class="mb-3 flex items-start gap-2">
+									<h3 class="min-w-0 flex-1 font-semibold">{a.title}</h3>
+									{#if editingForm !== a.id}
+										<button
+											data-testid="workspace-inline-form-edit-questions"
+											class="shrink-0 rounded-md px-2 py-0.5 text-xs text-zinc-500 hover:bg-zinc-100 hover:text-zinc-800 disabled:opacity-50 dark:hover:bg-zinc-800 dark:hover:text-zinc-200"
+											disabled={busy}
+											onclick={() => {
+												formError = '';
+												editingForm = a.id;
+											}}>Edit questions</button
+										>
+									{/if}
+								</div>
+								{#key v.id}
+									{#if editingForm === a.id}
+										<QuestionEditor
+											{spec}
+											saveLabel="Save questions"
+											disabled={busy}
+											onsave={async (next) => {
+												try {
+													await saveQuestions(cid, a.id, next);
+													editingForm = null;
+												} catch (err) {
+													formError = (err as Error).message;
+												}
+											}}
+											oncancel={() => (editingForm = null)}
+										/>
+										{#if formError}<p
+												data-testid="workspace-inline-form-error"
+												class="mt-2 text-sm text-rose-600"
+											>
+												{formError}
+											</p>{/if}
+									{:else}
+										<FormView
+											{spec}
+											submitLabel={spec.submitLabel ?? 'Submit'}
+											disabled={busy}
+											onsubmit={(values) => run({ type: 'form_submit', artifactId: a.id, values })}
+										/>
+									{/if}
+								{/key}
 							</div>
 						{:else if a}
 							<ArtifactCard

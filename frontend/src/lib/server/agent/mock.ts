@@ -107,7 +107,7 @@ function script(req: ChatRequest): { content: string; toolCalls: ToolCall[] } {
 	if (text.startsWith('[Edit]')) {
 		const stale = [...text.matchAll(/^- (art_\w+)/gm)].map((m) => m[1]);
 		// Stand-in for the model's judgment: goal or audience changes reshape everything.
-		if (stale.length && /^- (goal|audience):/m.test(text)) {
+		if (stale.length && /\((goal|audience)\):/.test(text)) {
 			return {
 				content: '',
 				toolCalls: [
@@ -154,7 +154,6 @@ function script(req: ChatRequest): { content: string; toolCalls: ToolCall[] } {
 							name: 'goal',
 							label: 'What are you trying to achieve?',
 							type: 'textarea',
-							required: true,
 							default: text
 						},
 						{ name: 'audience', label: 'Who is it for?', type: 'text' },

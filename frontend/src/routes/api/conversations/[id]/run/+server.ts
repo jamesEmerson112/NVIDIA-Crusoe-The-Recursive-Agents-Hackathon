@@ -12,6 +12,8 @@ type Body =
 			artifactId: string;
 			values?: Record<string, unknown>;
 			content?: string;
+			/** Forms only: replacement questions (a FormSpec). */
+			spec?: import('#lib/types.ts').FormSpec;
 	  }
 	| { type: 'proposal_reply'; callId: string; approved: boolean };
 

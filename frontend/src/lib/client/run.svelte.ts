@@ -9,6 +9,8 @@ export type RunBody =
 			artifactId: string;
 			values?: Record<string, unknown>;
 			content?: string;
+			/** Forms only: replacement questions (a FormSpec). */
+			spec?: import('#lib/types.ts').FormSpec;
 	  }
 	| { type: 'proposal_reply'; callId: string; approved: boolean };
 
@@ -101,4 +103,20 @@ function apply(e: RunEvent) {
 
 export async function cancelRun(cid: string) {
 	await fetch(`/api/conversations/${cid}/cancel`, { method: 'POST' });
+}
+
+/** Save new questions on a form that hasn't been answered yet (no agent run). */
+export async function saveQuestions(
+	cid: string,
+	artifactId: string,
+	spec: import('#lib/types.ts').FormSpec
+) {
+	const res = await fetch(`/api/conversations/${cid}/artifacts/${artifactId}`, {
+		method: 'PUT',
+		headers: { 'Content-Type': 'application/json' },
+		body: JSON.stringify({ spec })
+	});
+	if (!res.ok)
+		throw new Error((await res.json().catch(() => null))?.message ?? `Save failed (${res.status})`);
+	await invalidate('app:conversation');
 }

@@ -44,7 +44,6 @@ export interface FormField {
 	label: string;
 	type: FieldType;
 	options?: string[];
-	required?: boolean;
 	placeholder?: string;
 	help?: string;
 	default?: unknown;

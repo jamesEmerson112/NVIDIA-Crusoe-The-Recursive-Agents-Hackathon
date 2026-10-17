@@ -67,7 +67,7 @@
 					</label>
 				{:else}
 					<label data-testid="form-label" class="block text-sm font-medium" for="f-{f.name}">
-						{f.label}{#if f.required}<span class="text-rose-600"> *</span>{/if}
+						{f.label}
 					</label>
 					{#if f.type === 'textarea'}
 						<textarea
@@ -75,7 +75,6 @@
 							data-testid="form-input-textarea"
 							class={input}
 							rows="3"
-							required={f.required}
 							placeholder={f.placeholder}
 							bind:value={values[f.name]}></textarea>
 					{:else if f.type === 'select'}
@@ -83,7 +82,6 @@
 							data-testid="form-input-select"
 							id="f-{f.name}"
 							class={input}
-							required={f.required}
 							bind:value={values[f.name]}
 						>
 							<option value="" disabled>Choose…</option>
@@ -104,7 +102,6 @@
 										class="sr-only"
 										name={f.name}
 										value={o}
-										required={f.required}
 										bind:group={values[f.name]}
 									/>
 									{o}
@@ -135,7 +132,6 @@
 							data-testid="form-input-text"
 							class={input}
 							type={f.type}
-							required={f.required}
 							placeholder={f.placeholder}
 							bind:value={values[f.name]}
 						/>
