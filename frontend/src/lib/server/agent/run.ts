@@ -142,6 +142,9 @@ export async function runAgent(
 			}
 			pendingCalls = [];
 			emit({ type: 'changed' });
+			// A form, widget or redo proposal is now waiting on the user: end the run here.
+			// Continuing let the model call create_form again and show the same form twice.
+			if (outputs.some((o) => o.awaitUser)) break;
 		}
 	} catch (err) {
 		// Keep history valid: every tool call needs a result before the next request.

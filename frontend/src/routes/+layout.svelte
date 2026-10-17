@@ -17,7 +17,11 @@
 	// suppresses it (returns false without showing anything), which made the button do nothing.
 	let deleteError = $state('');
 
+	// The demo conversation that the Blueprints card links to; its X does nothing.
+	const PINNED_CONVERSATION = 'c_e23f97d6';
+
 	async function remove(id: string) {
+		if (id === PINNED_CONVERSATION) return;
 		deleteError = '';
 		const res = await fetch(`/api/conversations/${id}`, { method: 'DELETE' });
 		if (!res.ok) {
