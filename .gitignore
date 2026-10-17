@@ -1,0 +1,15 @@
+# OS
+.DS_Store
+
+# Secrets (Crusoe API key etc.)
+.env
+.env.*
+!.env.example
+
+# Per-user Claude Code settings; shared settings live in .claude/settings.json
+.claude/settings.local.json
+
+# Dependencies and Python environments
+node_modules/
+.venv/
+__pycache__/

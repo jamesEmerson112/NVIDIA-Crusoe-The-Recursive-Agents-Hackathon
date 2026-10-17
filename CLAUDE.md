@@ -6,7 +6,31 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 Entry for the Crusoe × Cerebral Valley **Recursive Agents Hackathon** (Sat Oct 17, 2026, San Francisco). Theme: a team of agents you can walk away from — agents that take a goal, plan, spawn and delegate to sub-agents, communicate, check their own progress, recover from failures, and keep running. Everything is built on **Crusoe Managed Inference** (OpenAI-compatible serverless API).
 
-There is no application code yet, so no build, lint, or test commands exist. Add them here once a stack is chosen.
+Background research on the "digital fruit fly brain", with agent-team design ideas for this project, is in `docs/research/fruit-fly-brain/` (start with `00-overview.md`).
+
+## Frontend (`frontend/`)
+
+Angular 22 (standalone components, zoneless, Vitest), chosen by the user: stick with Angular until told otherwise. 3D rendering uses plain `three` + `@types/three` (keep both on the same 0.x minor). `angular-three` was ruled out on 2026-10-17 because it only supports Angular <22 and three <0.183.
+
+`src/app/three-scene/` is the three.js component. Its patterns: initialize in `afterNextRender`, check `WebGL.isWebGL2Available()` first (jsdom in unit tests has no WebGL), size the renderer from a `ResizeObserver`, and dispose everything in `DestroyRef.onDestroy`. `app.html` wraps it in `@defer` so three.js loads as a lazy chunk; without that, the initial bundle exceeds the 500 kB budget.
+
+## Environment and commands
+
+This is a team repo, and collaborators work through their own Claude agents, so everyone must run identical tooling:
+
+- **Node 24.22.0** (bundles npm 11.19.1) is pinned by the root `.nvmrc`. Each Bash call is a fresh shell, so prefix Node commands with `source ~/.nvm/nvm.sh && nvm use >/dev/null &&`; nvm finds the root `.nvmrc` from any subfolder. On Windows (nvm-windows ignores `.nvmrc`), run `nvm use 24.22.0`.
+- `devEngines` in `frontend/package.json` rejects any other Node or npm version, but only for `npm` commands, **not `npx`**. Always go through npm scripts.
+- Install with `npm ci`. Run `npm install <pkg>` only to add a dependency, then commit `package-lock.json`. Never delete or regenerate the lockfile: it carries the native binaries for every OS.
+- Dependency install scripts are denied in `allowScripts`; the current packages ship prebuilt binaries. If a new dependency genuinely needs its script, review it and run `npm install-scripts approve <pkg>`.
+- Shared Claude Code permissions live in `.claude/settings.json`. Personal overrides go in `.claude/settings.local.json`, which is gitignored.
+
+Commands, from `frontend/`:
+
+- `npm ci`: install the exact locked dependencies
+- `npm start`: dev server at http://localhost:4200
+- `npm run build`: production build to `dist/frontend`
+- `npm test -- --watch=false`: all unit tests; add `--include src/app/app.spec.ts` for a single spec file
+- `npm run ng -- generate component <name>`: Angular CLI generators
 
 ## Source of truth: the `crusoe-recursive-agents-hackathon` skill
 
