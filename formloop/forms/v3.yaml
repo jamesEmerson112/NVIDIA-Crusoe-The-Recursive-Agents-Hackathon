@@ -1,0 +1,42 @@
+# Form v3 (from v2). Written by formloop; edit research/ instead.
+version: 3
+parent: 2
+questions:
+  - id: budget
+    text: What's your monthly rent budget, and what's the absolute maximum you can
+      go?
+    type: text
+    maps_to:
+      - price
+    help: e.g. '$2,800, could stretch to $3,100 for the right place'
+  - id: bedrooms
+    text: How many bedrooms do you need? (Or tell us who's moving in.)
+    type: text
+    maps_to:
+      - bedrooms
+  - id: laundry
+    text: What laundry setup do you need?
+    type: select
+    options:
+      - in-unit
+      - in-building
+      - none needed
+    maps_to:
+      - laundry
+  - id: commute
+    text: Where do you need to get to on a typical day, and how long is too long?
+    type: text
+    maps_to:
+      - commute
+      - neighborhood
+  - id: last_place_gripe
+    text: What's the one thing you hated about your last place?
+    type: text
+    maps_to:
+      - layout
+      - street_noise
+      - floor
+note: Promoted the renter rewrites for commute and budget (rewrites are stronger
+  signal and both had negative value as written), and dropped parking, which
+  every renter skipped.
+score: 0.696

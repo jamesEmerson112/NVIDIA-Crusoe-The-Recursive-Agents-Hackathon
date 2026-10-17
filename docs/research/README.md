@@ -12,6 +12,7 @@ Background research for the team, compiled 2026-10-17 by parallel research agent
 | [floorplan-datasets-formats.md](floorplan-datasets-formats.md) | Open floorplan datasets, their licenses, exchange formats, and whether real SF floorplans are obtainable |
 | [floorplan-2d-to-3d.md](floorplan-2d-to-3d.md) | Turning a floorplan into walls, doors and rooms in three.js, and synthetic interiors inside SF footprints |
 | [building-performance-simulation.md](building-performance-simulation.md) | Energy, daylight and thermal comfort simulation for SF buildings |
+| [you-com-api.md](you-com-api.md) | You.com Search, Contents, Answer and Research APIs: prices, what our $10 buys, and tool designs for live listings and research sub-agents |
 
 ## Summaries
 
@@ -39,3 +40,5 @@ Agents read and write the same files through tool functions. Browser-only storag
 **Floorplan 2D to 3D.** Build walls as box segments around openings in plain three.js; a 3-story SF flat with 45 openings is about 1,600 triangles, built in about 15 ms, which beats CSG. Copy openPlan3D's plan JSON (MIT, SvelteKit + three.js, ships an LLM plan-authoring skill). In Workbench the plan is an artifact, rendered by a lazily loaded Svelte component. Interiors inside SF footprints are synthetic templates and must be labelled as such.
 
 **Building performance simulation.** EnergyPlus 26.2.0 runs headless on an M1 in 1.2–6.5 s per annual simulation, and `geomeppy` (MIT) builds a model from an SF footprint, height and story count in 0.6 s. Ground truth: SF's benchmarking data (`4ua7-5sfx`, public domain, 30,483 rows) joins to 89.5% of footprints; ResStock/ComStock medians (CC BY 4.0) cover the rest. Have the LLM pick model parameters, not write EnergyPlus files. Ladybug/honeybee is AGPL-3.0. NREL is now the National Laboratory of the Rockies (`NatLabRockies` on GitHub).
+
+**You.com API.** Four REST APIs matter: Search ($5 per 1k calls), Contents ($1 per 1k pages), Answer ($5 per 1k) and Research (`lite` $12 per 1k). Our $10 buys about 2,000 searches or 830 Research `lite` calls; a full demo run is about $0.08. For listings, call Search with `include_domains` set to listing sites, `freshness: month` and highlights: one test returned 7 results in 1.0 s, 5 with street addresses. Use Research `lite` (about 5 s, cited sources) for neighborhood briefs, one call per `spawn_research` sub-agent. The key is `YDC_API_KEY`, which formloop already reads.

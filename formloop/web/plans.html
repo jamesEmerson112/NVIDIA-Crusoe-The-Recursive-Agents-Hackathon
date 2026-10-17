@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Floor Plan Gallery</title>
+<script src="/floorplan.js"></script>
+<style>
+	:root { --bg: #f6f5f2; --panel: #fff; --ink: #1d1d1f; --muted: #6b6b70; --plan-bg: #fff; --plan-ink: #16291f; }
+	body { margin: 0; padding: 20px; background: var(--bg); color: var(--ink); font: 14px/1.4 -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
+	h1 { font-size: 17px; margin: 0 0 4px; } p { color: var(--muted); margin: 0 0 16px; }
+	.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 14px; }
+	.cell { background: var(--panel); border: 1px solid #e4e2dc; border-radius: 10px; padding: 10px; }
+	.cell b { display: block; font-size: 13px; margin-bottom: 6px; }
+	svg { width: 100%; height: 260px; }
+</style>
+</head>
+<body>
+<h1>Floor plans generated from listing data</h1>
+<p>One per layout type. Plans are drawn in the browser from bedrooms, baths, square feet, layout and laundry.</p>
+<div class="grid" id="grid"></div>
+<script>
+const L = (id, bedrooms, bathrooms, sqft, layout, laundry, floor) => ({ id, bedrooms, bathrooms, sqft, layout, laundry, floor });
+const samples = [L('a', 0, 1, 450, 'standard', 'in_unit', 3), L('b', 0, 1, 520, 'loft', 'none', 2), L('c', 1, 1, 700, 'railroad', 'in_building', 2), L('d', 1, 1, 680, 'standard', 'in_unit', 5), L('e', 2, 2, 1000, 'irregular', 'in_unit', 9), L('f', 2, 1, 900, 'open', 'none', 1), L('g', 2, 1, 950, 'railroad', 'none', 2), L('h', 3, 2, 1350, 'standard', 'in_unit', 4)];
+for (const l of samples) {
+	const d = document.createElement('div');
+	d.className = 'cell';
+	d.innerHTML = `<b>${l.bedrooms ? l.bedrooms + ' BR' : 'Studio'} · ${l.bathrooms} BA · ${l.layout} · laundry ${l.laundry.replace('_', ' ')}</b>` + floorplanSVG(l);
+	document.getElementById('grid').append(d);
+}
+</script>
+</body>
+</html>

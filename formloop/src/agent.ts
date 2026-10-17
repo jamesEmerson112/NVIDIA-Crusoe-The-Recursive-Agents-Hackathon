@@ -39,7 +39,13 @@ export function cleanPref(raw: unknown, questionIds: Set<string>): Pref | null {
 		const n = Number(value);
 		if (!Number.isFinite(n)) return null;
 		value = n;
+		// A destination without a time limit ("Mission Bay, I take the N") came back as "max 0 minutes".
+		if (field === 'commute' && (n < 10 || n > 120)) value = 35;
+		if (field === 'price' && n < 500) return null;
+		if ((field === 'sqft' || field === 'bedrooms') && n < 0) return null;
 	}
+	// "In-building works" also accepts in-unit, which is strictly better.
+	if (field === 'laundry' && op === 'in' && Array.isArray(value) && value.includes('in_building') && !value.includes('in_unit')) value = ['in_unit', ...value];
 	const dest = p.dest as Destination | undefined;
 	if (field === 'commute' && !DESTINATIONS.includes(dest as Destination)) return null;
 	const from = typeof p.from === 'string' && questionIds.has(p.from) ? p.from : undefined;
@@ -55,7 +61,7 @@ export function cleanPref(raw: unknown, questionIds: Set<string>): Pref | null {
 }
 
 const SCHEMA = `Pref = {"field": one of ${PREF_FIELDS.join('|')}, "op": max|min|in|not_in|eq, "value": number | ISO date | list | boolean, "dest": ${DESTINATIONS.join('|')} (commute only), "weight": 0-3, "hard": true only for dealbreakers, "from": the question_id it came from}
-Rules: price max in USD/month; commute max minutes with dest; bedrooms min; floor min/max; available max = move-in-by date; pets in = pets the renter HAS (dogs, cats); laundry in [in_unit] or [in_unit,in_building]; parking eq true/false; street_noise in subset of [quiet,moderate,lively]; layout in/not_in subset of [${LAYOUTS.join(',')}]; neighborhood in/not_in subset of [${NEIGHBORHOODS.join(', ')}].`;
+Rules: price max in USD/month; commute max minutes with dest (if no time is given, use 35); bedrooms min; floor min/max; available max = move-in-by date; pets in = pets the renter HAS (dogs, cats); laundry in [in_unit] or [in_unit,in_building]; parking eq true/false; street_noise in subset of [quiet,moderate,lively]; layout in/not_in subset of [${LAYOUTS.join(',')}]; neighborhood in/not_in subset of [${NEIGHBORHOODS.join(', ')}].`;
 
 function questionText(q: Question, a: Answer) {
 	return a.action === 'rewrite' && a.rewritten_text ? `${a.rewritten_text} (renter's rewrite of: ${q.text})` : q.text;

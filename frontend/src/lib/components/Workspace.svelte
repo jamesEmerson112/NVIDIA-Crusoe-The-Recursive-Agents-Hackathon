@@ -1,15 +1,10 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
 	import { page } from '$app/state';
-	import {
-		cancelRun,
-		live,
-		saveQuestions,
-		startRun,
-		type RunBody
-	} from '#lib/client/run.svelte.ts';
+	import { cancelRun, live, startRun, type RunBody } from '#lib/client/run.svelte.ts';
 	import type { ConversationState } from '#lib/server/store.ts';
-	import type { FormSpec, MessageMeta } from '#lib/types.ts';
+	import type { MessageMeta } from '#lib/types.ts';
+	import AgentMap from './AgentMap.svelte';
 	import ArtifactCard from './ArtifactCard.svelte';
 	import ArtifactView from './ArtifactView.svelte';
 	import Composer from './Composer.svelte';
@@ -35,6 +30,11 @@
 	);
 	const byId = $derived(new Map(cs.artifacts.map((a) => [a.id, a])));
 	let panelOpen = $state(true);
+	// Right panel tab; `?panel=map` deep-links the agent map.
+	let panelTab = $state<'process' | 'map'>(
+		page.url.searchParams.get('panel') === 'map' ? 'map' : 'process'
+	);
+	const mapWide = $derived(panelTab === 'map' && !opened);
 	// Below xl the panel overlays the chat, so start with it closed there.
 	$effect(() => {
 		if (window.innerWidth < 1280) panelOpen = false;
@@ -95,6 +95,15 @@
 			<h1 data-testid="workspace-title" class="min-w-0 flex-1 truncate text-sm font-semibold">
 				{cs.conversation.title}
 			</h1>
+			<button
+				data-testid="workspace-open-map"
+				class="rounded-md px-2 py-1 text-xs text-zinc-600 hover:bg-zinc-100 dark:text-zinc-300 dark:hover:bg-zinc-800"
+				onclick={() => {
+					panelTab = 'map';
+					panelOpen = true;
+					if (opened) open(null);
+				}}>Agent map</button
+			>
 			<button
 				data-testid="workspace-toggle-process"
 				class="rounded-md px-2 py-1 text-xs text-zinc-600 hover:bg-zinc-100 dark:text-zinc-300 dark:hover:bg-zinc-800"
@@ -238,7 +247,9 @@
 	{#if panelOpen || opened}
 		<aside
 			data-testid="workspace-panel"
-			class="w-[420px] shrink-0 border-l border-zinc-200 bg-zinc-50 max-xl:absolute max-xl:inset-y-0 max-xl:right-0 max-xl:z-10 max-xl:w-[min(420px,100%)] max-xl:shadow-2xl dark:border-zinc-800 dark:bg-zinc-950"
+			class="{mapWide
+				? 'w-[min(880px,58vw)] max-xl:w-full'
+				: 'w-[420px] max-xl:w-[min(420px,100%)]'} shrink-0 border-l border-zinc-200 bg-zinc-50 max-xl:absolute max-xl:inset-y-0 max-xl:right-0 max-xl:z-10 max-xl:shadow-2xl dark:border-zinc-800 dark:bg-zinc-950"
 		>
 			{#if opened}
 				<ArtifactView
@@ -250,7 +261,30 @@
 					onedit={(edit) => run({ type: 'artifact_edit', artifactId: opened.id, ...edit })}
 				/>
 			{:else}
-				<ProcessPanel conversation={cs} onopen={open} />
+				<div class="flex h-full flex-col">
+					<div
+						data-testid="workspace-panel-tabs"
+						class="flex gap-1 border-b border-zinc-200 px-3 pt-2 dark:border-zinc-800"
+					>
+						{#each [['process', 'Process'], ['map', 'Agent map']] as const as [tab, label] (tab)}
+							<button
+								data-testid="workspace-panel-tab"
+								class="-mb-px border-b-2 px-3 py-1.5 text-xs font-medium {panelTab === tab
+									? 'border-zinc-900 text-zinc-900 dark:border-zinc-100 dark:text-zinc-100'
+									: 'border-transparent text-zinc-500 hover:text-zinc-800 dark:hover:text-zinc-200'}"
+								aria-pressed={panelTab === tab}
+								onclick={() => (panelTab = tab)}>{label}</button
+							>
+						{/each}
+					</div>
+					<div class="min-h-0 flex-1">
+						{#if panelTab === 'map'}
+							<AgentMap conversation={cs} onopen={open} />
+						{:else}
+							<ProcessPanel conversation={cs} onopen={open} />
+						{/if}
+					</div>
+				</div>
 			{/if}
 		</aside>
 	{/if}

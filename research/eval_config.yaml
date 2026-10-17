@@ -10,10 +10,10 @@ listings:
   count: 300
 
 # Renters simulated per generation to collect reactions the reviewer learns from.
-train_batch_size: 6
+train_batch_size: 8
 
 # Fresh renters a proposed form must beat the current form on before it is accepted.
-acceptance_batch_size: 6
+acceptance_batch_size: 10
 
 # Generated renters never seen during training; `npm run eval` compares v1 vs latest on them.
 heldout_size: 10

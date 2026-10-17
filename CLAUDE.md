@@ -8,6 +8,14 @@ Entry for the Crusoe × Cerebral Valley **Recursive Agents Hackathon** (Sat Oct 
 
 Team research lives in `docs/research/` (start with `docs/research/README.md`). It covers building our own Obsidian-style knowledge base for agent memory, GPT-6 Astra vs Claude for Blender and 3D work, rendering San Francisco buildings in three.js, floorplan datasets and 2D-to-3D rendering, and building energy simulation. Read the relevant file before working on any of those.
 
+## Team and feature tracking
+
+- **Who works on what:** James = frontend, Gaelan = backend (the Workbench agent in `frontend/src/lib/server/`), Laurie = `formloop/` (a self-improving apartment intake form with its own README and demo). Everyone commits directly to `main`.
+- **`docs/possible-technical-features.txt` is the tracked feature list.** Read it before starting work. It has TODO lanes FRONTEND (FE, ranked most essential first), BACKEND (BE) and BOTH, each with NOW then LATER, and a DONE list at the bottom.
+  - `<-- Name` after an item marks who is on it now. Add your owner's arrow when you start an item, and don't start an item someone else's arrow is on without asking.
+  - When you finish an item, move it to DONE (dropping the arrow). Add new items to the lane whose code they need. Keep every item and sub-point to 8 words or fewer, and keep arrows in a section aligned to one column.
+  - A 10-minute job in James's session also syncs this file from commits, so commit your changes to it promptly.
+
 ## Frontend (`frontend/`)
 
 Parallel room-designer work is planned in [`docs/cozy-implementation-plan.md`](docs/cozy-implementation-plan.md), with C0–C3 lane ownership, shared contracts, and integration gates. Read its parallel implementation section before starting that work. Reuse the existing research scheduler/run events when available; coordinate edits to shared backend and workspace files with their current owners. The feature list tracks status; `docs/api.md` documents implemented behavior only. Room-design features remain planned until their gate checks pass.
@@ -15,6 +23,10 @@ Parallel room-designer work is planned in [`docs/cozy-implementation-plan.md`](d
 SvelteKit 3 + Svelte 5 (runes mode forced in `vite.config.ts`), TypeScript, Tailwind 4 with `@tailwindcss/typography`, Vitest, Prettier. Switched from Angular on 2026-10-17 at the user's request. `@sveltejs/adapter-node` because agents run as long-lived server work: all Crusoe calls go through server code (`src/lib/server/`, `+server.ts`, `+page.server.ts`), never the browser, so `CRUSOE_API_KEY` stays out of the bundle.
 
 Persistence is SQLite through Node's built-in `node:sqlite` with Drizzle ORM (schema in `src/lib/server/db/schema.ts`, database path from `DATABASE_URL` in `frontend/.env`, default `local.db`). `drizzle-orm` and `drizzle-kit` are pinned to `1.0.0-rc.4`: the `node-sqlite` driver doesn't exist in stable 0.45, and 1.0 takes `drizzle({ client })`, not `drizzle(client, { schema })`. Using `node:sqlite` avoids native builds, so install scripts can stay blocked.
+
+**3D blueprints**: `/plans` renders apartment blueprints with three.js 0.186 (`three/webgpu`'s `WebGPURenderer`, which falls back to WebGL2) on the viewer's own GPU. Plans are JSON in `static/plans/` in the `Plan` format of `src/lib/floorplan/types.ts` (metres; plan x/y maps to three x/-z); `validate.ts` checks them and `three/build.ts` turns them into ~6 merged draw calls. Import the viewer only through a dynamic `import()` in `onMount` (`PlanViewer.svelte`), so three never runs during SSR and stays out of other pages' bundles. Debug mode: `?debug=1` or the D key (stats-gl + lil-gui).
+
+**Agent map**: `AgentMap.svelte` draws the conversation as a subway-style map derived by `src/lib/client/agent-map.ts` from `ConversationState` (no backend data of its own); open it from the workspace header or `?panel=map`. New tool names get their own lane automatically.
 
 **Test IDs**: every interactive element (`button`, `a`, `input`, `textarea`, `select`, `iframe`, clickable `label`/`summary`), major region, repeated item and status readout gets `data-testid="<area>-<thing>"` in kebab-case, where `<area>` is the component or route (`composer-send`, `sidebar-conversation`, `proposal-approve`). Repeated items share one static id (never interpolate database ids). Put it on an HTML element inside the component, since Svelte 5 doesn't forward it from a component tag. New UI ships with ids; don't rename or remove one without updating tests. All current ids are listed in `docs/test-ids.md`; regenerate that list when you add some.
 
