@@ -120,7 +120,7 @@
 				params.delete('listing');
 				params.set('plan', event.currentTarget.value);
 				params.set('quality', 'high');
-				view = 'full';
+				params.set('view', 'full');
 				goto(`?${params}`, { replace: true });
 			}}
 		>

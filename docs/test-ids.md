@@ -46,6 +46,10 @@ Repeated items (messages, steps, list rows, chips) share one id; pick one by tex
 
 **`routes/plans/+page.svelte`**: `plans-root`, `plans-heading`, `plans-select`, `plans-option`, `plans-model-collection`, `plans-model-placeholder`, `plans-model-{p.id}`, `plans-views`, `plans-view-{v.id}` (`dollhouse`, `top`, `full`, `walk`), `plans-walk-hint`, `plans-photo-link`, `plans-showcase-link`, `plans-summary`, `plans-quality`, `plans-quality-{q ?? 'auto'}`, `plans-debug-toggle`, `plans-problems`
 
+**`routes/plans/photo/+page.svelte`**: `plans-photo-root`, `plans-photo-back`, `plans-photo-heading`, `plans-photo-name`, `plans-photo-cam-{c.id}`, `plans-photo-fullres`, `plans-photo-viewport`, `plans-photo-error`, `plans-photo-hud`, `plans-photo-samples`, `plans-photo-state`
+
+**`lib/floorplan/three/photo.ts`**: `plans-photo-canvas`
+
 **`routes/plans/room/+page.svelte`**: `room-root`, `room-back`, `room-heading`, `room-presets`, `room-preset-{p.id}` (`listing`, `window`, `dining`), `room-status`, `room-canvas`
 
 **`lib/floorplan/three/viewer.ts`**: `plan-viewer-canvas`, `plan-viewer-labels`, `plan-viewer-fps`, `plan-viewer-debug`, `plan-viewer-room-label`, `plan-viewer-wall-label`
