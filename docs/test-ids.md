@@ -30,7 +30,7 @@ Repeated items (messages, steps, list rows, chips) share one id; pick one by tex
 
 **`lib/components/RunLog.svelte`**: `run-log`, `run-log-summary`, `run-log-empty`, `run-log-scroll`, `run-log-table`, `run-log-row`, `run-log-time`, `run-log-role`, `run-log-model`, `run-log-cache-hit`, `run-log-cost`, `run-log-duration`, `run-log-did`, `run-log-artifact`, `run-log-tool`, `run-log-totals`
 
-**`lib/components/SanFrancisco3D.svelte`**: `sf3d-backdrop`, `sf3d-host`
+**`lib/components/SanFrancisco3D.svelte`**: `sf3d-attribution`, `sf3d-backdrop`, `sf3d-host`
 
 **`lib/components/StatusBadge.svelte`**: `status-badge`
 
@@ -47,5 +47,7 @@ Repeated items (messages, steps, list rows, chips) share one id; pick one by tex
 **`routes/plans/+page.svelte`**: `plans-root`, `plans-heading`, `plans-select`, `plans-option`, `plans-model-collection`, `plans-model-placeholder`, `plans-model-{p.id}`, `plans-views`, `plans-view-{v.id}`, `plans-summary`, `plans-quality`, `plans-quality-{q ?? 'auto'}`, `plans-debug-toggle`, `plans-problems`
 
 **`lib/floorplan/three/viewer.ts`**: `plan-viewer-canvas`, `plan-viewer-labels`, `plan-viewer-fps`, `plan-viewer-debug`, `plan-viewer-room-label`, `plan-viewer-wall-label`
+
+**`lib/sf3d/map.ts`**: `sf3d-map-canvas`
 
 **`lib/sf3d/scene.ts`**: `sf3d-canvas`

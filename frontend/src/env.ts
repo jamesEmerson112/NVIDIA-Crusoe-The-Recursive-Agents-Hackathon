@@ -18,5 +18,11 @@ export const variables = defineEnvVars({
 	CRUSOE_FAST_MODEL: {
 		description: 'Cheap model for quick artifact edits run as sub-agents.',
 		schema: (value) => value || 'deepseek-ai/Deepseek-V4-Flash'
+	},
+	PUBLIC_MAPTILER_KEY: {
+		description:
+			'MapTiler key for the 3D San Francisco map on the start page. Shipped to the browser, so restrict it to your domains in the MapTiler dashboard. Without it the start page draws a keyless three.js skyline.',
+		public: true,
+		schema: optional
 	}
 });

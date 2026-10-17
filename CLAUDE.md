@@ -28,6 +28,8 @@ Persistence is SQLite through Node's built-in `node:sqlite` with Drizzle ORM (sc
 
 **Agent map**: `AgentMap.svelte` draws the conversation as a subway-style map derived by `src/lib/client/agent-map.ts` from `ConversationState` (no backend data of its own); open it from the workspace header or `?panel=map`. New tool names get their own lane automatically.
 
+**Start-page SF map**: `SanFrancisco3D.svelte` is a non-interactive background. With `PUBLIC_MAPTILER_KEY` (public var in `src/env.ts`, read from `$app/env/public`) it draws real SF with `maplibre-gl` + MapTiler `dataviz-light`, terrain and extruded `building` tiles (`sf3d/map.ts`; the worker URL is set explicitly because Vite moves it). Without a key, or if the map fails, it falls back to the keyless three.js skyline (`sf3d/scene.ts`).
+
 **Test IDs**: every interactive element (`button`, `a`, `input`, `textarea`, `select`, `iframe`, clickable `label`/`summary`), major region, repeated item and status readout gets `data-testid="<area>-<thing>"` in kebab-case, where `<area>` is the component or route (`composer-send`, `sidebar-conversation`, `proposal-approve`). Repeated items share one static id (never interpolate database ids). Put it on an HTML element inside the component, since Svelte 5 doesn't forward it from a component tag. New UI ships with ids; don't rename or remove one without updating tests. All current ids are listed in `docs/test-ids.md`; regenerate that list when you add some.
 
 Imports through `#lib/...` (Node subpath imports in `package.json`) need the file extension: `#lib/types.ts`, not `#lib/types`.
