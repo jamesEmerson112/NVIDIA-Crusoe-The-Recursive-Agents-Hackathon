@@ -393,6 +393,15 @@ export async function usageTotals(conversationId: string) {
 	};
 }
 
+/** Every model call in the conversation, oldest first (read-only; feeds the run log). */
+export async function listUsage(conversationId: string) {
+	return db
+		.select()
+		.from(usage)
+		.where(eq(usage.conversationId, conversationId))
+		.orderBy(asc(usage.createdAt));
+}
+
 // ---------- full snapshot for the UI ----------
 
 export async function conversationState(id: string) {
@@ -427,7 +436,8 @@ export async function conversationState(id: string) {
 			versions: versionRows.filter((v) => v.artifactId === a.id),
 			upstream: depRows.filter((d) => d.downstreamId === a.id).map((d) => d.upstreamId)
 		})),
-		usage: await usageTotals(id)
+		usage: await usageTotals(id),
+		calls: await listUsage(id)
 	};
 }
 

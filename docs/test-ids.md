@@ -30,6 +30,8 @@ Repeated items (messages, steps, list rows, chips) share one id; pick one by tex
 
 **`lib/components/QuestionEditor.svelte`**: `question-editor-label`, `question-editor`, `question-editor-description`, `question-editor-question`, `question-editor-up`, `question-editor-down`, `question-editor-remove`, `question-editor-type`, `question-editor-help`, `question-editor-options`, `question-editor-add`, `question-editor-save`, `question-editor-cancel`
 
+**`lib/components/RunLog.svelte`**: `run-log`, `run-log-summary`, `run-log-empty`, `run-log-scroll`, `run-log-table`, `run-log-row`, `run-log-time`, `run-log-role`, `run-log-model`, `run-log-cache-hit`, `run-log-cost`, `run-log-duration`, `run-log-did`, `run-log-artifact`, `run-log-tool`, `run-log-totals`
+
 **`lib/components/StatusBadge.svelte`**: `status-badge`
 
 **`lib/components/Widget.svelte`**: `widget`, `widget-description`, `widget-frame`, `widget-error`

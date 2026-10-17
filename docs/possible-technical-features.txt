@@ -36,19 +36,18 @@ NOW
 
 LATER
 4. [S] Landing page copy and one-line pitch
-5. [S] Run log view of every call                   <-- James
-6. [S] Real-world task list with checkboxes
-7. [M] Weight sliders re-rank shortlist             <-- Laurie
+5. [S] Real-world task list with checkboxes
+6. [M] Weight sliders re-rank shortlist             <-- Laurie
    - Plain code re-sorts, no model call
    - formloop infers weights; Workbench doesn't yet
-8. [S] Live "options remaining" counter on forms
-9. [M] Map with listing pins
+7. [S] Live "options remaining" counter on forms
+8. [M] Map with listing pins
    - Sandbox blocks network; inline or static
-10. [M] Charts: rents, price versus commute
-11. [M] Plan artifacts open in 3D viewer
+9. [M] Charts: rents, price versus commute
+10. [M] Plan artifacts open in 3D viewer
     - Reuse PlanViewer from /plans
-12. [L] Synthetic floorplan inside building footprint
-13. [L] C1: Cozy room editor and furniture assets (planned)
+11. [L] Synthetic floorplan inside building footprint
+12. [L] C1: Cozy room editor and furniture assets (planned)
     - Fixture scenes first; move, rotate, lock, save, reload
     - Own new room UI/renderer files; C0 wires shared UI
     - Use BE's shared run events for the live agent tree
@@ -188,4 +187,6 @@ Works on its own; Workbench (frontend/) can't use it yet.
 - Default agent model now GLM-5.3-Flash             <-- Gaelan
 - Petite-vue widgets the agent writes, in chat      <-- Gaelan
   - Return JSON; schema enforced; leaf-level diffs
+- Run log of every model call, ?panel=log           <-- James
+  - Tokens, cache hits, cost, tools, slow calls
 - Forms and widgets stay embedded after submit      <-- Gaelan
