@@ -1,0 +1,37 @@
+# Eval config: how a generation is run and scored. Every field is required.
+# LLM credits are limited and the API allows 30 requests/minute per model, so keep batches small.
+
+# Base seed for all randomness (listings, generated personas, splits). Same seed = same run.
+seed: 42
+
+# Listings the matcher ranks. source: synthetic | youcom | both. count = how many to use.
+listings:
+  source: synthetic
+  count: 300
+
+# Renters simulated per generation to collect reactions the reviewer learns from.
+train_batch_size: 6
+
+# Fresh renters a proposed form must beat the current form on before it is accepted.
+acceptance_batch_size: 6
+
+# Generated renters never seen during training; `npm run eval` compares v1 vs latest on them.
+heldout_size: 10
+
+# Max questions shown to one renter (must be <= the number of questions in the bank).
+questions_shown: 8
+
+# Objective = match quality - friction_weight * friction. Higher weight punishes long forms more.
+friction_weight: 0.05
+
+# Friction cost per skip, per rewritten question, and per simulated second spent answering.
+friction:
+  skip: 1
+  rewrite: 1.5
+  per_second: 0.02
+
+# Recommendations shown to the renter in each inner-loop round.
+top_k: 2
+
+# Like/pass reaction rounds per renter.
+rounds: 2
