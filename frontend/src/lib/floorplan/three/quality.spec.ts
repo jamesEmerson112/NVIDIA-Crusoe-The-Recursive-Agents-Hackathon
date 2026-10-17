@@ -68,7 +68,7 @@ describe('PRESETS', () => {
 		expect(p.shadows).toBe(true);
 		expect(p.shadowMapSize).toBe(4096);
 		expect(p.pixelRatioCap).toBe(2);
-		expect(p.toneMapping).toBe('agx');
+		expect(p.toneMapping).toBe('neutral');
 	});
 
 	it('is frozen so callers cannot mutate it', () => {

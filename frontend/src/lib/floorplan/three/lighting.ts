@@ -1,11 +1,11 @@
-// Fixed golden-hour lighting for the blueprint viewer: a low warm sun from the west-southwest plus a
-// cool hemisphere fill. High adds PCF shadows fitted to the unit, a RoomEnvironment PMREM and AgX.
+// Bright daylight for the blueprint viewer, styled after real-estate 3D floor plans: a high, slightly
+// warm sun with soft shadows, a bright sky fill and (on High) image-based light with neutral tone mapping.
 // Plan +y (three -z) is treated as north, so west is -x and south is +z.
 import {
-	AgXToneMapping,
 	Box3,
 	DirectionalLight,
 	HemisphereLight,
+	NeutralToneMapping,
 	NoToneMapping,
 	PCFShadowMap,
 	PMREMGenerator,
@@ -23,8 +23,8 @@ export interface Lighting {
 	dispose(): void;
 }
 
-const SUN_ELEVATION = (12 * Math.PI) / 180;
-const SUN_AZIMUTH = (247.5 * Math.PI) / 180; // WSW, clockwise from north
+const SUN_ELEVATION = (52 * Math.PI) / 180;
+const SUN_AZIMUTH = (205 * Math.PI) / 180; // south-southwest, clockwise from north
 /** Unit vector from the scene towards the sun. */
 const SUN_DIR = new Vector3(
 	Math.sin(SUN_AZIMUTH) * Math.cos(SUN_ELEVATION),
@@ -37,12 +37,12 @@ export function createLighting(
 	renderer: WebGPURenderer,
 	settings: QualitySettings
 ): Lighting {
-	const high = settings.environment || settings.shadows || settings.toneMapping === 'agx';
+	const high = settings.environment || settings.shadows || settings.toneMapping === 'neutral';
 
 	// Low has no environment or tone mapping, so the fill carries more of the load (the sun grazes
 	// floors at 12°, so horizontal surfaces are lit mostly by the hemisphere).
-	const hemi = new HemisphereLight('#bcd4ff', '#8a7660', high ? 0.7 : 1.5);
-	const sun = new DirectionalLight('#ffb46b', high ? 3 : 2.2);
+	const hemi = new HemisphereLight('#f4f7ff', '#d6cfc4', high ? 1.1 : 1.6);
+	const sun = new DirectionalLight('#fff1dd', high ? 2.6 : 1.8);
 	sun.name = 'sun';
 	sun.position.copy(SUN_DIR).multiplyScalar(20);
 	scene.add(hemi, sun, sun.target);
@@ -71,12 +71,13 @@ export function createLighting(
 		room.dispose();
 		pmrem.dispose();
 		scene.environment = envTarget.texture;
-		scene.environmentIntensity = 0.4;
+		scene.environmentIntensity = 0.9;
 	}
 
-	if (settings.toneMapping === 'agx') {
-		renderer.toneMapping = AgXToneMapping;
-		renderer.toneMappingExposure = 1.1;
+	if (settings.toneMapping === 'neutral') {
+		// Khronos PBR Neutral keeps materials' true colours (AgX greyed the scene out).
+		renderer.toneMapping = NeutralToneMapping;
+		renderer.toneMappingExposure = 1.0;
 	} else {
 		renderer.toneMapping = NoToneMapping;
 		renderer.toneMappingExposure = 1;

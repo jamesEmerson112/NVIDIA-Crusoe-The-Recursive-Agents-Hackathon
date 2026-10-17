@@ -9,8 +9,11 @@ import {
 	Group,
 	Mesh,
 	MeshStandardMaterial,
+	RepeatWrapping,
 	Shape,
 	ShapeGeometry,
+	SRGBColorSpace,
+	type Texture,
 	Vector2
 } from 'three/webgpu';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
@@ -37,6 +40,16 @@ const FURNITURE_COLORS: Record<string, string> = {
 	washer: '#e6e8ea',
 	wardrobe: '#c4a882'
 };
+
+/** PBR maps for the photoreal look: wood for dry rooms, tile for kitchen, bath and utility. */
+export interface FloorMaps {
+	wood: { map: Texture; normalMap: Texture; roughnessMap: Texture };
+	tile: { map: Texture; normalMap: Texture; roughnessMap: Texture };
+}
+
+const WET_ROOMS = new Set(['kitchen', 'bath', 'utility']);
+/** Metres covered by one repeat of each texture. */
+const TEXTURE_METRES = { wood: 2, tile: 1 };
 
 export interface BuildResult {
 	group: Group;
@@ -76,9 +89,10 @@ function furnitureBox(f: Furniture): BufferGeometry {
 	return paint(geo, FURNITURE_COLORS[f.type] ?? '#b0a99f');
 }
 
-function buildStory(story: Story, cut: number) {
+function buildStory(story: Story, cut: number, realistic: boolean) {
 	const top = Math.min(cut, story.height);
 	const walls: BufferGeometry[] = [];
+	const caps: BufferGeometry[] = [];
 	const glass: BufferGeometry[] = [];
 	const doors: BufferGeometry[] = [];
 	for (const w of story.walls) {
@@ -109,26 +123,52 @@ function buildStory(story: Story, cut: number) {
 			cursor = Math.max(cursor, o.e);
 		}
 		if (cursor < len + w.t / 2) walls.push(wallPiece(w, cursor, len + w.t / 2, 0, top));
+		// Marketing-style floor plans draw the cut tops of walls dark so the layout reads at a glance.
+		if (realistic) caps.push(wallPiece(w, -w.t / 2, len + w.t / 2, top, top + 0.015, w.t + 0.002));
 	}
-	const floors = story.rooms.map((r) => {
+	const floors: BufferGeometry[] = [];
+	const floorsWood: BufferGeometry[] = [];
+	const floorsTile: BufferGeometry[] = [];
+	for (const r of story.rooms) {
 		const shape = new Shape(r.polygon.map(([x, y]) => new Vector2(x, y)));
-		const geo = new ShapeGeometry(shape);
+		const geo = new ShapeGeometry(shape); // UVs are plan metres
 		geo.rotateX(-Math.PI / 2);
 		geo.translate(0, 0.002, 0);
-		return paint(geo, ROOM_COLORS[r.type] ?? '#dddddd');
-	});
+		if (!realistic) floors.push(paint(geo, ROOM_COLORS[r.type] ?? '#dddddd'));
+		else (WET_ROOMS.has(r.type) ? floorsTile : floorsWood).push(geo);
+	}
 	const furniture = story.furniture.map(furnitureBox);
-	return { walls, glass, doors, floors, furniture };
+	return { walls, caps, glass, doors, floors, floorsWood, floorsTile, furniture };
 }
 
-export function buildPlan(plan: Plan, cut = Infinity): BuildResult {
+function floorMaterial(maps: FloorMaps['wood'], metres: number): MeshStandardMaterial {
+	for (const t of [maps.map, maps.normalMap, maps.roughnessMap]) {
+		t.wrapS = t.wrapT = RepeatWrapping;
+		t.repeat.set(1 / metres, 1 / metres);
+	}
+	maps.map.colorSpace = SRGBColorSpace;
+	return new MeshStandardMaterial({ ...maps, roughness: 1 });
+}
+
+/** Without `floorMaps` floors are tinted by room type (Low); with them the photoreal look is used. */
+export function buildPlan(plan: Plan, cut = Infinity, floorMaps?: FloorMaps): BuildResult {
 	const t0 = performance.now();
-	const parts = { walls: [], glass: [], doors: [], floors: [], furniture: [] } as Record<
-		'walls' | 'glass' | 'doors' | 'floors' | 'furniture',
+	const realistic = Boolean(floorMaps);
+	const parts = {
+		walls: [],
+		caps: [],
+		glass: [],
+		doors: [],
+		floors: [],
+		floorsWood: [],
+		floorsTile: [],
+		furniture: []
+	} as Record<
+		'walls' | 'caps' | 'glass' | 'doors' | 'floors' | 'floorsWood' | 'floorsTile' | 'furniture',
 		BufferGeometry[]
 	>;
 	for (const story of plan.stories) {
-		const s = buildStory(story, cut);
+		const s = buildStory(story, cut, realistic);
 		for (const key of Object.keys(parts) as (keyof typeof parts)[]) {
 			for (const g of s[key]) g.translate(0, story.elevation, 0);
 			parts[key].push(...s[key]);
@@ -136,7 +176,11 @@ export function buildPlan(plan: Plan, cut = Infinity): BuildResult {
 	}
 	const pieces = parts.walls.length;
 	const materials = {
-		walls: new MeshStandardMaterial({ color: '#efe9de', roughness: 0.9 }),
+		walls: new MeshStandardMaterial({
+			color: realistic ? '#f7f6f3' : '#efe9de',
+			roughness: realistic ? 0.85 : 0.9
+		}),
+		caps: new MeshStandardMaterial({ color: '#2b2b2d', roughness: 0.6 }),
 		glass: new MeshStandardMaterial({
 			color: '#9ecbff',
 			transparent: true,
@@ -146,6 +190,12 @@ export function buildPlan(plan: Plan, cut = Infinity): BuildResult {
 		}),
 		doors: new MeshStandardMaterial({ color: '#b08560', roughness: 0.7 }),
 		floors: new MeshStandardMaterial({ vertexColors: true, roughness: 0.55 }),
+		floorsWood: floorMaps
+			? floorMaterial(floorMaps.wood, TEXTURE_METRES.wood)
+			: new MeshStandardMaterial(),
+		floorsTile: floorMaps
+			? floorMaterial(floorMaps.tile, TEXTURE_METRES.tile)
+			: new MeshStandardMaterial(),
 		furniture: new MeshStandardMaterial({ vertexColors: true, roughness: 0.7 })
 	};
 	const group = new Group();
@@ -157,7 +207,7 @@ export function buildPlan(plan: Plan, cut = Infinity): BuildResult {
 		mesh.name = key;
 		// Glass neither casts nor receives; floors only receive.
 		mesh.castShadow = key === 'walls' || key === 'doors' || key === 'furniture';
-		mesh.receiveShadow = key !== 'glass';
+		mesh.receiveShadow = key !== 'glass' && key !== 'caps';
 		group.add(mesh);
 	}
 	const story = plan.stories[0];

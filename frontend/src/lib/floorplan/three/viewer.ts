@@ -9,6 +9,7 @@ import {
 	Group,
 	PerspectiveCamera,
 	Scene,
+	TextureLoader,
 	Vector3,
 	WebGPURenderer
 } from 'three/webgpu';
@@ -18,7 +19,7 @@ import GUI from 'lil-gui';
 import Stats from 'stats-gl';
 import type { Plan } from '../types.ts';
 import { area, centroid } from '../validate.ts';
-import { buildPlan, disposeBuild, type BuildResult } from './build.ts';
+import { buildPlan, disposeBuild, type BuildResult, type FloorMaps } from './build.ts';
 import { createLighting } from './lighting.ts';
 import { createPost, type PostEffect } from './post.ts';
 import { detectQuality, PRESETS, type Quality } from './quality.ts';
@@ -41,6 +42,19 @@ export interface Viewer {
 }
 
 const DOLLHOUSE_CUT = 1.2;
+
+/** CC0 floor textures from Poly Haven, served from static/textures/ (High only). */
+async function loadFloorMaps(): Promise<FloorMaps> {
+	const loader = new TextureLoader();
+	const set = async (name: string) => {
+		const [map, normalMap, roughnessMap] = await Promise.all(
+			['diff', 'nor', 'rough'].map((k) => loader.loadAsync(`/textures/${name}_${k}.jpg`))
+		);
+		return { map, normalMap, roughnessMap };
+	};
+	const [wood, tile] = await Promise.all([set('laminate_floor_02'), set('interior_tiles')]);
+	return { wood, tile };
+}
 
 export async function mount(
 	host: HTMLElement,
@@ -78,6 +92,9 @@ export async function mount(
 		matchMedia('(prefers-color-scheme: dark)').matches ? '#18181b' : '#f4f4f5'
 	);
 	const lighting = createLighting(scene, renderer, preset);
+	// The photoreal look (textured floors, dark wall caps) belongs to High; a failed load falls back.
+	const floorMaps: FloorMaps | undefined =
+		detected.quality === 'high' ? await loadFloorMaps().catch(() => undefined) : undefined;
 
 	const camera = new PerspectiveCamera(45, 1, 0.1, 200);
 	// Null on Low, or if the effects can't be built on this backend; then we render directly.
@@ -162,7 +179,7 @@ export async function mount(
 		}
 		clearOverlays();
 		const cut = view === 'full' ? Infinity : settings.cutHeight;
-		build = buildPlan(plan, cut);
+		build = buildPlan(plan, cut, floorMaps);
 		scene.add(build.group);
 		lighting.fitTo(new Box3().setFromObject(build.group));
 		for (const m of build.materials) m.wireframe = settings.wireframe;
@@ -342,6 +359,9 @@ export async function mount(
 			observer.disconnect();
 			post?.dispose();
 			lighting.dispose();
+			if (floorMaps)
+				for (const set of [floorMaps.wood, floorMaps.tile])
+					for (const t of Object.values(set)) t.dispose();
 			setDebug(false);
 			clearOverlays();
 			if (build) disposeBuild(build);
