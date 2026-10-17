@@ -1,132 +1,113 @@
 POSSIBLE TECHNICAL FEATURES
-Recursive Agents Hackathon, 2026-10-17. Written 1:35 PM; submission is 5:00 PM.
-
-Product, per the brainstorm (docs/brainstorm-2026-10-17.md): a generic "I have a problem,
-help me" platform. Chat plus agent-built forms, plans and artifacts for long, multi-step tasks.
-Demo story: "find me a home" in San Francisco.
-
-Effort: S = under 30 min, M = 30-90 min, L = more than 90 min.
-Status: [done] already on main; [new] not started.
-
-
-1. ORCHESTRATION (the hackathon theme: plan, spawn, delegate, check, recover)
-
-[done]  Plan of steps the agent creates and updates (set_plan, update_step).
-[done]  One sub-agent type: quick_edit patches one stale artifact on the fast model,
-        and several run in parallel.
-[done]  Redo approval: large changes show a cost and time estimate and ask first
-        (propose_redo).
-[new]   M  Research fan-out tool (spawn_research): the orchestrator starts N sub-agents in
-           parallel, each with its own brief (one per neighborhood, price band or listing
-           batch). Each returns a document artifact linked to its inputs.
-           This is the visible "spawns multiple agents" moment for the demo.
-[new]   M  Sub-agents with their own tools: a sub-agent can call data tools (section 2),
-           not just rewrite text.
-[new]   S  Concurrency cap and model spreading: run at most K sub-agents at once and
-           alternate between two cheap models, so 30 requests/min per model isn't hit.
-[new]   M  Verifier agent ("definition of done"): a checker scores each research artifact
-           against the user's criteria and sends failures back for one retry.
-[new]   S  Live agent tree in the UI: show running sub-agents with status, model, cost and
-           time, so judges watch the fan-out happen.
-[new]   L  Recursive delegation: sub-agents can spawn their own sub-agents, with a depth
-           limit and a budget.
-[new]   M  Budget guard: a per-conversation dollar or token cap; the orchestrator plans
-           within it and stops cleanly when it runs out.
+- Hackathon day, 2026-10-17; submission 5:00 PM
+- Product: generic "help me solve this" agent platform
+  - Chat plus agent-built forms, plans, artifacts
+  - Demo story: "find me a home" in SF
+- Effort: S under 30 min
+  - M 30 to 90 min
+  - L over 90 min
+- Kept current by the 10-minute doc-sync job
+  - Built items move to DONE at bottom
+  - "(in progress: branch)" means someone's on it
 
 
-2. DATA FOR THE HOUSING DEMO
+==================== TODO ====================
 
-[new]   M  Rental listings tool: query Speaker B's scraped Bay Area listings (price, beds,
-           baths, zip, neighborhood) loaded into SQLite. Needs the data file.
-[new]   S  DataSF context tool: free public APIs, no key. Land use and residential units
-           (c5ge-t6pj), assessor roll with year built and stories (wv5m-vpq2), housing
-           production since 2005 (xdht-4php). See docs/research/sf-buildings-3d.md.
-[new]   S  Commute estimate: straight-line distance or a simple speed model from a listing
-           to the user's workplace. A real routing API needs a key.
-[new]   M  Neighborhood profiles: one cached document per SF neighborhood, built once by
-           sub-agents and reused across conversations.
-[new]   S  Market snapshot: median rent by neighborhood and bedroom count, computed from the
-           listings data with plain SQL rather than an LLM.
-
-
-3. USER PREFERENCE LOOP (the brainstorm's core idea)
-
-[done]  Agent-built forms embedded in the chat.
-[done]  Editing a form marks downstream artifacts stale and patches or redoes them.
-[new]   S  All form answers optional, and the agent reads skipped questions as a signal.
-[new]   M  Editable questions: the user can reword or delete a form question, and the
-           agent treats the edit as preference data.
-[new]   M  Weight sliders: the user adjusts how much price, commute, size and so on matter.
-           The ranked shortlist re-sorts with plain code, no model call.
-[new]   M  Visit list and visit feedback: the agent produces "places to visit this weekend"
-           as tasks, then a per-visit feedback form whose ratings drive the next search round.
-[new]   S  Preference profile artifact: a living document of what the agent believes the
-           user wants, versus what they said, updated after each round.
-[new]   S  "Options remaining" counter: show how many listings match as the user fills in
-           the form.
+NOW: CUT FOR 5 PM (freeze at 4:00)
+1. [M] Research fan-out tool (spawn_research)
+   - Orchestrator starts N parallel research sub-agents
+   - One brief each: neighborhood or price band
+   - Each returns a linked document artifact
+   - The visible "spawns multiple agents" demo moment
+2. [S] Concurrency cap and model spreading
+   - At most K sub-agents at once
+   - Alternate two models; avoid 30 RPM cap
+3. [S] Live agent tree in the UI
+   - Shows status, model, cost and time
+4. [M] Rental listings tool over scraped data
+   - Speaker B's Bay Area listings in SQLite
+   - Needs the data file first
+   - Fallback: DataSF context tool below
+5. [S] Market snapshot: median rent via SQL
+6. [M] Visit list, then visit feedback form
+   - Ratings drive the next search round
+7. [S] Side-by-side comparison table of homes
+8. [S] Pre-run demo conversation, no live latency
+9. [M] Backup screen recording of full flow
 
 
-4. RICH ARTIFACTS AND VISUALS
+LATER: ORCHESTRATION
+- [M] Sub-agents call data tools themselves
+- [M] Verifier agent checks definition of done
+  - Scores artifacts against user's criteria
+  - Failures get sent back for one retry
+- [L] Recursive delegation with depth limit
+- [M] Budget guard per conversation
+  - Plans within cap, stops cleanly
 
-[done]  Markdown documents and sandboxed HTML artifacts with versions and lineage.
-[done]  Artifact library and version diffs.
-[new]   S  Comparison table artifact: shortlisted homes side by side, generated as HTML.
-[new]   M  Map artifact: shortlisted listings as pins on a map in an HTML artifact. The
-           sandbox blocks network access, so tiles would need inlining or a static image.
-[new]   M  Charts: rent distribution and price vs commute, as an HTML artifact using an
-           inlined chart library.
-[new]   L  3D view: re-add three.js and show extruded SF buildings around a listing, or a
-           floorplan. See docs/research/floorplan-2d-to-3d.md and sf-buildings-3d.md.
-[new]   L  Floorplan from listing photos, or a synthetic floorplan inside a building
-           footprint (research done, nothing built).
-[new]   L  Building energy and sun exposure per listing (research done:
-           docs/research/building-performance-simulation.md).
+LATER: DATA
+- [S] DataSF context tool, free, no key
+  - Land use and units: c5ge-t6pj
+  - Year built and stories: wv5m-vpq2
+  - Housing production since 2005: xdht-4php
+- [S] Commute estimate from listing to work
+  - Straight-line distance; routing APIs need keys
+- [M] Cached neighborhood profiles, built by sub-agents
+
+LATER: USER PREFERENCE LOOP
+- [S] All answers optional; skips are signal
+- [M] Users can reword or delete questions
+  - Agent treats edits as preference data
+- [M] Weight sliders re-rank shortlist
+  - Plain code re-sorts, no model call
+- [S] Preference profile artifact
+  - What user wants versus what they said
+- [S] Live "options remaining" counter on forms
+
+LATER: VISUALS
+- [M] Map with listing pins
+  - Sandbox blocks network; inline or static
+- [M] Charts: rents, price versus commute
+- [L] 3D buildings or floorplan via three.js
+  - See floorplan-2d-to-3d.md, sf-buildings-3d.md
+- [L] Synthetic floorplan inside building footprint
+- [L] Energy and sun exposure per listing
+  - See building-performance-simulation.md
+
+LATER: LONG-RUNNING
+- [M] Background runs survive closed browser
+  - Server already continues after client disconnects
+- [M] Daily re-check flags new listings
+  - Demo can fake it with a button
+- [S] Resume failed runs from last step
+- [S] Real-world task list with checkboxes
+
+LATER: RELIABILITY
+- [S] Run log of every call
+- [S] Fallback model after repeated errors
+- [S] Validate tool arguments; return errors
+- [M] Eval script replays a fixed scenario
+
+LATER: SUBMISSION
+- [S] Landing page copy and one-line pitch
+- [S] Verify README setup from fresh clone
+  - Include copying .env.example to .env
 
 
-5. LONG-RUNNING ("AGENTS YOU CAN WALK AWAY FROM")
+==================== DONE ====================
 
-[done]  Conversations, plans and artifacts persist in SQLite; the user can come back later.
-[new]   M  Background runs: research keeps running after the browser closes, and results
-           appear when the user returns. The server already continues a run if the
-           client disconnects.
-[new]   M  Scheduled re-checks: the agent re-runs the listing search daily and flags new
-           matches. A demo can fake "a day later" with a button.
-[new]   S  Resume after failure: a run that crashed or hit a rate limit picks up from the
-           last completed step instead of starting over.
-[new]   S  Task list for the user: the real-world to-dos the agent gave them (visit X, ask
-           landlord Y), with checkboxes.
-
-
-6. RELIABILITY AND OBSERVABILITY
-
-[done]  Jittered retry on 429/503 and a per-model throttle on Crusoe's rate-limit headers.
-[done]  Usage table: cost, tokens and cache-hit rate per model call.
-[new]   S  Run log view: every model call and tool call with timing and cost, for
-           debugging and to show judges the agent's work.
-[new]   S  Model fallback: if a model returns errors repeatedly, switch that role to a
-           backup model.
-[new]   S  Tool-input validation: check each tool call's arguments against its schema
-           and send errors back to the model for repair.
-[new]   M  Eval script: replay a fixed "find me a home" scenario and check that the
-           shortlist meets the stated constraints.
-
-
-7. DEMO AND SUBMISSION
-
-[new]   S  Seeded demo conversation: a pre-run "find me a home" session, so the demo
-           doesn't depend on live latency.
-[new]   S  Mock-mode switch for offline demos (exists: unset CRUSOE_API_KEY).
-[new]   S  Landing page copy and one-line pitch.
-[new]   M  Backup screen recording of the full flow.
-[new]   S  README "how to run" checked from a fresh clone, including copying
-           .env.example to .env.
-
-
-SUGGESTED CUT FOR 5 PM (about 2.5 hours of building, then freeze at 4:00)
-
-1. Research fan-out tool, with concurrency cap and a live agent tree   (1.1, 1.3, 1.5)
-2. Rental listings tool + market snapshot, if Speaker B's data arrives  (2.1, 2.5)
-   Otherwise DataSF context only                                         (2.2)
-3. Visit list and visit feedback round                                   (3.5)
-4. Comparison table artifact                                             (4.3)
-5. Seeded demo conversation and backup recording                        (7.1, 7.4)
+- Agent plans and updates its own steps
+- quick_edit sub-agents patch stale artifacts
+  - Run in parallel on fast model
+- Redo approval shows cost before big changes
+- Agent-built forms embedded in chat
+- Form edits mark downstream artifacts stale
+- Markdown and sandboxed HTML artifacts
+  - Versioned, with lineage between them
+- Artifact library and version diffs
+- Everything persists in SQLite
+- Retry and throttle on rate limits
+- Usage table: cost, tokens, cache hits
+- Offline mock mode: unset CRUSOE_API_KEY
+- Verified end to end on real Crusoe
+  - 13 calls, $0.0027, 73% cache hits
