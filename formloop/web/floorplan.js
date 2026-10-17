@@ -122,36 +122,51 @@
 			H = (sqft * FT * FT) / W;
 			const top = H * 0.66;
 			rooms.push({ name: layout === 'loft' ? 'LOFT' : 'LIVING / SLEEPING', r: rect(0, 0, W, top) });
-			rooms.push({ name: 'BATH', r: rect(0, top, W * 0.4, H - top) });
-			rooms.push({ name: 'KITCHEN', r: rect(W * 0.4, top, W * 0.6, H - top), open: layout === 'open' || layout === 'loft' });
-		} else {
-			// Bedrooms stacked on the left, then bath(s), then a W/D or closet by the entry; living over kitchen on the right.
-			W = Math.sqrt(sqft * 1.15) * FT;
+			const wd = l.laundry === 'in_unit' ? Math.min(W * 0.16, 5 * FT) : 0;
+			rooms.push({ name: 'BATH', r: rect(0, top, W * 0.4, H - top), bath: true });
+			if (wd) rooms.push({ name: 'W/D', r: rect(W * 0.4, top, wd, H - top), small: true });
+			rooms.push({ name: 'KITCHEN', r: rect(W * 0.4 + wd, top, W * 0.6 - wd, H - top), open: layout === 'open' || layout === 'loft' });
+		} else if (beds >= 2) {
+			// Like a sales plan: bedrooms (with an ensuite between) down the left; living, kitchen, bath and W/D down the right.
+			W = Math.sqrt(sqft * 1.05) * FT;
 			H = (sqft * FT * FT) / W;
-			const leftW = W * (beds >= 2 ? 0.5 : 0.46);
-			const ensuite = baths > 1 && beds > 1;
-			const bathH = Math.min(H * 0.3, 8 * FT);
-			const free = H - bathH * (ensuite ? 2 : 1);
-			const bedH = Math.min(free / beds, Math.max(10 * FT, Math.min(14 * FT, free / beds)));
+			const leftW = W * 0.48;
+			const ensuite = baths > 1;
+			const ensH = ensuite ? Math.min(7.5 * FT, H * 0.2) : 0;
+			const bedH = (H - ensH) / beds;
 			let y = 0;
 			for (let i = 0; i < beds; i++) {
 				rooms.push({ name: 'BEDROOM', r: rect(0, y, leftW, bedH), bed: true });
 				y += bedH;
 				if (i === 0 && ensuite) {
-					rooms.push({ name: 'ENSUITE', r: rect(0, y, leftW, bathH), bath: true });
-					y += bathH;
+					rooms.push({ name: 'ENSUITE', r: rect(0, y, leftW, ensH), bath: true });
+					y += ensH;
 				}
 			}
-			const rest = H - y - bathH;
-			const bathR = rect(0, y, leftW, rest > 3.5 * FT ? bathH : H - y);
-			rooms.push({ name: 'BATH', r: bathR, bath: true });
-			if (rest > 3.5 * FT) rooms.push({ name: l.laundry === 'in_unit' ? 'W/D' : 'CLOSET', r: rect(0, y + bathH, leftW, rest), small: true });
+			const rw = W - leftW;
+			const livingH = H * 0.44;
+			const kitchenH = H * 0.3;
+			rooms.push({ name: rw < 17 * FT ? 'LIVING' : 'LIVING / DINING', r: rect(leftW, 0, rw, livingH) });
+			rooms.push({ name: 'KITCHEN', r: rect(leftW, livingH, rw, kitchenH), open: layout === 'open' || layout === 'loft', kitchenRight: true });
+			const by = livingH + kitchenH;
+			rooms.push({ name: 'BATH', r: rect(leftW + rw * 0.4, by, rw * 0.6, H - by), bath: true });
+			rooms.push({ name: l.laundry === 'in_unit' ? 'W/D' : 'CLOSET', r: rect(leftW, by, rw * 0.4, H - by), small: true });
+		} else {
+			// One bedroom: bedroom, bath and a W/D or closet down the left; living over kitchen on the right.
+			W = Math.sqrt(sqft * 1.15) * FT;
+			H = (sqft * FT * FT) / W;
+			const leftW = W * 0.46;
+			const bathH = Math.min(H * 0.3, 8 * FT);
+			const bedH = Math.min(H - bathH, 14 * FT);
+			rooms.push({ name: 'BEDROOM', r: rect(0, 0, leftW, bedH), bed: true });
+			const rest = H - bedH - bathH;
+			rooms.push({ name: 'BATH', r: rect(0, bedH, leftW, rest > 3.5 * FT ? bathH : H - bedH), bath: true });
+			if (rest > 3.5 * FT) rooms.push({ name: l.laundry === 'in_unit' ? 'W/D' : 'CLOSET', r: rect(0, bedH + bathH, leftW, rest), small: true });
 			const livingH = H * (layout === 'open' ? 0.62 : 0.58);
 			const living = rect(leftW, 0, W - leftW, livingH);
 			rooms.push({ name: living.w < 17 * FT ? 'LIVING' : 'LIVING / DINING', r: living });
 			rooms.push({ name: 'KITCHEN', r: rect(leftW, livingH, W - leftW, H - livingH), open: layout === 'open' || layout === 'loft', kitchenRight: true });
 		}
-		if (beds === 0 && l.laundry === 'in_unit') extras.push({ name: 'W/D', r: rect(0, H - 5 * FT, 5 * FT, 5 * FT) });
 		return { W, H, rooms, extras, layout, chamfer: layout === 'irregular' ? Math.min(W, H) * 0.18 : 0, rnd, beds, baths, sqft };
 	}
 
@@ -173,7 +188,7 @@
 			if (r.y <= 0.5) body += windows(r, 'top');
 			else if (r.x <= 0.5 && (bed || name === 'LIVING') && p.layout !== 'railroad') body += windows(r, 'left');
 			// Doors: bedrooms and baths open toward the living side.
-			if (bed || isBath || name === 'BATH' || small) body += door(r.x + r.w, r.y + Math.min(r.h - 4, 3.2 * FT), 2.8 * FT, 'sw');
+			if (bed || isBath || name === 'BATH') body += door(r.x + r.w, r.y + Math.min(r.h - 4, 3.2 * FT), 2.8 * FT, 'sw');
 			if (p.layout === 'railroad' && r.y > 0.5) body += door(r.x + r.w * 0.7, r.y, 2.6 * FT, 'se');
 			const sub = name === 'BEDROOM' ? `${Math.round(r.w / FT)}' × ${Math.round(r.h / FT)}'` : '';
 			if (small) body += `<text x="${r.x + r.w / 2}" y="${r.y + r.h / 2 + 3}" class="fp-mini">${name}</text>`;

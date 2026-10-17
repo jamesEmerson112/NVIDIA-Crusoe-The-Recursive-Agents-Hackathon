@@ -140,6 +140,8 @@ createServer(async (req, res) => {
 	try {
 		const url = new URL(req.url ?? '/', `http://localhost:${PORT}`);
 		if (req.method === 'GET' && url.pathname === '/') return send(res, 200, readFileSync(page, 'utf8'), 'text/html; charset=utf-8');
+		if (req.method === 'GET' && url.pathname === '/plans')
+			return send(res, 200, readFileSync(join(formloopDir, 'web', 'plans.html'), 'utf8'), 'text/html; charset=utf-8');
 		if (req.method === 'GET' && url.pathname === '/floorplan.js')
 			return send(res, 200, readFileSync(join(formloopDir, 'web', 'floorplan.js'), 'utf8'), 'text/javascript; charset=utf-8');
 		if (req.method === 'GET' && url.pathname === '/api/form') {
