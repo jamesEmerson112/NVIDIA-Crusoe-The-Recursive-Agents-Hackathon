@@ -9,6 +9,7 @@ POSSIBLE TECHNICAL FEATURES
 - Kept current by the 10-minute doc-sync job
   - Built items move to DONE at bottom
   - "<-- Name": who is on it (TODO) or built it (DONE)
+  - "Not merged" section: built outside frontend/
 - Team: James = FE, Gaelan = BE (Workbench agent)
   - Laurie = formloop (self-improving intake form)
 - Freeze features at 4:00; NOW items first
@@ -129,6 +130,20 @@ LATER: PARALLEL ROOM-DESIGN EXTENSION
   - Proposed APIs stay in plan until implemented in docs/api.md
 
 
+========= BUILT, NOT MERGED INTO frontend/ YET =========
+Works on its own; Workbench (frontend/) can't use it yet.
+
+- formloop engine (lsarta), outside Workbench       <-- Laurie
+  - Listings incl. You.com, renter simulator
+  - Agent, matcher, scorer, reviewer, eval
+  - Two-pane demo: editable form, live listings
+- formloop: drag-to-rank form sets answer weights   <-- Laurie
+- formloop: agent writes follow-up questions        <-- Laurie
+- formloop: skipped questions dropped by reviewer   <-- Laurie
+- formloop: form v3 beats v1 on unseen renters      <-- Laurie
+  - Quality 0.776 vs 0.741; 5 vs 8 questions
+
+
 ==================== DONE ====================
 
 - Agent plans and updates its own steps             <-- Gaelan
@@ -162,15 +177,6 @@ LATER: PARALLEL ROOM-DESIGN EXTENSION
 - Every form question optional and editable         <-- Gaelan
 - Tool errors go back to model; bodies validated    <-- Gaelan
 - Default agent model now GLM-5.3-Flash             <-- Gaelan
-- formloop engine (lsarta), outside Workbench       <-- Laurie
-  - Listings incl. You.com, renter simulator
-  - Agent, matcher, scorer, reviewer, eval
-  - Two-pane demo: editable form, live listings
 - Petite-vue widgets the agent writes, in chat      <-- Gaelan
   - Return JSON; schema enforced; leaf-level diffs
 - Forms and widgets stay embedded after submit      <-- Gaelan
-- formloop: drag-to-rank form sets answer weights   <-- Laurie
-- formloop: agent writes follow-up questions        <-- Laurie
-- formloop: skipped questions dropped by reviewer   <-- Laurie
-- formloop: form v3 beats v1 on unseen renters      <-- Laurie
-  - Quality 0.776 vs 0.741; 5 vs 8 questions
