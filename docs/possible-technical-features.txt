@@ -23,43 +23,27 @@ POSSIBLE TECHNICAL FEATURES
 Ranked: most essential first, most optional last
 
 NOW
-1. [M] Low/High render quality for /plans           <-- James
-   - Presets, auto-detect, shadows, GTAO, SSR, TRAA done
-   - Auto-detects M3 Max; ?quality= overrides
-   - SSGI built but off; hazed the image
-   - Reworking toward photoreal 3D floor plan
-   - Textured wood/tile floors, real furniture models
-   - White walls, dark cut caps, bright daylight
-2. [S] Comparison table view of shortlisted homes   <-- James
-3. [M] Visit feedback form and visit task view      <-- James
+1. [S] Comparison table view of shortlisted homes   <-- James
+2. [M] Visit feedback form and visit task view      <-- James
    - Ratings feed BE's next search round
-4. [L] Path-traced photo mode at /plans/photo       <-- James
-   - Fan-out branch, awaiting review and merge
-   - three-gpu-pathtracer on WebGL; converges when still
-5. [L] Japandi showcase room at /plans/room         <-- James
-   - Fan-out branch, awaiting review and merge
-   - CC0 Poly Haven assets, HDR sky
-6. [M] First-person walkthrough mode in /plans      <-- James
-   - Fan-out branch, awaiting review and merge
-   - WASD, mouse look, wall collision
-7. [M] Window, door frames, baseboards, ceilings    <-- James
-   - Fan-out branch, awaiting review and merge
-   - High path only; every blueprint
+3. [M] Real SF map on start page (MapTiler)         <-- James
+   - Agent branch in progress; not merged yet
+   - Key: PUBLIC_MAPTILER_KEY in frontend/.env
 
 LATER
-8. [S] Landing page copy and one-line pitch
-9. [S] Real-world task list with checkboxes
-10. [M] Weight sliders re-rank shortlist            <-- Laurie
+4. [S] Landing page copy and one-line pitch
+5. [S] Real-world task list with checkboxes
+6. [M] Weight sliders re-rank shortlist             <-- Laurie
    - Plain code re-sorts, no model call
    - formloop infers weights; Workbench doesn't yet
-11. [S] Live "options remaining" counter on forms
-12. [M] Map with listing pins
+7. [S] Live "options remaining" counter on forms
+8. [M] Map with listing pins
    - Sandbox blocks network; inline or static
-13. [M] Charts: rents, price versus commute
-14. [M] Plan artifacts open in 3D viewer
+9. [M] Charts: rents, price versus commute
+10. [M] Plan artifacts open in 3D viewer
     - Reuse PlanViewer from /plans
-15. [L] Synthetic floorplan inside building footprint
-16. [L] C1: Cozy room editor and furniture assets (planned)
+11. [L] Synthetic floorplan inside building footprint
+12. [L] C1: Cozy room editor and furniture assets (planned)
     - Fixture scenes first; move, rotate, lock, save, reload
     - Own new room UI/renderer files; C0 wires shared UI
     - Use BE's shared run events for the live agent tree
@@ -216,3 +200,13 @@ Works on its own; Workbench (frontend/) can't use it yet.
 - Forms and widgets stay embedded after submit     <-- Gaelan
 - CC0 furniture models on High; textured floors    <-- James
 - 3D SF skyline behind the start page              <-- James
+- Low/High render quality for /plans               <-- James
+  - Auto-detect (M3 Max = High), ?quality= override
+  - Shadows, GTAO, SSR, TRAA; SSGI off (hazy)
+- Path-traced photo mode at /plans/photo           <-- James
+  - three-gpu-pathtracer on WebGL; converges when still
+- Japandi showcase room at /plans/room             <-- James
+  - CC0 Poly Haven assets, HDR sky
+- First-person Walk mode in /plans                 <-- James
+  - WASD, mouse look, wall collision, ?view=walk
+- Window/door frames, baseboards, ceilings (High)  <-- James
