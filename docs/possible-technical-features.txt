@@ -8,7 +8,7 @@ POSSIBLE TECHNICAL FEATURES
   - L over 90 min
 - Kept current by the 10-minute doc-sync job
   - Built items move to DONE at bottom
-  - "(in progress: branch)" means someone's on it
+  - "<-- Gaelan" means Gaelan is on it
 
 
 ==================== TODO ====================
