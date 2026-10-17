@@ -6,7 +6,9 @@ Every `data-testid` in the frontend, grouped by file. Selectors for UI tests and
 grep -rnoE 'data-testid="[^"]+"' frontend/src --include=*.svelte
 ```
 
-Repeated items (messages, steps, list rows, chips) share one id; pick one by text or index. Ids listed twice in a file sit in mutually exclusive branches (e.g. the two Composer variants).
+Repeated items (messages, steps, list rows, chips) share one id; pick one by text or index. Ids listed twice in a file sit in mutually exclusive branches (e.g. the two Composer variants). Ids built in TypeScript (the 3D viewer's canvas, labels and debug panel in `lib/floorplan/three/viewer.ts`) are listed under that file.
+
+**`lib/components/AgentMap.svelte`**: `agent-map`, `agent-map-header`, `agent-map-title`, `agent-map-summary`, `agent-map-live`, `agent-map-empty`, `agent-map-scroll`, `agent-map-svg`, `agent-map-column`, `agent-map-edge`, `agent-map-lane`, `agent-map-lane-label`, `agent-map-node-label`, `agent-map-node`
 
 **`lib/components/ArtifactCard.svelte`**: `artifact-card-open`
 
@@ -18,6 +20,8 @@ Repeated items (messages, steps, list rows, chips) share one id; pick one by tex
 
 **`lib/components/Markdown.svelte`**: `markdown`
 
+**`lib/components/PlanViewer.svelte`**: `plan-viewer`, `plan-viewer-error`, `plan-viewer-loading`
+
 **`lib/components/ProcessPanel.svelte`**: `process-panel`, `process-empty`, `process-step`, `process-step-status`, `process-step-title`, `process-artifact`, `process-usage`
 
 **`lib/components/ProposalCard.svelte`**: `proposal-card`, `proposal-open-artifact`, `proposal-cost`, `proposal-duration`, `proposal-approve`, `proposal-keep`, `proposal-answer`
@@ -26,10 +30,14 @@ Repeated items (messages, steps, list rows, chips) share one id; pick one by tex
 
 **`lib/components/StatusBadge.svelte`**: `status-badge`
 
-**`lib/components/Workspace.svelte`**: `workspace-title`, `workspace-toggle-process`, `workspace-chat`, `workspace-message-form-submit`, `workspace-form-submit-open`, `workspace-message-artifact-edit`, `workspace-artifact-edit-open`, `workspace-message-check`, `workspace-check-summary`, `workspace-check-problem`, `workspace-message-proposal-reply`, `workspace-message-user`, `workspace-message-error`, `workspace-inline-form`, `workspace-inline-form-edit-questions`, `workspace-inline-form-error`, `workspace-live`, `workspace-live-status`, `workspace-live-activity`, `workspace-error`, `workspace-panel`
+**`lib/components/Workspace.svelte`**: `workspace-title`, `workspace-open-map`, `workspace-toggle-process`, `workspace-chat`, `workspace-message-form-submit`, `workspace-form-submit-open`, `workspace-message-artifact-edit`, `workspace-artifact-edit-open`, `workspace-message-check`, `workspace-check-summary`, `workspace-check-problem`, `workspace-message-proposal-reply`, `workspace-message-user`, `workspace-message-error`, `workspace-inline-form`, `workspace-inline-form-edit-questions`, `workspace-inline-form-error`, `workspace-live`, `workspace-live-status`, `workspace-live-activity`, `workspace-error`, `workspace-panel`, `workspace-panel-tabs`, `workspace-panel-tab`
 
-**`routes/+layout.svelte`**: `app-root`, `sidebar`, `sidebar-toggle`, `sidebar-new`, `sidebar-library`, `sidebar-conversations`, `sidebar-item`, `sidebar-conversation`, `sidebar-working`, `sidebar-delete`, `sidebar-mock-notice`, `app-main`
+**`routes/+layout.svelte`**: `app-root`, `sidebar`, `sidebar-toggle`, `sidebar-new`, `sidebar-library`, `sidebar-plans`, `sidebar-conversations`, `sidebar-item`, `sidebar-conversation`, `sidebar-working`, `sidebar-delete`, `sidebar-mock-notice`, `app-main`
 
 **`routes/+page.svelte`**: `start-root`, `start-heading`, `start-examples`, `start-example`
 
 **`routes/library/+page.svelte`**: `library-root`, `library-heading`, `library-search`, `library-kinds`, `library-kind`, `library-results`, `library-result`, `library-empty`
+
+**`routes/plans/+page.svelte`**: `plans-root`, `plans-heading`, `plans-select`, `plans-option`, `plans-views`, `plans-summary`, `plans-debug-toggle`, `plans-problems`, `plans-view-<id>`
+
+**`lib/floorplan/three/viewer.ts`**: `plan-viewer-canvas`, `plan-viewer-labels`, `plan-viewer-fps`, `plan-viewer-debug`, `plan-viewer-room-label`, `plan-viewer-wall-label`
