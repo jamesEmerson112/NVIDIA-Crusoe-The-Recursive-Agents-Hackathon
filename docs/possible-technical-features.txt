@@ -32,7 +32,6 @@ NOW
 
 LATER
 4. [S] Landing page copy and one-line pitch
-5. [S] Run log view of every call
 6. [S] Real-world task list with checkboxes
 7. [M] Weight sliders re-rank shortlist             <-- Laurie
    - Plain code re-sorts, no model call
@@ -179,4 +178,6 @@ Works on its own; Workbench (frontend/) can't use it yet.
 - Default agent model now GLM-5.3-Flash             <-- Gaelan
 - Petite-vue widgets the agent writes, in chat      <-- Gaelan
   - Return JSON; schema enforced; leaf-level diffs
+- Run log of every model call, ?panel=log           <-- James
+  - Tokens, cache hits, cost, tools, slow calls
 - Forms and widgets stay embedded after submit      <-- Gaelan
