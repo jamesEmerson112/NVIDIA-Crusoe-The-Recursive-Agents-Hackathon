@@ -147,6 +147,7 @@ export function parseField(field: PrefField, text: string, weight: number, from:
 		}
 		case 'bedrooms': {
 			if (/studio/.test(t)) return { ...base, field, op: 'min', value: 0 };
+			if (/^\s*\d\+?\s*$/.test(t)) return { ...base, field, op: 'min', value: parseInt(t, 10) };
 			const m = t.match(/(\d)\s*(?:bed|br|bedroom)/) ?? t.match(/(\d)\s*(?:people|of us|person household)/);
 			if (!m) return null;
 			const n = /people|of us|household/.test(m[0]) ? Math.max(1, Number(m[1]) - 1) : Number(m[1]);
@@ -157,18 +158,26 @@ export function parseField(field: PrefField, text: string, weight: number, from:
 			return m ? { ...base, field, op: 'min', value: Number(m[1]) } : null;
 		}
 		case 'available': {
+			const op = /not before|after|no earlier/.test(t) ? 'min' : 'max';
 			const m = text.match(/\d{4}-\d{2}-\d{2}/);
-			if (!m) return null;
-			return { ...base, field, op: /not before|after|no earlier/.test(t) ? 'min' : 'max', value: m[0] };
+			if (m) return { ...base, field, op, value: m[0] };
+			const months = ['jan', 'feb', 'mar', 'apr', 'may', 'jun', 'jul', 'aug', 'sep', 'oct', 'nov', 'dec'];
+			const mm = t.match(/\b(jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)[a-z]*\.?\s*(\d{1,2})?/);
+			if (!mm) return /asap|now|immediately|right away/.test(t) ? { ...base, field, op: 'max', value: '2026-11-15' } : null;
+			const month = months.indexOf(mm[1]);
+			const year = month >= 9 ? 2026 : 2027;
+			const day = mm[2] ? Number(mm[2]) : /early|beginning|start/.test(t) ? 7 : /late|end/.test(t) ? 25 : 15;
+			return { ...base, field, op, value: `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}` };
 		}
 		case 'pets': {
-			const pets = [/\bdogs?\b|\bpupp/.test(t) && 'dogs', /\bcats?\b|kitten/.test(t) && 'cats'].filter(Boolean) as string[];
+			const both = /^\s*both\s*$/.test(t);
+			const pets = [(both || /\bdogs?\b|\bpupp/.test(t)) && 'dogs', (both || /\bcats?\b|kitten/.test(t)) && 'cats'].filter(Boolean) as string[];
 			if (!pets.length) return null;
 			return { ...base, field, op: 'in', value: pets };
 		}
 		case 'laundry': {
-			if (/in[- ]?unit|washer|laundry in the unit/.test(t)) return { ...base, field, op: 'in', value: ['in_unit'] };
-			if (/laundry/.test(t) && /building/.test(t)) return { ...base, field, op: 'in', value: ['in_unit', 'in_building'] };
+			if (/building/.test(t) && !/no laundry in the building/.test(t)) return { ...base, field, op: 'in', value: ['in_unit', 'in_building'] };
+			if (/in[-_ ]?unit|washer|laundry in the unit/.test(t)) return { ...base, field, op: 'in', value: ['in_unit'] };
 			return null;
 		}
 		case 'parking': {
@@ -178,6 +187,7 @@ export function parseField(field: PrefField, text: string, weight: number, from:
 		}
 		case 'street_noise': {
 			if (/lively|buzz|nightlife|energy/.test(t) && !/not/.test(t)) return { ...base, field, op: 'in', value: ['lively', 'moderate'] };
+			if (/^\s*moderate\s*$/.test(t)) return { ...base, field, op: 'not_in', value: ['lively'] };
 			if (/quiet|loud|noise|noisy|sleep/.test(t)) {
 				return /not too loud|moderate/.test(t)
 					? { ...base, field, op: 'not_in', value: ['lively'] }
@@ -188,8 +198,10 @@ export function parseField(field: PrefField, text: string, weight: number, from:
 		case 'floor': {
 			const m = t.match(/floor\s*(\d+)\s*or\s*(higher|lower|above|below)/);
 			if (m) return { ...base, field, op: /higher|above/.test(m[2]) ? 'min' : 'max', value: Number(m[1]) };
+			if (/^\s*ground\s*$/.test(t)) return { ...base, field, op: 'max', value: 1 };
+			if (/^\s*low\b/.test(t)) return { ...base, field, op: 'max', value: 3 };
+			if (/^\s*high\b|high floor|top floor|views/.test(t)) return { ...base, field, op: 'min', value: 4 };
 			if (/ground floor|first floor/.test(t)) return { ...base, field, op: 'min', value: 2 };
-			if (/high floor|top floor|views/.test(t)) return { ...base, field, op: 'min', value: 4 };
 			if (/stairs|low floor/.test(t)) return { ...base, field, op: 'max', value: 2 };
 			return null;
 		}
@@ -211,8 +223,11 @@ export function parseField(field: PrefField, text: string, weight: number, from:
 export function parsePrefs(q: Question, text: string, weight: number): Pref[] {
 	const out: Pref[] = [];
 	if (/^\s*(no preference|n\/a|none|whatever|don'?t care)\s*$/i.test(text)) return out;
+	// "Which neighborhoods would you never consider?" answered with a plain list means not_in.
+	const negative = /never|avoid|hate|rule out|deal ?breaker/i.test(q.text);
 	for (const f of q.maps_to) {
-		const p = parseField(f, text, weight, q.id);
+		let p = parseField(f, text, weight, q.id);
+		if (p && negative && (f === 'neighborhood' || f === 'layout') && p.op === 'in') p = { ...p, op: 'not_in' };
 		if (p) out.push(p);
 	}
 	return out;

@@ -1,0 +1,275 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Formloop</title>
+<style>
+	:root {
+		--bg: #f6f5f2; --panel: #ffffff; --ink: #1d1d1f; --muted: #6b6b70; --line: #e4e2dc;
+		--accent: #2f5bd3; --accent-soft: #e8eefc; --good: #1f8a4c; --bad: #c2412d; --warn: #a86b00;
+	}
+	@media (prefers-color-scheme: dark) {
+		:root { --bg: #141416; --panel: #1d1d20; --ink: #ececee; --muted: #9a9aa2; --line: #2e2e33; --accent: #7d9cff; --accent-soft: #232a40; --good: #4cc483; --bad: #ff7a66; --warn: #e3a93b; }
+	}
+	* { box-sizing: border-box; }
+	body { margin: 0; background: var(--bg); color: var(--ink); font: 15px/1.45 -apple-system, BlinkMacSystemFont, "Segoe UI", Inter, sans-serif; }
+	header { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; padding: 14px 20px; border-bottom: 1px solid var(--line); background: var(--panel); position: sticky; top: 0; z-index: 2; }
+	header h1 { font-size: 17px; margin: 0; letter-spacing: -0.01em; }
+	header .sub { color: var(--muted); font-size: 13px; }
+	.badge { font-size: 12px; padding: 2px 8px; border-radius: 999px; background: var(--accent-soft); color: var(--accent); white-space: nowrap; }
+	.badge.offline { background: #f3e9d2; color: var(--warn); }
+	header select { margin-left: auto; font: inherit; padding: 4px 6px; border-radius: 6px; border: 1px solid var(--line); background: var(--panel); color: var(--ink); }
+	main { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 0; min-height: calc(100vh - 56px); }
+	@media (max-width: 860px) { main { grid-template-columns: 1fr; } }
+	@media (min-width: 861px) { body { height: 100vh; display: flex; flex-direction: column; } main { flex: 1; min-height: 0; } .pane { min-height: 0; } }
+	.pane { padding: 20px; overflow: auto; }
+	.pane + .pane { border-left: 1px solid var(--line); }
+	@media (max-width: 860px) { .pane + .pane { border-left: 0; border-top: 1px solid var(--line); } }
+	.pane h2 { font-size: 13px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); margin: 0 0 12px; font-weight: 600; }
+	.q { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 12px 14px; margin-bottom: 10px; }
+	.q.skipped { opacity: 0.55; }
+	.q-head { display: flex; gap: 8px; align-items: flex-start; }
+	.q-text { flex: 1; font-weight: 600; }
+	.q-text.edited { color: var(--accent); }
+	.q-orig { font-size: 12px; color: var(--muted); margin-top: 2px; }
+	.q-help { font-size: 12px; color: var(--muted); margin: 4px 0 8px; }
+	button { font: inherit; cursor: pointer; border-radius: 6px; border: 1px solid var(--line); background: var(--panel); color: var(--ink); padding: 4px 10px; }
+	button.link { border: 0; background: none; color: var(--muted); padding: 2px 4px; font-size: 13px; }
+	button.link:hover { color: var(--accent); }
+	button.on { background: var(--accent); border-color: var(--accent); color: #fff; }
+	input[type=text], input[type=number], textarea, select.answer { width: 100%; font: inherit; padding: 7px 9px; border: 1px solid var(--line); border-radius: 7px; background: var(--bg); color: var(--ink); }
+	textarea { min-height: 56px; resize: vertical; }
+	.chips { display: flex; flex-wrap: wrap; gap: 6px; }
+	.chip { font-size: 13px; padding: 3px 10px; border-radius: 999px; border: 1px solid var(--line); background: var(--bg); cursor: pointer; user-select: none; }
+	.chip.on { background: var(--accent); border-color: var(--accent); color: #fff; }
+	.weight { display: flex; align-items: center; gap: 8px; margin-top: 8px; font-size: 13px; color: var(--muted); }
+	.weight input { flex: 0 0 120px; accent-color: var(--accent); }
+	.weight b { color: var(--ink); font-weight: 600; min-width: 74px; }
+	.foot { display: flex; gap: 10px; align-items: center; margin-top: 14px; color: var(--muted); font-size: 13px; }
+	.status { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; font-size: 13px; color: var(--muted); margin-bottom: 12px; }
+	.status .spin { display: none; color: var(--accent); }
+	.status.busy .spin { display: inline; }
+	.card { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 14px 16px; margin-bottom: 12px; transition: opacity .2s; }
+	.status.busy ~ #cards .card { opacity: .6; }
+	.card-top { display: flex; justify-content: space-between; gap: 10px; align-items: baseline; }
+	.price { font-size: 22px; font-weight: 700; letter-spacing: -0.02em; }
+	.title { font-weight: 600; }
+	.meta { color: var(--muted); font-size: 13px; margin: 4px 0 10px; }
+	.checks { list-style: none; padding: 0; margin: 0 0 12px; font-size: 13px; display: grid; gap: 3px; }
+	.checks .ok { color: var(--good); } .checks .no { color: var(--bad); } .checks .mid { color: var(--warn); } .checks .unk { color: var(--muted); }
+	.checks small { color: var(--muted); }
+	.actions { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+	.like { border-color: var(--good); color: var(--good); }
+	.pass { border-color: var(--bad); color: var(--bad); }
+	.reason { display: none; margin-top: 10px; }
+	.reason.open { display: block; }
+	.reason .chips { margin: 6px 0; }
+	.prefs { list-style: none; padding: 0; margin: 0; font-size: 13px; display: grid; gap: 4px; }
+	.prefs li { display: flex; gap: 8px; justify-content: space-between; border-bottom: 1px dashed var(--line); padding-bottom: 3px; }
+	.prefs .from { color: var(--muted); font-size: 12px; }
+	.hard { color: var(--bad); font-size: 11px; font-weight: 600; text-transform: uppercase; margin-left: 4px; }
+	.empty { color: var(--muted); font-size: 14px; padding: 18px; border: 1px dashed var(--line); border-radius: 12px; text-align: center; }
+	.saved { font-size: 13px; color: var(--muted); margin: 6px 0 16px; }
+	.toast { position: fixed; bottom: 16px; left: 50%; transform: translateX(-50%); background: var(--ink); color: var(--bg); padding: 8px 14px; border-radius: 8px; font-size: 13px; opacity: 0; transition: opacity .3s; pointer-events: none; }
+	.toast.show { opacity: 1; }
+</style>
+</head>
+<body>
+<header>
+	<h1>Formloop</h1>
+	<span class="sub">The intake form is the product, and it rewrites itself.</span>
+	<span id="mode" class="badge">…</span>
+	<select id="version" title="Form version"></select>
+</header>
+<main>
+	<section class="pane">
+		<h2>Tell us what matters <span style="text-transform:none;letter-spacing:0;font-weight:400">· every question is optional</span></h2>
+		<div id="form"></div>
+		<div class="foot">
+			<button id="submit">Done, help improve this form</button>
+			<span>Skips and edited questions teach the next version.</span>
+		</div>
+	</section>
+	<section class="pane">
+		<h2>Best matches right now</h2>
+		<div id="status" class="status"><span class="spin">● agent working</span><span id="count"></span><span id="cost"></span></div>
+		<div id="cards"></div>
+		<div id="saved" class="saved"></div>
+		<h2>What the agent heard</h2>
+		<ul id="prefs" class="prefs"></ul>
+	</section>
+</main>
+<div id="toast" class="toast"></div>
+<script>
+const WEIGHTS = ['Not at all', 'A little', 'Somewhat', 'A lot'];
+const QUICK_REASONS = ['too expensive', 'commute is too long', 'street is too loud', 'I need in-unit laundry', "don't like the layout", 'floor is too low', 'not this neighborhood'];
+const state = { form: null, answers: {}, reactions: [], seq: 0 };
+
+const $ = (sel) => document.querySelector(sel);
+const el = (tag, attrs = {}, ...kids) => {
+	const n = document.createElement(tag);
+	for (const [k, v] of Object.entries(attrs)) {
+		if (k === 'class') n.className = v;
+		else if (k.startsWith('on')) n.addEventListener(k.slice(2), v);
+		else if (v !== false && v != null) n.setAttribute(k, v === true ? '' : v);
+	}
+	for (const kid of kids.flat()) if (kid != null) n.append(kid.nodeType ? kid : String(kid));
+	return n;
+};
+const money = (n) => '$' + Math.round(n).toLocaleString('en-US');
+function toast(msg) { const t = $('#toast'); t.textContent = msg; t.classList.add('show'); setTimeout(() => t.classList.remove('show'), 1800); }
+
+function answerOf(id) { return (state.answers[id] ??= { question_id: id, action: 'answer', importance: 1, started: Date.now() }); }
+
+function payloadAnswers() {
+	return state.form.questions.map((q) => {
+		const a = state.answers[q.id];
+		const empty = !a || a.value == null || a.value === '' || (Array.isArray(a.value) && !a.value.length);
+		if (!a || a.skipped || empty) return { question_id: q.id, action: 'skip', seconds: a?.seconds ?? 0 };
+		const rewritten = a.rewritten_text && a.rewritten_text.trim() && a.rewritten_text.trim() !== q.text;
+		return { question_id: q.id, action: rewritten ? 'rewrite' : 'answer', value: a.value, ...(rewritten ? { rewritten_text: a.rewritten_text.trim() } : {}), importance: a.importance, seconds: Math.round((a.seconds ?? 0)) };
+	});
+}
+
+function touch(id) {
+	const a = answerOf(id);
+	a.seconds = Math.min(120, (Date.now() - a.started) / 1000);
+	schedule();
+}
+
+function control(q) {
+	const a = answerOf(q.id);
+	const set = (v) => { a.value = v; touch(q.id); };
+	if (q.type === 'select') {
+		return el('div', { class: 'chips' }, q.options.map((o) => el('span', { class: 'chip' + (a.value === o ? ' on' : ''), onclick: (e) => {
+			set(a.value === o ? undefined : o);
+			e.target.parentNode.querySelectorAll('.chip').forEach((c) => c.classList.toggle('on', c.textContent === a.value));
+		} }, o.replace('_', ' '))));
+	}
+	if (q.type === 'multiselect') {
+		a.value ??= [];
+		return el('div', { class: 'chips' }, q.options.map((o) => el('span', { class: 'chip', onclick: (e) => {
+			a.value = a.value.includes(o) ? a.value.filter((x) => x !== o) : [...a.value, o];
+			e.target.classList.toggle('on', a.value.includes(o));
+			touch(q.id);
+		} }, o)));
+	}
+	if (q.type === 'yesno') {
+		return el('div', { class: 'chips' }, ['yes', 'no'].map((o) => el('span', { class: 'chip', onclick: (e) => {
+			set(a.value === o ? undefined : o);
+			e.target.parentNode.querySelectorAll('.chip').forEach((c) => c.classList.toggle('on', c.textContent === a.value));
+		} }, o)));
+	}
+	if (q.type === 'number') return el('input', { type: 'number', placeholder: q.help || '', oninput: (e) => set(e.target.value === '' ? undefined : Number(e.target.value)) });
+	return el('textarea', { placeholder: q.help || '', oninput: (e) => set(e.target.value) });
+}
+
+function renderForm() {
+	const box = $('#form');
+	box.replaceChildren();
+	for (const q of state.form.questions) {
+		const a = answerOf(q.id);
+		const card = el('div', { class: 'q' + (a.skipped ? ' skipped' : '') });
+		const text = el('div', { class: 'q-text' + (a.rewritten_text ? ' edited' : '') }, a.rewritten_text || q.text);
+		const orig = el('div', { class: 'q-orig' }, a.rewritten_text ? `You reworded: "${q.text}"` : '');
+		const editBtn = el('button', { class: 'link', title: 'Reword this question so it fits you', onclick: () => {
+			const input = el('input', { type: 'text', value: a.rewritten_text || q.text });
+			const done = () => { const v = input.value.trim(); a.rewritten_text = v && v !== q.text ? v : undefined; renderForm(); touch(q.id); };
+			input.addEventListener('keydown', (e) => { if (e.key === 'Enter') done(); if (e.key === 'Escape') renderForm(); });
+			input.addEventListener('blur', done);
+			text.replaceWith(input); input.focus(); input.select();
+		} }, '✎ edit question');
+		const skipBtn = el('button', { class: 'link', onclick: () => { a.skipped = !a.skipped; renderForm(); touch(q.id); } }, a.skipped ? 'undo skip' : 'skip');
+		const weightLabel = el('b', {}, WEIGHTS[a.importance]);
+		const slider = el('input', { type: 'range', min: 0, max: 3, step: 1, value: a.importance, oninput: (e) => { a.importance = Number(e.target.value); weightLabel.textContent = WEIGHTS[a.importance]; touch(q.id); } });
+		card.append(
+			el('div', { class: 'q-head' }, text, editBtn, skipBtn),
+			orig,
+			q.help ? el('div', { class: 'q-help' }, q.help) : el('div', { style: 'height:8px' }),
+			a.skipped ? '' : control(q),
+			a.skipped ? '' : el('label', { class: 'weight' }, 'How much it matters', slider, weightLabel)
+		);
+		box.append(card);
+	}
+}
+
+const MARK = (s) => (s === null ? ['unk', '?'] : s >= 1 ? ['ok', '✓'] : s <= 0 ? ['no', '✗'] : ['mid', '~']);
+
+function listingCard(c, shownRank) {
+	const l = c.listing;
+	const reasonBox = el('div', { class: 'reason' });
+	const reasonInput = el('input', { type: 'text', placeholder: 'Why not? (optional, the agent re-ranks from this)' });
+	const doPass = () => { state.reactions.push({ listing_id: l.id, liked: false, reason: reasonInput.value.trim() || undefined }); schedule(0); };
+	reasonBox.append(
+		el('div', { class: 'chips' }, QUICK_REASONS.map((r) => el('span', { class: 'chip', onclick: () => { reasonInput.value = r; } }, r))),
+		reasonInput,
+		el('div', { class: 'actions', style: 'margin-top:8px' }, el('button', { class: 'pass', onclick: doPass }, 'Pass'), el('button', { class: 'link', onclick: () => reasonBox.classList.remove('open') }, 'cancel'))
+	);
+	reasonInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') doPass(); });
+	const bits = [l.neighborhood, l.sqft && `${l.sqft} sq ft`, l.floor != null && `floor ${l.floor}`, l.layout, l.laundry && `laundry: ${l.laundry.replace('_', ' ')}`, l.parking ? 'parking' : null, l.pets && `pets: ${l.pets}`, l.street_noise && `${l.street_noise} street`, l.available && `available ${l.available}`].filter(Boolean);
+	return el('div', { class: 'card' },
+		el('div', { class: 'card-top' }, el('span', { class: 'title' }, `#${shownRank} · ${l.title}`), el('span', { class: 'price' }, money(l.price))),
+		el('div', { class: 'meta' }, bits.join(' · '), l.url ? el('span', {}, ' · ', el('a', { href: l.url, target: '_blank', rel: 'noopener' }, 'source')) : ''),
+		c.checks.length ? el('ul', { class: 'checks' }, c.checks.map((k) => { const [cls, m] = MARK(k.sat); return el('li', { class: cls }, `${m} ${k.label}`, k.hard ? el('span', { class: 'hard' }, 'dealbreaker') : '', k.from ? el('small', {}, ` · from ${k.from}`) : ''); })) : el('div', { class: 'meta' }, 'Answer a question and the agent will explain its picks.'),
+		el('div', { class: 'actions' },
+			el('button', { class: 'like', onclick: () => { state.reactions.push({ listing_id: l.id, liked: true }); toast('Saved. Showing the next best.'); schedule(0); } }, '♥ Like'),
+			el('button', { class: 'pass', onclick: () => { reasonBox.classList.add('open'); reasonInput.focus(); } }, 'Pass…')
+		),
+		reasonBox
+	);
+}
+
+let timer;
+function schedule(ms = 700) { clearTimeout(timer); timer = setTimeout(recommend, ms); }
+
+async function recommend() {
+	const seq = ++state.seq;
+	$('#status').classList.add('busy');
+	try {
+		const res = await fetch('/api/recommend', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ version: state.form.version, answers: payloadAnswers(), reactions: state.reactions }) });
+		const data = await res.json();
+		if (seq !== state.seq) return;
+		if (data.error) throw new Error(data.error);
+		$('#count').textContent = `${data.remaining} of ${data.total} listings still fit your dealbreakers`;
+		$('#cost').textContent = data.calls ? `· ${data.calls} model calls, $${data.cost.toFixed(4)}` : '';
+		setMode(data.mode);
+		$('#cards').replaceChildren(...(data.top.length ? data.top.map((c, i) => listingCard(c, i + 1)) : [el('div', { class: 'empty' }, 'Nothing left that fits. Loosen a dealbreaker or edit an answer.')]));
+		$('#saved').textContent = data.liked.length ? `♥ Saved: ${data.liked.map((c) => `${c.listing.title} (${money(c.listing.price)})`).join(' · ')}` : '';
+		$('#prefs').replaceChildren(...(data.prefs.length ? data.prefs.map((p) => el('li', {}, el('span', {}, p.label, p.hard ? el('span', { class: 'hard' }, 'dealbreaker') : ''), el('span', { class: 'from' }, `${p.from || 'agent'} · weight ${p.weight}`))) : [el('li', { class: 'from' }, 'Nothing yet. Answer any question and the ranking updates.')]));
+	} catch (e) {
+		toast('Agent error: ' + e.message);
+	} finally {
+		if (seq === state.seq) $('#status').classList.remove('busy');
+	}
+}
+
+function setMode(mode) {
+	const m = $('#mode');
+	m.textContent = mode === 'live' ? 'agent: live Crusoe models' : 'agent: offline rules';
+	m.classList.toggle('offline', mode !== 'live');
+}
+
+async function load(version) {
+	const res = await fetch('/api/form' + (version ? `?version=${version}` : ''));
+	const form = await res.json();
+	state.form = form; state.answers = {}; state.reactions = [];
+	setMode(form.mode);
+	const sel = $('#version');
+	if (!sel.options.length) {
+		for (let v = form.version; v >= 1; v--) sel.append(el('option', { value: v }, `form v${v}${v === form.version ? ' (latest)' : ''}`));
+		sel.addEventListener('change', () => load(Number(sel.value)));
+	}
+	renderForm();
+	recommend();
+}
+
+$('#submit').addEventListener('click', async () => {
+	await fetch('/api/submit', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ version: state.form.version, answers: payloadAnswers() }) });
+	toast('Thanks. Your skips and edits go to the reviewer for the next form version.');
+});
+
+load();
+</script>
+</body>
+</html>
