@@ -13,3 +13,8 @@
 node_modules/
 .venv/
 __pycache__/
+
+# Claude Code local state: agent worktrees, scheduler lock, per-machine preview config
+.claude/worktrees/
+.claude/scheduled_tasks.lock
+.claude/launch.json

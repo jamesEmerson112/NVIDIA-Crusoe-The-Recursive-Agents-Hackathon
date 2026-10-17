@@ -10,13 +10,23 @@ import {
 	usage
 } from './db/schema';
 import type { ChatMessage, Usage } from './crusoe';
-import type { ArtifactKind, ArtifactStatus, MessageMeta, StepStatus, ToolCall } from '#lib/types.ts';
+import type {
+	ArtifactKind,
+	ArtifactStatus,
+	MessageMeta,
+	StepStatus,
+	ToolCall
+} from '#lib/types.ts';
 
 // Short ids keep tool arguments cheap and easy for models to copy.
-const shortId = (prefix: string) => `${prefix}_${crypto.randomUUID().replaceAll('-', '').slice(0, 8)}`;
+const shortId = (prefix: string) =>
+	`${prefix}_${crypto.randomUUID().replaceAll('-', '').slice(0, 8)}`;
 
 export async function createConversation() {
-	const [row] = await db.insert(conversations).values({ id: shortId('c') }).returning();
+	const [row] = await db
+		.insert(conversations)
+		.values({ id: shortId('c') })
+		.returning();
 	return row;
 }
 
@@ -44,7 +54,12 @@ export async function deleteConversation(id: string) {
 
 export async function appendMessage(
 	conversationId: string,
-	msg: { role: 'user' | 'assistant' | 'tool'; content: string | null; toolCalls?: ToolCall[]; toolCallId?: string },
+	msg: {
+		role: 'user' | 'assistant' | 'tool';
+		content: string | null;
+		toolCalls?: ToolCall[];
+		toolCallId?: string;
+	},
 	meta?: MessageMeta
 ) {
 	const [{ seq }] = await db
@@ -74,7 +89,8 @@ export async function listMessages(conversationId: string) {
 export async function loadHistory(conversationId: string): Promise<ChatMessage[]> {
 	const rows = (await listMessages(conversationId)).filter((m) => m.meta?.kind !== 'error');
 	return rows.map((m): ChatMessage => {
-		if (m.role === 'tool') return { role: 'tool', content: m.content ?? '', tool_call_id: m.toolCallId! };
+		if (m.role === 'tool')
+			return { role: 'tool', content: m.content ?? '', tool_call_id: m.toolCallId! };
 		if (m.role === 'assistant')
 			return {
 				role: 'assistant',
@@ -96,7 +112,10 @@ export async function listSteps(conversationId: string) {
 }
 
 /** Replace the plan, matching existing steps by position so artifacts stay attached. */
-export async function setPlan(conversationId: string, plan: { title: string; status?: StepStatus }[]) {
+export async function setPlan(
+	conversationId: string,
+	plan: { title: string; status?: StepStatus }[]
+) {
 	const existing = await listSteps(conversationId);
 	for (const [i, item] of plan.entries()) {
 		const position = i + 1;
@@ -180,7 +199,9 @@ export async function createArtifact(input: {
 	});
 	const upstream = await existingArtifactIds(input.conversationId, input.dependsOn ?? []);
 	if (upstream.length) {
-		await db.insert(artifactDeps).values(upstream.map((upstreamId) => ({ upstreamId, downstreamId: id })));
+		await db
+			.insert(artifactDeps)
+			.values(upstream.map((upstreamId) => ({ upstreamId, downstreamId: id })));
 	}
 	return { id, linked: upstream };
 }
@@ -213,7 +234,10 @@ export async function getArtifact(conversationId: string, id: string) {
 		.select()
 		.from(artifactVersions)
 		.where(
-			and(eq(artifactVersions.artifactId, id), eq(artifactVersions.version, artifact.currentVersion))
+			and(
+				eq(artifactVersions.artifactId, id),
+				eq(artifactVersions.version, artifact.currentVersion)
+			)
 		);
 	return { ...artifact, content: version.content, data: version.data, versionInfo: version };
 }
@@ -222,7 +246,12 @@ export async function getArtifact(conversationId: string, id: string) {
 export async function addVersion(
 	conversationId: string,
 	id: string,
-	patch: { content?: string; data?: Record<string, unknown> | null; note: string; status?: ArtifactStatus },
+	patch: {
+		content?: string;
+		data?: Record<string, unknown> | null;
+		note: string;
+		status?: ArtifactStatus;
+	},
 	provenance: Provenance
 ) {
 	const current = await getArtifact(conversationId, id);
@@ -245,7 +274,10 @@ export async function addVersion(
 
 export async function setArtifactStatus(ids: string[], status: ArtifactStatus) {
 	if (!ids.length) return;
-	await db.update(artifacts).set({ status, updatedAt: new Date() }).where(inArray(artifacts.id, ids));
+	await db
+		.update(artifacts)
+		.set({ status, updatedAt: new Date() })
+		.where(inArray(artifacts.id, ids));
 }
 
 export async function listVersions(artifactId: string) {
@@ -307,7 +339,12 @@ export async function estimateRedo(conversationId: string, ids: string[]) {
 
 // ---------- usage ----------
 
-export async function recordUsage(conversationId: string, model: string, role: 'agent' | 'subagent', u: Usage) {
+export async function recordUsage(
+	conversationId: string,
+	model: string,
+	role: 'agent' | 'subagent',
+	u: Usage
+) {
 	await db.insert(usage).values({ conversationId, model, role, ...u });
 }
 
@@ -330,7 +367,11 @@ export async function conversationState(id: string) {
 	const [msgs, stepRows, artifactRows] = await Promise.all([
 		listMessages(id),
 		listSteps(id),
-		db.select().from(artifacts).where(eq(artifacts.conversationId, id)).orderBy(asc(artifacts.createdAt))
+		db
+			.select()
+			.from(artifacts)
+			.where(eq(artifacts.conversationId, id))
+			.orderBy(asc(artifacts.createdAt))
 	]);
 	const ids = artifactRows.map((a) => a.id);
 	const [versionRows, depRows] = ids.length

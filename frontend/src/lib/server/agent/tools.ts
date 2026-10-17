@@ -86,7 +86,17 @@ export const TOOL_SCHEMAS: ToolSchema[] = [
 								label: { type: 'string' },
 								type: {
 									type: 'string',
-									enum: ['text', 'textarea', 'number', 'email', 'date', 'select', 'radio', 'checkbox', 'checkboxes']
+									enum: [
+										'text',
+										'textarea',
+										'number',
+										'email',
+										'date',
+										'select',
+										'radio',
+										'checkbox',
+										'checkboxes'
+									]
 								},
 								options: { type: 'array', items: { type: 'string' } },
 								required: { type: 'boolean' },
@@ -115,7 +125,10 @@ export const TOOL_SCHEMAS: ToolSchema[] = [
 					title: { type: 'string' },
 					kind: { type: 'string', enum: ['document', 'html'] },
 					step: { type: 'integer', description: 'Step number this artifact belongs to.' },
-					content: { type: 'string', description: 'Markdown for document, a full HTML page for html.' },
+					content: {
+						type: 'string',
+						description: 'Markdown for document, a full HTML page for html.'
+					},
 					depends_on: dependsOn
 				},
 				required: ['title', 'kind', 'content']
@@ -155,7 +168,7 @@ export const TOOL_SCHEMAS: ToolSchema[] = [
 		function: {
 			name: 'quick_edit',
 			description:
-				'Delegate a small revision of one artifact to a fast, cheap sub-agent. It sees the artifact and its upstream inputs. Several quick_edit calls in one turn run in parallel.',
+				'Delegate a small revision of one artifact to a fast, cheap sub-agent. It sees the artifact and its upstream inputs. Consecutive quick_edit calls in one turn run in parallel.',
 			parameters: {
 				type: 'object',
 				properties: {
@@ -183,7 +196,11 @@ export const TOOL_SCHEMAS: ToolSchema[] = [
 const ok = (data: Record<string, unknown>) => JSON.stringify({ ok: true, ...data });
 const fail = (error: string) => JSON.stringify({ ok: false, error });
 
-export async function runTool(name: string, rawArgs: string, ctx: ToolContext): Promise<ToolOutput> {
+export async function runTool(
+	name: string,
+	rawArgs: string,
+	ctx: ToolContext
+): Promise<ToolOutput> {
 	let args: Record<string, any>;
 	try {
 		args = rawArgs.trim() ? JSON.parse(rawArgs) : {};
@@ -200,13 +217,23 @@ export async function runTool(name: string, rawArgs: string, ctx: ToolContext): 
 
 	switch (name) {
 		case 'set_plan': {
-			const plan = (args.steps ?? []).map((s: any) => ({ title: String(s.title), status: s.status as StepStatus }));
+			const plan = (args.steps ?? []).map((s: any) => ({
+				title: String(s.title),
+				status: s.status as StepStatus
+			}));
 			const rows = await store.setPlan(cid, plan);
 			ctx.emit({ type: 'tool', name, summary: `Planned ${rows.length} steps` });
-			return { content: ok({ steps: rows.map((s) => ({ step: s.position, title: s.title, status: s.status })) }) };
+			return {
+				content: ok({
+					steps: rows.map((s) => ({ step: s.position, title: s.title, status: s.status }))
+				})
+			};
 		}
 		case 'update_step': {
-			const row = await store.updateStep(cid, Number(args.step), { status: args.status, summary: args.summary });
+			const row = await store.updateStep(cid, Number(args.step), {
+				status: args.status,
+				summary: args.summary
+			});
 			if (!row) return { content: fail(`No step ${args.step}`) };
 			ctx.emit({ type: 'tool', name, summary: `Step ${row.position}: ${row.status}` });
 			return { content: ok({ step: row.position, status: row.status }) };
@@ -230,13 +257,17 @@ export async function runTool(name: string, rawArgs: string, ctx: ToolContext): 
 			});
 			ctx.emit({ type: 'tool', name, summary: `Form: ${args.title}` });
 			return {
-				content: ok({ artifact_id: id, note: 'Form is shown to the user. Wait for their submission.' }),
+				content: ok({
+					artifact_id: id,
+					note: 'Form is shown to the user. Wait for their submission.'
+				}),
 				meta: { kind: 'artifact', artifactId: id },
 				awaitUser: true
 			};
 		}
 		case 'create_artifact': {
-			if (!['document', 'html'].includes(args.kind)) return { content: fail('kind must be document or html') };
+			if (!['document', 'html'].includes(args.kind))
+				return { content: fail('kind must be document or html') };
 			const { id, linked } = await store.createArtifact({
 				conversationId: cid,
 				kind: args.kind,
@@ -247,12 +278,16 @@ export async function runTool(name: string, rawArgs: string, ctx: ToolContext): 
 				provenance
 			});
 			ctx.emit({ type: 'tool', name, summary: `Created ${args.title}` });
-			return { content: ok({ artifact_id: id, depends_on: linked }), meta: { kind: 'artifact', artifactId: id } };
+			return {
+				content: ok({ artifact_id: id, depends_on: linked }),
+				meta: { kind: 'artifact', artifactId: id }
+			};
 		}
 		case 'update_artifact': {
 			const a = await store.getArtifact(cid, args.artifact_id);
 			if (!a) return { content: fail(`No artifact ${args.artifact_id}`) };
-			if (a.kind === 'form') return { content: fail('Forms are edited by the user, not the agent') };
+			if (a.kind === 'form')
+				return { content: fail('Forms are edited by the user, not the agent') };
 			const { version } = await store.addVersion(
 				cid,
 				a.id,
@@ -260,7 +295,10 @@ export async function runTool(name: string, rawArgs: string, ctx: ToolContext): 
 				provenance
 			);
 			ctx.emit({ type: 'tool', name, summary: `Updated ${a.title} to v${version}` });
-			return { content: ok({ artifact_id: a.id, version }), meta: { kind: 'artifact', artifactId: a.id } };
+			return {
+				content: ok({ artifact_id: a.id, version }),
+				meta: { kind: 'artifact', artifactId: a.id }
+			};
 		}
 		case 'read_artifact': {
 			const a = await store.getArtifact(cid, args.artifact_id);
@@ -280,15 +318,24 @@ export async function runTool(name: string, rawArgs: string, ctx: ToolContext): 
 		case 'quick_edit': {
 			const a = await store.getArtifact(cid, args.artifact_id);
 			if (!a) return { content: fail(`No artifact ${args.artifact_id}`) };
-			if (a.kind === 'form') return { content: fail('Forms are edited by the user, not the agent') };
+			if (a.kind === 'form')
+				return { content: fail('Forms are edited by the user, not the agent') };
 			ctx.emit({ type: 'tool', name, summary: `Sub-agent revising ${a.title}` });
 			await store.setArtifactStatus([a.id], 'updating');
 			ctx.emit({ type: 'changed' });
 			try {
 				const result = await runQuickEdit(cid, a.id, String(args.instruction), ctx.signal);
-				ctx.emit({ type: 'tool', name, summary: `Sub-agent updated ${a.title} to v${result.version}` });
+				ctx.emit({
+					type: 'tool',
+					name,
+					summary: `Sub-agent updated ${a.title} to v${result.version}`
+				});
 				return {
-					content: ok({ artifact_id: a.id, version: result.version, cost_usd: Number(result.costUsd.toFixed(5)) }),
+					content: ok({
+						artifact_id: a.id,
+						version: result.version,
+						cost_usd: Number(result.costUsd.toFixed(5))
+					}),
 					meta: { kind: 'artifact', artifactId: a.id }
 				};
 			} catch (err) {

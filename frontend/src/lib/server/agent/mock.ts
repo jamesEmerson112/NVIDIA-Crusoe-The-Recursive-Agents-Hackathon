@@ -41,10 +41,21 @@ function script(req: ChatRequest): { content: string; toolCalls: ToolCall[] } {
 	if (last.role === 'tool') {
 		const lastUser = [...msgs].reverse().find((m) => m.role === 'user')?.content as string;
 		if (lastUser.startsWith('[Form submitted]'))
-			return { content: 'I drafted **Project brief** from your answers. Change any answer in the form and I will update it.', toolCalls: [] };
+			return {
+				content:
+					'I drafted **Project brief** from your answers. Change any answer in the form and I will update it.',
+				toolCalls: []
+			};
 		if (lastUser.startsWith('[Edit]'))
-			return { content: 'That was a small change, so a fast sub-agent patched the brief. Open it to see the new version.', toolCalls: [] };
-		return { content: 'I set up a plan and a short form. Fill it in and I will take it from there.', toolCalls: [] };
+			return {
+				content:
+					'That was a small change, so a fast sub-agent patched the brief. Open it to see the new version.',
+				toolCalls: []
+			};
+		return {
+			content: 'I set up a plan and a short form. Fill it in and I will take it from there.',
+			toolCalls: []
+		};
 	}
 
 	if (text.startsWith('[Form submitted]')) {
@@ -54,7 +65,13 @@ function script(req: ChatRequest): { content: string; toolCalls: ToolCall[] } {
 			content: '',
 			toolCalls: [
 				call('update_step', { step: 1, status: 'done', summary: 'Collected the brief' }),
-				call('create_artifact', { title: 'Project brief', kind: 'document', step: 2, content: brief(answers), depends_on: [formId] }),
+				call('create_artifact', {
+					title: 'Project brief',
+					kind: 'document',
+					step: 2,
+					content: brief(answers),
+					depends_on: [formId]
+				}),
 				call('update_step', { step: 2, status: 'done', summary: 'Drafted the brief' }),
 				call('update_step', { step: 3, status: 'active' })
 			]
@@ -63,10 +80,16 @@ function script(req: ChatRequest): { content: string; toolCalls: ToolCall[] } {
 
 	if (text.startsWith('[Edit]')) {
 		const stale = [...text.matchAll(/^- (art_\w+)/gm)].map((m) => m[1]);
-		if (!stale.length) return { content: 'Noted. Nothing else depends on that, so there is nothing to redo.', toolCalls: [] };
+		if (!stale.length)
+			return {
+				content: 'Noted. Nothing else depends on that, so there is nothing to redo.',
+				toolCalls: []
+			};
 		return {
 			content: '',
-			toolCalls: stale.map((id) => call('quick_edit', { artifact_id: id, instruction: 'Reflect the updated form answers.' }))
+			toolCalls: stale.map((id) =>
+				call('quick_edit', { artifact_id: id, instruction: 'Reflect the updated form answers.' })
+			)
 		};
 	}
 
@@ -86,9 +109,21 @@ function script(req: ChatRequest): { content: string; toolCalls: ToolCall[] } {
 					step: 1,
 					description: 'A few details so the brief fits what you need.',
 					fields: [
-						{ name: 'goal', label: 'What are you trying to achieve?', type: 'textarea', required: true, default: text },
+						{
+							name: 'goal',
+							label: 'What are you trying to achieve?',
+							type: 'textarea',
+							required: true,
+							default: text
+						},
 						{ name: 'audience', label: 'Who is it for?', type: 'text' },
-						{ name: 'tone', label: 'Tone', type: 'radio', options: ['Casual', 'Professional', 'Playful'], default: 'Professional' },
+						{
+							name: 'tone',
+							label: 'Tone',
+							type: 'radio',
+							options: ['Casual', 'Professional', 'Playful'],
+							default: 'Professional'
+						},
 						{ name: 'budget', label: 'Budget (USD)', type: 'number' },
 						{ name: 'deadline', label: 'Deadline', type: 'date' }
 					],

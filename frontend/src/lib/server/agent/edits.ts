@@ -3,17 +3,27 @@ import type { MessageMeta } from '#lib/types.ts';
 
 type Input = { content: string; meta: MessageMeta };
 
-const fmt = (v: unknown) => (v === undefined || v === null || v === '' ? '(empty)' : JSON.stringify(v));
+const fmt = (v: unknown) =>
+	v === undefined || v === null || v === '' ? '(empty)' : JSON.stringify(v);
 const money = (usd: number) => `$${usd.toFixed(usd < 0.01 ? 5 : 3)}`;
 const secs = (ms: number) => `${Math.max(1, Math.round(ms / 1000))}s`;
 
 /** First submission of a form the agent is waiting on. A re-submission is an edit. */
-export async function submitForm(cid: string, artifactId: string, values: Record<string, unknown>): Promise<Input> {
+export async function submitForm(
+	cid: string,
+	artifactId: string,
+	values: Record<string, unknown>
+): Promise<Input> {
 	const form = await store.getArtifact(cid, artifactId);
 	if (!form || form.kind !== 'form') throw new Error('Unknown form');
 	if (form.status !== 'awaiting_input') return editArtifact(cid, artifactId, { values });
 
-	const { version } = await store.addVersion(cid, artifactId, { data: values, note: 'Submitted' }, { author: 'user' });
+	const { version } = await store.addVersion(
+		cid,
+		artifactId,
+		{ data: values, note: 'Submitted' },
+		{ author: 'user' }
+	);
 	return {
 		content: `[Form submitted] "${form.title}" (${artifactId}) v${version}:\n\`\`\`json\n${JSON.stringify(values, null, 2)}\n\`\`\``,
 		meta: { kind: 'form_submit', artifactId, version }
@@ -42,7 +52,9 @@ export async function editArtifact(
 		}
 	}
 	if (edit.content !== undefined && edit.content !== before.content) {
-		changes.push(`- content edited directly (${before.content.length} → ${edit.content.length} characters); read_artifact to see it`);
+		changes.push(
+			`- content edited directly (${before.content.length} → ${edit.content.length} characters); read_artifact to see it`
+		);
 	}
 	if (!changes.length) throw new Error('Nothing changed');
 
@@ -57,7 +69,8 @@ export async function editArtifact(
 	const estimate = await store.estimateRedo(cid, staleIds);
 
 	const staleLines = estimate.items.map(
-		(i) => `- ${i.id} "${i.title}" (${i.kind}): last produced for ${money(i.costUsd)} in ${secs(i.durationMs)}`
+		(i) =>
+			`- ${i.id} "${i.title}" (${i.kind}): last produced for ${money(i.costUsd)} in ${secs(i.durationMs)}`
 	);
 	const content = [
 		`[Edit] I changed "${before.title}" (${artifactId}) from v${before.currentVersion} to v${version}.`,
@@ -66,7 +79,9 @@ export async function editArtifact(
 		staleIds.length ? 'Now stale (built from it):' : 'Nothing is built from it yet.',
 		...staleLines,
 		...(staleIds.length
-			? [`Redo estimate if all are regenerated: ~${money(estimate.costUsd)}, ~${secs(estimate.durationMs)}.`]
+			? [
+					`Redo estimate if all are regenerated: ~${money(estimate.costUsd)}, ~${secs(estimate.durationMs)}.`
+				]
 			: [])
 	].join('\n');
 

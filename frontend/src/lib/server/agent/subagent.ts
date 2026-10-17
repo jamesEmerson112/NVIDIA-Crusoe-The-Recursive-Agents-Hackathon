@@ -9,7 +9,12 @@ Return ONLY the full revised content, in the same format as the current content 
 Change what the instruction and the new inputs require; keep everything else as it was.`;
 
 /** A cheap one-shot sub-agent on the fast model. Callers may run several in parallel. */
-export async function runQuickEdit(conversationId: string, artifactId: string, instruction: string, signal?: AbortSignal) {
+export async function runQuickEdit(
+	conversationId: string,
+	artifactId: string,
+	instruction: string,
+	signal?: AbortSignal
+) {
 	const artifact = await store.getArtifact(conversationId, artifactId);
 	if (!artifact) throw new Error(`No artifact ${artifactId}`);
 	const upstream = await Promise.all(
@@ -45,7 +50,12 @@ export async function runQuickEdit(conversationId: string, artifactId: string, i
 		conversationId,
 		artifactId,
 		{ content, note: `Sub-agent: ${instruction}` },
-		{ author: 'subagent', model, costUsd: result.usage.costUsd, durationMs: result.usage.durationMs }
+		{
+			author: 'subagent',
+			model,
+			costUsd: result.usage.costUsd,
+			durationMs: result.usage.durationMs
+		}
 	);
 	return { version, costUsd: result.usage.costUsd };
 }
