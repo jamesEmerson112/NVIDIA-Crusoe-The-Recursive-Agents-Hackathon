@@ -24,7 +24,8 @@
 	const VIEWS: { id: View; label: string }[] = [
 		{ id: 'dollhouse', label: 'Dollhouse' },
 		{ id: 'top', label: 'Top-down' },
-		{ id: 'full', label: 'Full height' }
+		{ id: 'full', label: 'Full height' },
+		{ id: 'walk', label: 'Walk' }
 	];
 
 	const planId = $derived(
@@ -36,7 +37,10 @@
 	const debug = $derived(page.url.searchParams.get('debug') === '1');
 	const forced = $derived(parseQuality(page.url.searchParams.get('quality')));
 	let active = $state<{ quality: Quality; reason: string } | null>(null);
-	let view = $state<View>('dollhouse');
+	/** `?view=walk` (or top, full) opens the viewer in that camera mode. */
+	const view = $derived(
+		VIEWS.find((v) => v.id === page.url.searchParams.get('view'))?.id ?? 'dollhouse'
+	);
 	let plan = $state.raw<Plan | null>(null);
 	let timings = $state.raw<ExternalTimings>({});
 	let problems = $state<string[]>([]);
@@ -73,7 +77,11 @@
 	function onkeydown(e: KeyboardEvent) {
 		const target = e.target as HTMLElement;
 		if (target.closest('input, textarea, [contenteditable]')) return;
-		if (e.key === 'd' || e.key === 'D') setParam('debug', debug ? null : '1');
+		// In walk mode D strafes right, so the debug shortcut is off there.
+		// Esc first releases the pointer lock (the browser handles that); a second Esc leaves walk mode.
+		if (view === 'walk' && e.key === 'Escape' && !document.pointerLockElement)
+			setParam('view', null);
+		if (view !== 'walk' && (e.key === 'd' || e.key === 'D')) setParam('debug', debug ? null : '1');
 	}
 </script>
 
@@ -129,7 +137,7 @@
 						? 'bg-emerald-600 text-white'
 						: 'hover:bg-zinc-100 dark:hover:bg-zinc-800'}"
 					aria-pressed={v.id === view}
-					onclick={() => (view = v.id)}>{v.label}</button
+					onclick={() => setParam('view', v.id === 'dollhouse' ? null : v.id)}>{v.label}</button
 				>
 			{/each}
 		</div>
@@ -177,7 +185,7 @@
 			{#each problems as problem (problem)}<li>{problem}</li>{/each}
 		</ul>
 	{/if}
-	<div class="min-h-0 flex-1">
+	<div class="relative min-h-0 flex-1">
 		{#key forced}
 			<PlanViewer
 				{plan}
@@ -188,5 +196,13 @@
 				onquality={(info) => (active = info)}
 			/>
 		{/key}
+		{#if view === 'walk'}
+			<p
+				data-testid="plans-walk-hint"
+				class="pointer-events-none absolute inset-x-0 bottom-4 mx-auto w-fit rounded-lg bg-zinc-900/75 px-3 py-1.5 text-xs text-white"
+			>
+				Click to look · WASD to move · Shift to run · Esc to exit
+			</p>
+		{/if}
 	</div>
 </div>

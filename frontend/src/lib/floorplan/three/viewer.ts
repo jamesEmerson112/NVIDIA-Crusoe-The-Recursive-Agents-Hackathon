@@ -27,8 +27,9 @@ import { loadFurniture } from './furniture.ts';
 import { createLighting } from './lighting.ts';
 import { createPost, type PostEffect } from './post.ts';
 import { detectQuality, PRESETS, type Quality } from './quality.ts';
+import { createWalk, EYE_HEIGHT, startPose, WALK_FOV, wallSegments } from './walk.ts';
 
-export type View = 'dollhouse' | 'top' | 'full';
+export type View = 'dollhouse' | 'top' | 'full' | 'walk';
 
 /** Timings measured outside the viewer (fetch, validation) that the debug panel should show. */
 export interface ExternalTimings {
@@ -46,6 +47,8 @@ export interface Viewer {
 }
 
 const DOLLHOUSE_CUT = 1.2;
+const ORBIT_FOV = 45;
+const TWEEN_MS = 600;
 
 /** CC0 floor textures from Poly Haven, served from static/textures/ (High only). */
 async function loadFloorMaps(): Promise<FloorMaps> {
@@ -100,7 +103,7 @@ export async function mount(
 	const floorMaps: FloorMaps | undefined =
 		detected.quality === 'high' ? await loadFloorMaps().catch(() => undefined) : undefined;
 
-	const camera = new PerspectiveCamera(45, 1, 0.1, 200);
+	const camera = new PerspectiveCamera(ORBIT_FOV, 1, 0.1, 200);
 	// Null on Low, or if the effects can't be built on this backend; then we render directly.
 	const post = createPost(renderer, scene, camera, preset);
 	const controls = new OrbitControls(camera, renderer.domElement);
@@ -108,6 +111,14 @@ export async function mount(
 	controls.maxPolarAngle = Math.PI / 2 - 0.05;
 	controls.minDistance = 2;
 	controls.maxDistance = 40;
+	const walk = createWalk(camera, renderer.domElement);
+	/** Camera move between orbit and walk; the loop drives it and skips controls while it runs. */
+	let tween: {
+		t0: number;
+		from: { pos: Vector3; target: Vector3; fov: number };
+		to: { pos: Vector3; target: Vector3; fov: number };
+		done: () => void;
+	} | null = null;
 
 	const helpers = new Group();
 	const grid = new GridHelper(30, 30, '#a1a1aa', '#d4d4d8');
@@ -241,7 +252,7 @@ export async function mount(
 			disposeBuild(build);
 		}
 		clearOverlays();
-		const cut = view === 'full' ? Infinity : settings.cutHeight;
+		const cut = view === 'full' || view === 'walk' ? Infinity : settings.cutHeight;
 		build = buildPlan(plan, cut, floorMaps);
 		scene.add(build.group);
 		lighting.fitTo(new Box3().setFromObject(build.group));
@@ -260,7 +271,7 @@ export async function mount(
 				'plan-viewer-room-label'
 			);
 			o.position.set(cx, 0.3, -cy);
-			o.visible = settings.labels;
+			o.visible = settings.labels && view !== 'walk';
 			labels.push(o);
 			scene.add(o);
 		}
@@ -296,11 +307,81 @@ export async function mount(
 		const center = box.getCenter(new Vector3());
 		const size = box.getSize(new Vector3());
 		const span = Math.max(size.x, size.z);
-		controls.target.copy(center).setY(0);
-		if (!fit) return;
-		if (view === 'top') camera.position.set(center.x, span * 1.6, center.z + 0.01);
-		else camera.position.set(center.x + span * 0.7, span * 1.1, center.z + span * 1.1);
-		controls.update();
+		const target = center.clone().setY(0);
+		if (view === 'walk') return enterWalk();
+		const wasWalking = !controls.enabled;
+		walk.disable();
+		if (!fit && !wasWalking) {
+			controls.target.copy(target);
+			return;
+		}
+		const pos =
+			view === 'top'
+				? new Vector3(center.x, span * 1.6, center.z + 0.01)
+				: new Vector3(center.x + span * 0.7, span * 1.1, center.z + span * 1.1);
+		const done = () => {
+			controls.target.copy(target);
+			controls.enabled = true;
+			controls.update();
+		};
+		if (wasWalking) startTween({ pos, target, fov: ORBIT_FOV }, done);
+		else {
+			tween = null;
+			camera.position.copy(pos);
+			done();
+		}
+	}
+
+	function currentPose() {
+		const dir = camera.getWorldDirection(new Vector3());
+		return {
+			pos: camera.position.clone(),
+			target: controls.enabled ? controls.target.clone() : camera.position.clone().add(dir),
+			fov: camera.fov
+		};
+	}
+
+	function startTween(to: { pos: Vector3; target: Vector3; fov: number }, done: () => void) {
+		tween = { t0: performance.now(), from: currentPose(), to, done };
+	}
+
+	function enterWalk() {
+		if (!plan) return;
+		const story = plan.stories[0];
+		walk.disable();
+		walk.setStory(story);
+		const { pos, dir } = startPose(story, wallSegments(story));
+		const eye = new Vector3(pos[0], story.elevation + EYE_HEIGHT, -pos[1]);
+		const target = eye.clone().add(new Vector3(dir[0], 0, -dir[1]));
+		const wasOrbiting = controls.enabled || tween !== null;
+		controls.enabled = false;
+		const done = () => {
+			camera.position.copy(eye);
+			camera.lookAt(target);
+			walk.enable();
+		};
+		if (wasOrbiting) startTween({ pos: eye, target, fov: WALK_FOV }, done);
+		else {
+			tween = null;
+			camera.fov = WALK_FOV;
+			camera.updateProjectionMatrix();
+			done();
+		}
+	}
+
+	function stepTween() {
+		if (!tween) return;
+		const k = Math.min(1, (performance.now() - tween.t0) / TWEEN_MS);
+		const e = k < 0.5 ? 4 * k * k * k : 1 - (-2 * k + 2) ** 3 / 2;
+		const { from, to } = tween;
+		camera.position.lerpVectors(from.pos, to.pos, e);
+		camera.lookAt(new Vector3().lerpVectors(from.target, to.target, e));
+		camera.fov = from.fov + (to.fov - from.fov) * e;
+		camera.updateProjectionMatrix();
+		if (k < 1) return;
+		const done = tween.done;
+		tween = null;
+		done();
 	}
 
 	function resize() {
@@ -318,8 +399,13 @@ export async function mount(
 	resize();
 
 	let lastStats = 0;
+	let lastTime = 0;
 	renderer.setAnimationLoop((time) => {
-		controls.update();
+		const dt = lastTime ? (time - lastTime) / 1000 : 0;
+		lastTime = time;
+		if (tween) stepTween();
+		else if (controls.enabled) controls.update();
+		else walk.update(dt);
 		if (post) post.render();
 		else renderer.render(scene, camera);
 		labelRenderer.render(scene, camera);
@@ -419,11 +505,13 @@ export async function mount(
 			stats.validateMs = external.validateMs ?? 0;
 			pendingFirstFrame = performance.now();
 			rebuild();
+			// A new plan in walk mode drops the camera straight in rather than flying from the old one.
+			if (view === 'walk') controls.enabled = false;
 			frame(true);
 		},
 		setView(next) {
 			view = next;
-			if (next === 'full') settings.cutHeight = 2.7;
+			if (next === 'full' || next === 'walk') settings.cutHeight = 2.7;
 			else if (settings.cutHeight >= 2.7) settings.cutHeight = DOLLHOUSE_CUT;
 			gui?.controllersRecursive().forEach((c) => c.updateDisplay());
 			rebuild();
@@ -446,6 +534,7 @@ export async function mount(
 			grid.dispose();
 			axes.dispose();
 			controls.dispose();
+			walk.dispose();
 			labelRenderer.domElement.remove();
 			renderer.domElement.remove();
 			renderer.dispose();
