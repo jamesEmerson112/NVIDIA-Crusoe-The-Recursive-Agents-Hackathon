@@ -13,6 +13,7 @@ import { ydcCacheOnly } from './ydc.ts';
 import { rank, satisfaction, utility, violates } from './utility.ts';
 import { DEST_LABEL } from './phrases.ts';
 import { proposeFollowups } from './followups.ts';
+import { listingPlan } from './plan3d.ts';
 import { formloopDir } from './config.ts';
 import { logsDir } from './outer.ts';
 import type { Answer, Listing, Pref, Question } from './types.ts';
@@ -162,6 +163,14 @@ createServer(async (req, res) => {
 	try {
 		const url = new URL(req.url ?? '/', `http://localhost:${PORT}`);
 		if (req.method === 'GET' && url.pathname === '/') return send(res, 200, readFileSync(page, 'utf8'), 'text/html; charset=utf-8');
+		// A listing as a 3D blueprint in James's Plan format (frontend/src/lib/floorplan/types.ts), for his three.js viewer.
+		const planMatch = url.pathname.match(/^\/api\/plan\/([\w-]+)$/);
+		if (req.method === 'GET' && planMatch) {
+			const l = listings.find((x) => x.id === planMatch[1]);
+			if (!l) return send(res, 404, { error: `no listing ${planMatch[1]}` });
+			res.setHeader('Access-Control-Allow-Origin', '*');
+			return send(res, 200, listingPlan(l));
+		}
 		if (req.method === 'GET' && url.pathname === '/plans')
 			return send(res, 200, readFileSync(join(formloopDir, 'web', 'plans.html'), 'utf8'), 'text/html; charset=utf-8');
 		if (req.method === 'GET' && url.pathname === '/floorplan.js')
