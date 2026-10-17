@@ -8,7 +8,9 @@ POSSIBLE TECHNICAL FEATURES
   - L over 90 min
 - Kept current by the 10-minute doc-sync job
   - Built items move to DONE at bottom
-  - "<-- Gaelan" marks what Gaelan is on now
+  - "<-- Name" marks who is on it now
+- Team: James = FE, Gaelan = BE (Workbench agent)
+  - Laurie = formloop (self-improving intake form)
 - Freeze features at 4:00; NOW items first
 - Cozy room designer: planned parallel extension, not built
   - Plan and ownership: docs/cozy-implementation-plan.md
@@ -20,16 +22,17 @@ POSSIBLE TECHNICAL FEATURES
 Ranked: most essential first, most optional last
 
 NOW
-1. [S] Comparison table view of shortlisted homes
-2. [M] Visit feedback form and visit task view
+1. [S] Comparison table view of shortlisted homes   <-- James
+2. [M] Visit feedback form and visit task view      <-- James
    - Ratings feed BE's next search round
 
 LATER
 3. [S] Landing page copy and one-line pitch
 4. [S] Run log view of every call
 5. [S] Real-world task list with checkboxes
-6. [M] Weight sliders re-rank shortlist
+6. [M] Weight sliders re-rank shortlist             <-- Laurie
    - Plain code re-sorts, no model call
+   - Built in formloop demo, not Workbench
 7. [S] Live "options remaining" counter on forms
 8. [M] Map with listing pins
    - Sandbox blocks network; inline or static
@@ -47,19 +50,19 @@ LATER
 ================ BACKEND (BE) ================
 
 NOW
-- [M] Research fan-out tool (spawn_research)   <-- Gaelan
+- [M] Research fan-out tool (spawn_research)        <-- Gaelan
   - Orchestrator starts N parallel research sub-agents
   - One brief each: neighborhood or price band
   - Each returns a linked document artifact
   - Emit run events FE's agent tree needs
-- [S] Concurrency cap and model spreading      <-- Gaelan
+- [S] Concurrency cap and model spreading           <-- Gaelan
   - At most K sub-agents at once
   - Alternate two models; avoid 30 RPM cap
-- [M] Rental listings tool over scraped data   <-- Gaelan
+- [M] Rental listings tool over scraped data        <-- Gaelan
   - Speaker B's Bay Area listings in SQLite
   - Reuse formloop's You.com listings source
   - Fallback: DataSF context tool below
-- [S] Market snapshot: median rent via SQL     <-- Gaelan
+- [S] Market snapshot: median rent via SQL          <-- Gaelan
 - [M] Visit list and feedback round in prompt
   - Ratings drive the next search round
 
@@ -78,7 +81,7 @@ LATER
 - [S] Commute estimate from listing to work
   - Straight-line distance; routing APIs need keys
 - [M] Cached neighborhood profiles, built by sub-agents
-- [S] Skipped questions read as preference signal
+- [S] Skipped questions read as preference signal   <-- Laurie
 - [S] Preference profile artifact
   - What user wants versus what they said
 - [L] Energy and sun exposure per listing
@@ -104,6 +107,8 @@ LATER
 ================ BOTH (demo and submission) ================
 
 NOW
+- [S] Pick the demo: Workbench, formloop, or both   <-- James
+  - Or feed formloop listings into Workbench
 - [S] Pre-run demo conversation, no live latency
 - [M] Backup screen recording of full flow
 - [S] Verify README setup from fresh clone

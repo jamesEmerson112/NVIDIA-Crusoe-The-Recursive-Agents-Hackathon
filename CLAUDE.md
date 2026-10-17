@@ -8,6 +8,14 @@ Entry for the Crusoe × Cerebral Valley **Recursive Agents Hackathon** (Sat Oct 
 
 Team research lives in `docs/research/` (start with `docs/research/README.md`). It covers building our own Obsidian-style knowledge base for agent memory, GPT-6 Astra vs Claude for Blender and 3D work, rendering San Francisco buildings in three.js, floorplan datasets and 2D-to-3D rendering, and building energy simulation. Read the relevant file before working on any of those.
 
+## Team and feature tracking
+
+- **Who works on what:** James = frontend, Gaelan = backend (the Workbench agent in `frontend/src/lib/server/`), Laurie = `formloop/` (a self-improving apartment intake form with its own README and demo). Everyone commits directly to `main`.
+- **`docs/possible-technical-features.txt` is the tracked feature list.** Read it before starting work. It has TODO lanes FRONTEND (FE, ranked most essential first), BACKEND (BE) and BOTH, each with NOW then LATER, and a DONE list at the bottom.
+  - `<-- Name` after an item marks who is on it now. Add your owner's arrow when you start an item, and don't start an item someone else's arrow is on without asking.
+  - When you finish an item, move it to DONE (dropping the arrow). Add new items to the lane whose code they need. Keep every item and sub-point to 8 words or fewer, and keep arrows in a section aligned to one column.
+  - A 10-minute job in James's session also syncs this file from commits, so commit your changes to it promptly.
+
 ## Frontend (`frontend/`)
 
 Parallel room-designer work is planned in [`docs/cozy-implementation-plan.md`](docs/cozy-implementation-plan.md), with C0–C3 lane ownership, shared contracts, and integration gates. Read its parallel implementation section before starting that work. Reuse the existing research scheduler/run events when available; coordinate edits to shared backend and workspace files with their current owners. The feature list tracks status; `docs/api.md` documents implemented behavior only. Room-design features remain planned until their gate checks pass.
