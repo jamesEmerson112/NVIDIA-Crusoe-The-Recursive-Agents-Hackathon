@@ -9,6 +9,26 @@ export function answerText(v: unknown): string {
 	return String(v);
 }
 
+/**
+ * Suggestion chips are inserted into the user's answer, so they (and placeholder examples) should
+ * only contain what a person types on a normal keyboard. Models like ±, en dashes and curly quotes.
+ */
+export function typeable(text: string): string {
+	return text
+		.replace(/\s*±\s*/g, ' +/- ')
+		.replace(/(\d)\s*[–—]\s*(?=[\d$€£])/g, '$1-')
+		.replace(/\s*[–—]\s*/g, ' - ')
+		.replace(/≤\s*/g, '<= ')
+		.replace(/≥\s*/g, '>= ')
+		.replace(/\s*→\s*/g, ' to ')
+		.replace(/[‘’]/g, "'")
+		.replace(/[“”]/g, '"')
+		.replace(/…/g, '...')
+		.replace(/\u00a0/g, ' ')
+		.replace(/ {2,}/g, ' ')
+		.trim();
+}
+
 const humanize = (name: string) => {
 	const words = name
 		.replace(/[_-]+/g, ' ')
@@ -44,8 +64,7 @@ export function normalizeFormSpec(input: {
 					...new Set(
 						f.options
 							.filter((o) => typeof o === 'string' || typeof o === 'number')
-							.map(String)
-							.map((o) => o.trim())
+							.map((o) => typeable(String(o)))
 							.filter(Boolean)
 					)
 				]
@@ -57,7 +76,7 @@ export function normalizeFormSpec(input: {
 			label: typeof f.label === 'string' && f.label.trim() ? f.label.trim() : humanize(name),
 			type,
 			...(options.length ? { options } : {}),
-			...(typeof f.placeholder === 'string' ? { placeholder: f.placeholder } : {}),
+			...(typeof f.placeholder === 'string' ? { placeholder: typeable(f.placeholder) } : {}),
 			...(typeof f.help === 'string' ? { help: f.help } : {}),
 			...(f.default !== undefined && f.default !== null ? { default: answerText(f.default) } : {})
 		});
