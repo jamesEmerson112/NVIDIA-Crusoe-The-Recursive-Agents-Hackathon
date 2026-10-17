@@ -35,7 +35,9 @@ export function findFactorsOffline(text: string): string[] {
 	const re = /\b(near|close to|walking distance (?:to|from)|walk to|away from|next to|far from|by)\s+(?:the\s+|a\s+|an\s+)?([^,.;]{3,40})/gi;
 	for (const m of text.matchAll(re)) {
 		const target = m[2].trim();
-		if (/\b(bus|muni line|bart|train|park|freeway|highway|school|gym|grocery|trader joe|whole foods|beach|trail|cafe|coffee|hospital|playground|library|bars?|nightlife)\b/i.test(target)) out.push(`${m[1].toLowerCase()} ${target}`);
+		// Stop at filler so "Dolores Park would be amazing" becomes "Dolores Park" (and matches the cache).
+		const clean = target.replace(/\s+\b(would|will|is|are|please|if|and|but|so|which|that|ideally|preferably)\b.*$/i, '').trim();
+		if (/\b(bus|muni line|bart|train|park|freeway|highway|school|gym|grocery|trader joe|whole foods|beach|trail|cafe|coffee|hospital|playground|library|bars?|nightlife)\b/i.test(clean)) out.push(`${m[1].toLowerCase()} ${clean}`);
 	}
 	return [...new Set(out)];
 }

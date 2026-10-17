@@ -1,0 +1,53 @@
+{
+  "query": "walking distance to a dog park San Francisco neighborhoods",
+  "fetched_at": "2026-10-17T22:08:38.867Z",
+  "results": [
+    {
+      "url": "https://www.yelp.com/search?find_desc=Places+To+Walk+Dog&find_loc=San+Francisco%2C+CA",
+      "title": "TOP 10 BEST Places to Walk Dog in San Francisco, CA - Updated 2026 ...",
+      "description": "\"The park is dog friendly, but owners should be aware that there are a number of dog walking...\" more ... Got search feedback? Help us improve. ... See more places to walk dog in San Francisco.",
+      "snippets": [
+        "\"Salesforce Park is a lovely park in this area of town, where a family can go and feel safe and enjoy...\" more ... \"We saw a lot of adorable dogs. This seems to be a very popular dog walk with lots of happy dogs.\" more",
+        "\"Great for dog walk and just to simply be here! Swing on the top of the hill to feel the free flow...\" more ... \"This is a lovely park.",
+        "\"Great for dog walking (or letting the dog loose....most of the animals seem to have loving owners so...\" more ... \"This is such a gem of a park in the Sunset District."
+      ]
+    },
+    {
+      "url": "https://sfdog.org/off-leash-map",
+      "title": "Off Leash Recreation — SFDOG",
+      "description": "A map of Bay Area off-leash dog parks and recreation areas.",
+      "snippets": [
+        "San Francisco is a dog-lover’s town, and the entire Bay Area is chock-full of off-leash play areas. Here’s a map to find parks near and far from your usual daily walk.",
+        "We’ll see you and your dogs out and about! In the blue bar above the map, click the box symbol in the upper left corner to view the list of parks - click the box in the upper right corner of the blue bar to enlarge the map in your browser window. Zoom in/out, click a marker to see more about that park, and then go there!"
+      ]
+    },
+    {
+      "url": "https://sfrecpark.org/457/Dog-Play-Areas",
+      "title": "Dog Play Areas | San Francisco Recreation and Parks, CA",
+      "description": "Everyone Can Get Out and Play, Even Our Four-Legged Friends",
+      "snippets": [
+        "San Francisco Health Department (415) 554-2830 – To report dog bites · The San Francisco Recreation and Park Department manages more than 230 parks, playgrounds, and open spaces, including Sharp Park in Pacifica and Camp Mather in the High Sierra. Our system features recreation centers, swimming pools, golf courses, and athletic fields, including iconic landmarks like Golden Gate Park and Coit Tow",
+        "Section 40 – states that dogs must be controlled so as not to commit nuisances; all dog feces must be removed; and all dog walkers must carry materials to remove dog feces.",
+        "We strive to meet or exceed the requirements of the Web Content Accessibility Guidelines (WCAG) 2.1, Level AA and the San Francisco Language Access Ordinance."
+      ]
+    },
+    {
+      "url": "https://www.bluedogsf.com/service-area",
+      "title": "SF Dog Walking Areas | 20 Neighborhoods — Blue Dog SF",
+      "description": "Blue Dog San Francisco serves 20+ SF neighborhoods — from the Marina and Inner Richmond down to Rincon Hill, Mission Bay and the Castro. GPS-tracked walks in solo and small pack sizes.",
+      "snippets": [
+        "* Please note that this map is an approximation based on existing routes and service might not be available at all locations within the area. If you don’t see your neighborhood now then please let us know and we’ll do our best to add it!"
+      ]
+    },
+    {
+      "url": "https://www.wilderdog.com/blogs/weeklywoof/dog-friendly-things-to-do-in-san-francisco",
+      "title": "Dog-Friendly Things to do in San Francisco – Wilderdog",
+      "description": "Getting Around San Francisco with a Dog San Francisco is a surprisingly walkable city, so long as you’re okay with trekking a few steep hills. In most neighborhoods, you’ll be within walking distance to coffee shops, restaurants, and parks, though travel across San Francisco can prove to ...",
+      "snippets": [
+        "Is San Francisco a good place to visit with a dog? In short: absolutely. Temperate weather, beautiful views, and easy access to nature have made San Francisco a favorite for lovers of the outdoors for decades. It’s also a city that loves its dogs (almost as much as its light puffer jackets).",
+        "San Francisco is a Wilderdog favorite, and we’re sharing our go-to tips for dog-friendly adventures that make exploring the city with your pup easy and unforgettable. San Francisco is a surprisingly walkable city, so long as you’re okay with trekking a few steep hills. In most neighborhoods, you’ll be within walking distance to coffee shops, restaurants, and parks, though travel across San Francis",
+        "Located between The Presidio and Golden Gate Park, Richmond District is a neighborhood filled with dog lovers. There are lots of great restaurants and coffee shops within walking distance."
+      ]
+    }
+  ]
+}

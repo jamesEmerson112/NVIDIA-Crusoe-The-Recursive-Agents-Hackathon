@@ -1,0 +1,15 @@
+{
+  "factor": "walking distance to Dolores Park",
+  "status": "resolved",
+  "kind": "neighborhoods",
+  "neighborhoods": [
+    "Mission",
+    "Castro"
+  ],
+  "confidence": 0.9,
+  "sources": [
+    "https://www.gpsmycity.com/attractions/dolores-park-7187.html",
+    "https://www.pps.org/places/mission-dolores-park"
+  ],
+  "rationale": "Results place Dolores Park in Mission and near Castro, so walking distance implies those neighborhoods."
+}

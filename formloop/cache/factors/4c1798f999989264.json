@@ -1,0 +1,13 @@
+{
+  "factor": "walking distance to a dog park",
+  "status": "unresolved",
+  "confidence": 0.2,
+  "sources": [
+    "https://www.yelp.com/search?find_desc=Places+To+Walk+Dog&find_loc=San+Francisco%2C+CA",
+    "https://sfdog.org/off-leash-map",
+    "https://sfrecpark.org/457/Dog-Play-Areas",
+    "https://www.bluedogsf.com/service-area",
+    "https://www.wilderdog.com/blogs/weeklywoof/dog-friendly-things-to-do-in-san-francisco"
+  ],
+  "reason": "low confidence (0.2)"
+}

@@ -127,7 +127,8 @@ const minutes = (t: string) => {
 };
 
 function findHoods(t: string): string[] {
-	return NEIGHBORHOODS.filter((h) => new RegExp(`\\b${h.replace(/ /g, '\\s+')}\\b`, 'i').test(t));
+	// "Mission Bay" (UCSF) is not the Mission neighborhood.
+	return NEIGHBORHOODS.filter((h) => new RegExp(`\\b${h.replace(/ /g, '\\s+')}\\b${h === 'Mission' ? '(?!\\s+bay)' : ''}`, 'i').test(t));
 }
 
 /** Parse one field out of free text. Returns null when the text says nothing about it. */

@@ -1,0 +1,11 @@
+{
+  "factor": "near the 14 bus",
+  "status": "unresolved",
+  "confidence": 0.2,
+  "sources": [
+    "https://en.wikipedia.org/wiki/14_Mission",
+    "https://www.sfmta.com/routes/14r-mission-rapid",
+    "https://www.sfmta.com/routes/14-mission"
+  ],
+  "reason": "low confidence (0.2)"
+}

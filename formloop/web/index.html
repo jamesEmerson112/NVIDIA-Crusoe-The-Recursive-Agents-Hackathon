@@ -180,6 +180,14 @@
 	.results th:first-child, .results td:first-child { text-align: left; }
 	.results th { font-weight: 600; color: var(--muted); font-size: 12px; }
 	.results.hidden { display: none; }
+	/* Scripted demo */
+	.demo-bar { display: none; position: fixed; left: 20px; bottom: 20px; z-index: 50; max-width: 560px; background: var(--ink); color: #fff; border-radius: 14px; padding: 12px 16px; font-size: 14.5px; line-height: 1.4; box-shadow: 0 10px 30px -10px #0006; }
+	body.demo .demo-bar { display: block; }
+	.demo-bar small { display: block; color: #ffffffa0; font-size: 11.5px; letter-spacing: .08em; text-transform: uppercase; margin-bottom: 3px; }
+	.demo-next { display: block; margin-top: 8px; color: #fff; font-size: 13px; font-weight: 600; opacity: .85; }
+	.demo-next:hover { opacity: 1; }
+	.q.demo-skip { opacity: .45; }
+	.q.demo-skip .q-text::before { content: "skipped · "; color: var(--clay); font-weight: 500; }
 	.toast { position: fixed; bottom: 22px; left: 50%; transform: translate(-50%, 10px); background: var(--green); color: #fff; padding: 10px 16px; border-radius: 999px; font-size: 13.5px; opacity: 0; transition: all .3s; pointer-events: none; }
 	.toast.show { opacity: 1; transform: translate(-50%, 0); }
 </style>
@@ -233,6 +241,7 @@
 	<div class="results hidden" id="results"><div class="eyebrow">Held-out renters: v1 vs latest</div><div id="resultsBody"></div></div>
 </section>
 <div id="toast" class="toast"></div>
+<div class="demo-bar" id="demoBar"><small id="demoStep"></small><span id="demoSay"></span><button id="demoNext" class="demo-next">Next →</button></div>
 <script>
 const QUICK = ['too expensive', 'commute is too long', 'street is too loud', 'I need in-unit laundry', "don't like the layout", 'floor is too low', 'not this neighborhood'];
 const state = { form: null, latest: 1, answers: {}, reactions: [], followups: [], order: [], fresh: new Set(), weights: {}, seq: 0 };
@@ -267,7 +276,8 @@ function payload() {
 }
 // Questions ordered by how much the renter revealed they care (inferred server-side from their answers).
 const ranking = () => [...state.order].sort((a, b) => (state.weights[b] ?? 0) - (state.weights[a] ?? 0));
-const requestBody = () => ({ version: state.form.version, answers: payload(), ranking: ranking(), followups: state.followups, reactions: state.reactions });
+const DEMO = new URLSearchParams(location.search).get('demo') === '1';
+const requestBody = () => ({ offline: DEMO || undefined, version: state.form.version, answers: payload(), ranking: ranking(), followups: state.followups, reactions: state.reactions });
 function touch(id) { const a = ans(id); a.seconds = Math.min(120, (Date.now() - a.started) / 1000); schedule(); }
 
 function chips(q, a, multi) {
@@ -389,7 +399,7 @@ function card(c, i) {
 
 // Approximate neighborhood centres; listings sit at a small fixed jitter around theirs.
 const HOODS = { 'Mission': [37.7599, -122.4148], 'SoMa': [37.7785, -122.4056], 'Hayes Valley': [37.7759, -122.4245], 'Nob Hill': [37.7930, -122.4161], 'Pacific Heights': [37.7925, -122.4382], 'Marina': [37.8030, -122.4368], 'Inner Sunset': [37.7602, -122.4689], 'Outer Sunset': [37.7553, -122.4950], 'Inner Richmond': [37.7802, -122.4645], 'Outer Richmond': [37.7775, -122.4936], 'Noe Valley': [37.7502, -122.4337], 'Castro': [37.7609, -122.4350], 'Bernal Heights': [37.7389, -122.4152], 'Potrero Hill': [37.7587, -122.3990], 'Dogpatch': [37.7577, -122.3891], 'Tenderloin': [37.7847, -122.4141], 'North Beach': [37.8061, -122.4103], 'Russian Hill': [37.8011, -122.4194], 'Lower Haight': [37.7717, -122.4310], 'Excelsior': [37.7244, -122.4272] };
-const FIT = 0.75; // "still fits": meets at least ~three quarters of the weighted preferences and no dealbreaker
+const FIT = 0.6; // display only: "still fits" = no dealbreaker broken and at least 60% of weighted preferences met
 const mapState = { map: null, dots: new Map(), pulses: [], areas: [], shown: 300 };
 function hash(s) { let h = 2166136261; for (const c of s) h = Math.imul(h ^ c.charCodeAt(0), 16777619) >>> 0; return h; }
 
@@ -466,6 +476,7 @@ async function recommend() {
 		const res = await fetch('/api/recommend', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(requestBody()) });
 		const d = await res.json();
 		if (seq !== state.seq) return;
+		state.lastTop = d.top;
 		if (d.error) throw new Error(d.error);
 		setMode(d.mode);
 		updateMap(d);
@@ -490,6 +501,7 @@ function setMode(mode) {
 }
 
 async function load(version) {
+	// (returns once the form is rendered, so demo mode can start)
 	const form = await (await fetch('/api/form' + (version ? `?version=${version}` : ''))).json();
 	if (!version) state.latest = form.version;
 	state.form = form;
@@ -587,8 +599,55 @@ function setView(v) {
 }
 document.querySelectorAll('#tabs button').forEach((b) => b.addEventListener('click', () => setView(b.dataset.view)));
 
+// ?demo=1: a fixed renter, rules + cache only (works with the network off). → advances one step.
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+async function typeInto(id, text) {
+	const input = document.querySelector(`.q[data-id="${id}"] input`);
+	const a = ans(id);
+	if (input) { input.scrollIntoView({ behavior: 'smooth', block: 'center' }); input.focus(); const stepN = Math.max(2, Math.ceil(text.length / 40)); for (let i = stepN; i < text.length; i += stepN) { input.value = text.slice(0, i); await sleep(16); } input.value = text; }
+	a.value = text;
+	touch(id);
+	schedule(0);
+}
+function rewriteQ(id, text) { ans(id).rewritten_text = text; renderQuestions(); }
+function markSkip(id) { const row = document.querySelector(`.q[data-id="${id}"]`); if (row) { row.classList.add('demo-skip'); row.scrollIntoView({ behavior: 'smooth', block: 'center' }); } }
+function passTop(reason) {
+	const top = state.lastTop?.[0];
+	if (!top) return;
+	const card = document.querySelector('.card');
+	if (card) { card.classList.add('asking'); const inp = card.querySelector('.reasons input'); if (inp) inp.value = reason; }
+	setTimeout(() => { state.reactions.push({ listing_id: top.listing.id, liked: false, reason }); toast(`Passed: "${reason}". Re-ranking…`); schedule(0); }, 900);
+}
+const DEMO_STEPS = [
+	['Meet Maya', 'First-year grad student at UCSF Mission Bay, on a stipend. Every listing in SF is on the map.', () => {}],
+	['Answer in her own words', 'She answers the budget question. "Firm" tells the agent it matters a lot.', () => typeInto('budget', "$2,400 max, that's firm")],
+	['Edit a question', 'The commute question doesn\'t fit her, so she rewrites it and answers her version. "Dolores Park" is grounded with You.com search.', async () => { rewriteQ('commute', 'How far is it to UCSF Mission Bay, and how do you get there?'); await sleep(300); await typeInto('commute', 'UCSF Mission Bay by bike or Muni, under 25 minutes. Walking distance to Dolores Park would be amazing') }],
+	['Skip one', 'Every question is optional. A skip is signal too.', () => markSkip('last_place_gripe')],
+	['React to a listing', 'She passes on the top match and says why. The agent turns the reason into a preference and re-ranks.', () => { document.querySelector('#right')?.scrollTo({ top: 0, behavior: 'smooth' }); passTop('the street is too loud'); }],
+	['The outer loop', 'Renters\' skips, edits and rewrites taught a reviewer agent to rewrite the form. Each version had to beat the last on renters it never saw.', () => setView('evo')],
+	['Held-out result', 'v1 vs the latest form on held-out renters, exactly as the eval produced it.', () => showResults()]
+];
+let demoAt = -1;
+async function demoNext() {
+	if (demoAt >= DEMO_STEPS.length - 1) return;
+	demoAt++;
+	const [title, say, run] = DEMO_STEPS[demoAt];
+	$('#demoStep').textContent = `Step ${demoAt + 1} of ${DEMO_STEPS.length} · ${title}`;
+	$('#demoSay').textContent = say;
+	$('#demoNext').style.display = demoAt >= DEMO_STEPS.length - 1 ? 'none' : '';
+	await run();
+}
+if (DEMO) {
+	document.body.classList.add('demo');
+	$('#demoNext').addEventListener('click', () => demoNext());
+	addEventListener('keydown', (e) => {
+		if (e.target.closest?.('input, textarea, [contenteditable]') && e.key !== 'ArrowRight') return;
+		if (e.key === 'ArrowRight' || e.key === ' ') { e.preventDefault(); e.target.blur?.(); demoNext(); }
+	});
+}
+
 initMap();
-load();
+load().then(() => { if (DEMO) demoNext(); });
 </script>
 </body>
 </html>
