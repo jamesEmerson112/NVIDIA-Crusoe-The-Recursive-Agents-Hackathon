@@ -22,6 +22,8 @@ Repeated items (messages, steps, list rows, chips) share one id; pick one by tex
 
 **`lib/components/InlineInput.svelte`**: `inline-input`, `inline-input-title`, `inline-input-answered`, `inline-input-edit`, `inline-input-cancel`, `inline-input-error`
 
+**`lib/components/ListingPlanCard.svelte`**: `listing-plan-card`, `listing-plan-viewer`, `listing-plan-error`, `listing-plan-name`, `listing-plan-open`, `listing-plan-walk`, `listing-plan-photo`
+
 **`lib/components/Markdown.svelte`**: `markdown`
 
 **`lib/components/PlanSketch.svelte`**: `plan-sketch`

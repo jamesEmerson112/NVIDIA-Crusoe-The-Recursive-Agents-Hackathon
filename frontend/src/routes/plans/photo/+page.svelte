@@ -7,7 +7,6 @@
 
 	// Same ids and formloop source as /plans.
 	const PLAN_IDS = ['sf-studio', 'sf-1br', 'sf-2br', 'sample-1br'];
-	const FORMLOOP_URL = 'http://localhost:5190';
 
 	const params = page.url.searchParams;
 	const planId = PLAN_IDS.find((p) => p === params.get('plan')) ?? 'sf-2br';
@@ -21,7 +20,9 @@
 	let host: HTMLDivElement;
 	let photo = $state.raw<PhotoMode | null>(null);
 
-	const backHref = $derived(listing ? `/plans?listing=${listing}` : `/plans?plan=${planId}`);
+	const backHref = $derived(
+		listing ? `/plans/view?listing=${listing}` : `/plans/view?plan=${planId}`
+	);
 
 	function setParam(key: string, value: string | null) {
 		const next = new URLSearchParams(page.url.search);
@@ -32,7 +33,7 @@
 
 	onMount(() => {
 		let disposed = false;
-		const url = listing ? `${FORMLOOP_URL}/api/plan/${listing}` : `/plans/${planId}.json`;
+		const url = listing ? `/api/plan/${listing}` : `/plans/${planId}.json`;
 		Promise.all([
 			fetch(url).then((r) => {
 				if (!r.ok) throw new Error(`${r.status} loading ${url}`);

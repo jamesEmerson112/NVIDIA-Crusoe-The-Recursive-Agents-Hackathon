@@ -20,6 +20,8 @@ All under `/api`, JSON unless noted. Errors are SvelteKit errors: `{ "message": 
 | POST | `/api/conversations/[id]/run` | `RunBody` | NDJSON stream of `RunEvent` | 400, 404, 409 |
 | POST | `/api/conversations/[id]/cancel` | none | 204 | |
 | PUT | `/api/conversations/[id]/artifacts/[artifactId]` | `{ spec: FormSpec }` | `{ version }`; replaces the questions of a form still awaiting answers, with no agent run; forms only (a widget id gives 404) | 400 (`spec is required`, `A form needs at least one question`, `Nothing changed`), 404 (`Unknown form`), 409 (`Form already answered…`: use `artifact_edit` with `spec` instead) |
+| GET | `/api/listings` | none | `[{ id, neighborhood, price, bedrooms, title }]`: Laurie's 300 synthetic SF listings (`#lib/server/listings.ts`, same ids as formloop) `<-- James` | |
+| GET | `/api/plan/[id]` | none | the listing's `Plan` (`#lib/floorplan/types.ts`) for the 3D viewer; see CLAUDE.md "Live rendering handoff" `<-- James` | 404 (`No listing <id>`) |
 
 ### `POST /api/conversations/[id]/run`
 

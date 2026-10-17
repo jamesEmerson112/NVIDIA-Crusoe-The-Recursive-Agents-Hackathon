@@ -112,6 +112,8 @@ LATER
 ================ BOTH (demo and submission) ================
 
 NOW
+- [M] Live rendering inside Workbench               <-- Gaelan
+  - Handoff notes in CLAUDE.md (3D blueprints)
 - [S] Pick the demo: Workbench, formloop, or both   <-- James
   - Or feed formloop listings into Workbench
 - [S] Pre-run demo conversation, no live latency
@@ -201,6 +203,8 @@ Works on its own; Workbench (frontend/) can't use it yet.
 - Close button on the right panel                  <-- Gaelan
 - CC0 furniture models on High; textured floors    <-- James
 - 3D SF skyline behind the start page              <-- James
+- In-app listing plans and embed card              <-- James
+  - /api/listings, /api/plan/<id>, ListingPlanCard
 - Low/High render quality for /plans               <-- James
   - Auto-detect (M3 Max = High), ?quality= override
   - Shadows, GTAO, SSR, TRAA; SSGI off (hazy)

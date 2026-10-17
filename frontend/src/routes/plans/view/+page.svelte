@@ -19,8 +19,6 @@
 		{ id: 'models-kitchen', label: 'Dining / kitchen' },
 		{ id: 'models-bedroom-bath', label: 'Bedroom / bath' }
 	];
-	// Laurie's formloop demo serves every listing as a Plan (GET /api/plan/<id>, CORS enabled).
-	const FORMLOOP_URL = 'http://localhost:5190';
 	const VIEWS: { id: View; label: string }[] = [
 		{ id: 'dollhouse', label: 'Dollhouse' },
 		{ id: 'top', label: 'Top-down' },
@@ -32,7 +30,7 @@
 		[...PLANS, ...MODEL_PLANS].find((p) => p.id === page.url.searchParams.get('plan'))?.id ??
 			PLANS[0].id
 	);
-	/** `?listing=syn_000` loads a formloop listing instead of a bundled plan. */
+	/** `?listing=syn_000` loads one of Laurie's formloop listings (served in-app by /api/plan) instead of a bundled plan. */
 	const listing = $derived(page.url.searchParams.get('listing')?.match(/^[\w-]+$/)?.[0] ?? null);
 	const debug = $derived(page.url.searchParams.get('debug') === '1');
 	/** Opened from a blueprint card: `?c=<conversation>&a=<artifact>` links back to it. */
@@ -59,7 +57,7 @@
 	}
 
 	$effect(() => {
-		const url = listing ? `${FORMLOOP_URL}/api/plan/${listing}` : `/plans/${planId}.json`;
+		const url = listing ? `/api/plan/${listing}` : `/plans/${planId}.json`;
 		let stale = false;
 		const t0 = performance.now();
 		fetch(url)
