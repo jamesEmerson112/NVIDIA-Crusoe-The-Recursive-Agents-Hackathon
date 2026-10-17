@@ -11,6 +11,7 @@
 	import Markdown from './Markdown.svelte';
 	import ProcessPanel from './ProcessPanel.svelte';
 	import ProposalCard from './ProposalCard.svelte';
+	import RunLog from './RunLog.svelte';
 	import InlineInput from './InlineInput.svelte';
 
 	let { conversation: cs }: { conversation: ConversationState } = $props();
@@ -30,11 +31,12 @@
 	);
 	const byId = $derived(new Map(cs.artifacts.map((a) => [a.id, a])));
 	let panelOpen = $state(true);
-	// Right panel tab; `?panel=map` deep-links the agent map.
-	let panelTab = $state<'process' | 'map'>(
-		page.url.searchParams.get('panel') === 'map' ? 'map' : 'process'
+	// Right panel tab; `?panel=map` deep-links the agent map, `?panel=log` the run log.
+	const panelParam = page.url.searchParams.get('panel');
+	let panelTab = $state<'process' | 'map' | 'log'>(
+		panelParam === 'map' || panelParam === 'log' ? panelParam : 'process'
 	);
-	const mapWide = $derived(panelTab === 'map' && !opened);
+	const mapWide = $derived(panelTab !== 'process' && !opened);
 	// Below xl the panel overlays the chat, so start with it closed there.
 	$effect(() => {
 		if (window.innerWidth < 1280) panelOpen = false;
@@ -266,7 +268,7 @@
 						data-testid="workspace-panel-tabs"
 						class="flex gap-1 border-b border-zinc-200 px-3 pt-2 dark:border-zinc-800"
 					>
-						{#each [['process', 'Process'], ['map', 'Agent map']] as const as [tab, label] (tab)}
+						{#each [['process', 'Process'], ['map', 'Agent map'], ['log', 'Run log']] as const as [tab, label] (tab)}
 							<button
 								data-testid="workspace-panel-tab"
 								class="-mb-px border-b-2 px-3 py-1.5 text-xs font-medium {panelTab === tab
@@ -280,6 +282,8 @@
 					<div class="min-h-0 flex-1">
 						{#if panelTab === 'map'}
 							<AgentMap conversation={cs} onopen={open} />
+						{:else if panelTab === 'log'}
+							<RunLog conversation={cs} onopen={open} />
 						{:else}
 							<ProcessPanel conversation={cs} onopen={open} />
 						{/if}

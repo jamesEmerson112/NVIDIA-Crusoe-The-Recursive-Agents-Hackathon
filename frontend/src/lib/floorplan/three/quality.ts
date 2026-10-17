@@ -6,7 +6,7 @@ export interface QualitySettings {
 	shadows: boolean;
 	shadowMapSize: number;
 	environment: boolean;
-	toneMapping: 'none' | 'agx';
+	toneMapping: 'none' | 'neutral';
 	post: { ao: boolean; ssgi: boolean; ssr: boolean; taa: boolean; halfResGI: boolean };
 }
 
@@ -27,7 +27,7 @@ const HIGH: QualitySettings = {
 	shadows: true,
 	shadowMapSize: 4096,
 	environment: true,
-	toneMapping: 'agx',
+	toneMapping: 'neutral',
 	post: Object.freeze({ ao: true, ssgi: false, ssr: true, taa: true, halfResGI: true })
 };
 

@@ -2,7 +2,7 @@
 
 The contract between the frontend (Svelte components) and the backend (SvelteKit server code in `frontend/src/lib/server/`). Generated from the code and kept current by the 10-minute API-sync job; if this file and the code disagree, the code wins.
 
-Last synced: `78cdd75` (2026-10-17 14:57).
+Last synced: `run-log merge` (2026-10-17 15:10).
 
 `<-- Name` marks parts a teammate added or changed in the last hour (usually Gaelan, backend), so the frontend knows what is still moving. The sync job adds and expires these arrows.
 
@@ -70,7 +70,8 @@ Timestamps are `Date` objects in `load` data and ISO strings in JSON responses.
   messages: Message[],
   steps: Step[],
   artifacts: (Artifact & { versions: ArtifactVersion[]; upstream: string[] })[], // versions newest first; upstream = artifact ids it was built from
-  usage: { calls, costUsd, promptTokens, cachedTokens, completionTokens }
+  usage: { calls, costUsd, promptTokens, cachedTokens, completionTokens },
+  calls: UsageCall[] // every model call, oldest first (store.listUsage); feeds the Run log tab <-- James
 }
 ```
 
@@ -81,6 +82,7 @@ Timestamps are `Date` objects in `load` data and ISO strings in JSON responses.
 | `Step` | `id`, `conversationId`, `position`, `title`, `status: 'pending' \| 'active' \| 'done' \| 'stale'`, `summary`, `createdAt` |
 | `Artifact` | `id`, `conversationId`, `stepId`, `kind: 'form' \| 'widget' \| 'document' \| 'html'` `<-- Gaelan`, `title`, `status: 'ready' \| 'awaiting_input' \| 'stale' \| 'updating'`, `currentVersion`, `createdAt`, `updatedAt` |
 | `ArtifactVersion` | `id`, `artifactId`, `version`, `content`, `data` (form answers, or the object a widget submitted), `note`, `author: 'agent' \| 'user' \| 'subagent'`, `model`, `costUsd`, `durationMs`, `createdAt` |
+| `UsageCall` | `id`, `conversationId`, `model`, `role: 'agent' \| 'subagent'`, `promptTokens`, `cachedTokens`, `completionTokens`, `costUsd`, `durationMs`, `createdAt`; one row per model call. The Run log joins agent calls to assistant messages in order (their `toolCalls`) and sub-agent calls to the `subagent` artifact version with the same model, cost and duration (`#lib/client/run-log.ts`) `<-- James` |
 | `LibraryResult` | `id`, `kind`, `title`, `status`, `version`, `updatedAt`, `conversationId`, `conversationTitle`, `stepTitle`, `stepPosition`, `content`, `data` |
 
 **Artifact `content` by kind:** `form` is a JSON string of `FormSpec`; `widget` is a JSON string of `WidgetSpec` `<-- Gaelan`; `document` is markdown; `html` is a full HTML page rendered in an iframe with `sandbox="allow-scripts"` (no network).

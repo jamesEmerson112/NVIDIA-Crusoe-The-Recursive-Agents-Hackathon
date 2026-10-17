@@ -28,6 +28,8 @@ Repeated items (messages, steps, list rows, chips) share one id; pick one by tex
 
 **`lib/components/ProposalCard.svelte`**: `proposal-card`, `proposal-open-artifact`, `proposal-cost`, `proposal-duration`, `proposal-approve`, `proposal-keep`, `proposal-answer`
 
+**`lib/components/RunLog.svelte`**: `run-log`, `run-log-summary`, `run-log-empty`, `run-log-scroll`, `run-log-table`, `run-log-row`, `run-log-time`, `run-log-role`, `run-log-model`, `run-log-cache-hit`, `run-log-cost`, `run-log-duration`, `run-log-did`, `run-log-artifact`, `run-log-tool`, `run-log-totals`
+
 **`lib/components/StatusBadge.svelte`**: `status-badge`
 
 **`lib/components/Widget.svelte`**: `widget`, `widget-description`, `widget-frame`, `widget-error`
