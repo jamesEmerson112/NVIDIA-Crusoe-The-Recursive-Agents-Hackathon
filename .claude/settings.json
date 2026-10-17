@@ -14,5 +14,18 @@
       "Bash(git diff *)",
       "Bash(git log *)"
     ]
+  },
+  "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"$CLAUDE_PROJECT_DIR/.claude/hooks/main-drift.mjs\"",
+            "timeout": 15
+          }
+        ]
+      }
+    ]
   }
 }
