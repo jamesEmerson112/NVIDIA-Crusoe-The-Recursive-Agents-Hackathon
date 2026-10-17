@@ -41,7 +41,7 @@ Persistence is SQLite through Node's built-in `node:sqlite` with Drizzle ORM (sc
 
 Imports through `#lib/...` (Node subpath imports in `package.json`) need the file extension: `#lib/types.ts`, not `#lib/types`.
 
-Env vars are declared in `src/env.ts` (`defineEnvVars`) and read from `$app/env/private`: `DATABASE_URL`, `CRUSOE_API_KEY` (optional: unset runs the scripted mock agent in `agent/mock.ts`, so the UI works offline), `CRUSOE_AGENT_MODEL` (default `zai-org/GLM-5.3-Flash` since 2026-10-17; `openai/gpt-oss-120b` is the cheaper, faster, terser alternative), `CRUSOE_FAST_MODEL` (default `deepseek-ai/Deepseek-V4-Flash`). `PUBLIC_MAPTILER_KEY` (in `.env.example`) is a MapTiler key for the start page's 3D SF map; `PUBLIC_` vars ship to the browser, so restrict the key to your domains in the MapTiler dashboard.
+Env vars are declared in `src/env.ts` (`defineEnvVars`) and read from `$app/env/private`: `DATABASE_URL`, `CRUSOE_API_KEY` (optional: unset runs the scripted mock agent in `agent/mock.ts`, so the UI works offline), `CRUSOE_AGENT_MODEL` (default `zai-org/GLM-5.3-Flash` since 2026-10-17; `openai/gpt-oss-120b` is the cheaper, faster, terser alternative), `CRUSOE_FAST_MODEL` (default `deepseek-ai/Deepseek-V4-Flash`). `PUBLIC_MAPTILER_KEY` is the one public var, read from `$app/env/public` (see "Start-page SF map").
 
 ## Product: Workbench (in progress)
 
