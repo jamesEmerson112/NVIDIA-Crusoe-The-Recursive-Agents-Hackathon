@@ -1,0 +1,108 @@
+{
+  "rows": [
+    {
+      "form": "v1",
+      "match_quality": 0.736789297658863,
+      "dealbreaker_misses": 1,
+      "questions_asked": 8,
+      "answered": 5.1,
+      "skip_rate": 0.3625,
+      "rewrite_rate": 0,
+      "friction": 3.6980000000000004,
+      "objective": 0.5518892976588629
+    },
+    {
+      "form": "v3",
+      "match_quality": 0.6802675585284281,
+      "dealbreaker_misses": 2,
+      "questions_asked": 5,
+      "answered": 3.7,
+      "skip_rate": 0.26,
+      "rewrite_rate": 0,
+      "friction": 1.92,
+      "objective": 0.584267558528428
+    }
+  ],
+  "perRenter": [
+    {
+      "id": "gen_000",
+      "behavior": "answers_everything",
+      "quality": [
+        0.8327759197324415,
+        0.8327759197324415
+      ]
+    },
+    {
+      "id": "gen_001",
+      "behavior": "answers_everything",
+      "quality": [
+        0.9498327759197325,
+        0
+      ]
+    },
+    {
+      "id": "gen_002",
+      "behavior": "skips_money",
+      "quality": [
+        0.7892976588628763,
+        1
+      ]
+    },
+    {
+      "id": "gen_003",
+      "behavior": "terse",
+      "quality": [
+        0.8795986622073578,
+        0.8795986622073578
+      ]
+    },
+    {
+      "id": "gen_004",
+      "behavior": "answers_everything",
+      "quality": [
+        0.8093645484949833,
+        0.9899665551839465
+      ]
+    },
+    {
+      "id": "gen_005",
+      "behavior": "terse",
+      "quality": [
+        0.959866220735786,
+        0.959866220735786
+      ]
+    },
+    {
+      "id": "gen_006",
+      "behavior": "skips_all",
+      "quality": [
+        0.9331103678929766,
+        0.9331103678929766
+      ]
+    },
+    {
+      "id": "gen_007",
+      "behavior": "skips_all",
+      "quality": [
+        0.38461538461538464,
+        0.38461538461538464
+      ]
+    },
+    {
+      "id": "gen_008",
+      "behavior": "skips_money",
+      "quality": [
+        0,
+        0
+      ]
+    },
+    {
+      "id": "gen_009",
+      "behavior": "answers_everything",
+      "quality": [
+        0.8294314381270903,
+        0.822742474916388
+      ]
+    }
+  ]
+}
