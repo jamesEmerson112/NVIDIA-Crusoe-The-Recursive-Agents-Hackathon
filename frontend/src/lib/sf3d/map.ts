@@ -44,6 +44,7 @@ export function createSanFranciscoMap(host: HTMLElement, options: SfMapOptions):
 	const scene: SfScene = {
 		resize: () => map.resize(),
 		dispose() {
+			if (disposed) return;
 			disposed = true;
 			cancelAnimationFrame(frame);
 			map.remove();
