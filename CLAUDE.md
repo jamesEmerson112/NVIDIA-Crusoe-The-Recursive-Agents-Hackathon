@@ -10,6 +10,8 @@ Team research lives in `docs/research/` (start with `docs/research/README.md`). 
 
 ## Frontend (`frontend/`)
 
+Parallel room-designer work is planned in [`docs/cozy-implementation-plan.md`](docs/cozy-implementation-plan.md), with C0–C3 lane ownership, shared contracts, and integration gates. Read its parallel implementation section before starting that work. Reuse the existing research scheduler/run events when available; coordinate edits to shared backend and workspace files with their current owners. The feature list tracks status; `docs/api.md` documents implemented behavior only. Room-design features remain planned until their gate checks pass.
+
 SvelteKit 3 + Svelte 5 (runes mode forced in `vite.config.ts`), TypeScript, Tailwind 4 with `@tailwindcss/typography`, Vitest, Prettier. Switched from Angular on 2026-10-17 at the user's request. `@sveltejs/adapter-node` because agents run as long-lived server work: all Crusoe calls go through server code (`src/lib/server/`, `+server.ts`, `+page.server.ts`), never the browser, so `CRUSOE_API_KEY` stays out of the bundle.
 
 Persistence is SQLite through Node's built-in `node:sqlite` with Drizzle ORM (schema in `src/lib/server/db/schema.ts`, database path from `DATABASE_URL` in `frontend/.env`, default `local.db`). `drizzle-orm` and `drizzle-kit` are pinned to `1.0.0-rc.4`: the `node-sqlite` driver doesn't exist in stable 0.45, and 1.0 takes `drizzle({ client })`, not `drizzle(client, { schema })`. Using `node:sqlite` avoids native builds, so install scripts can stay blocked.

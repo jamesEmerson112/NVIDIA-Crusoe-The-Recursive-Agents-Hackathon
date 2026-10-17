@@ -8,6 +8,7 @@ Our entry for the Crusoe × Cerebral Valley Recursive Agents Hackathon (Oct 17, 
 |---|---|
 | `frontend/` | SvelteKit app (UI and server-side agent code) |
 | `docs/api.md` | Workbench API reference: endpoints, run stream events, data shapes |
+| `docs/cozy-implementation-plan.md` | Planned room designer: parallel workstreams C0–C3, shared contracts, project integration gates, and acceptance tests |
 | `docs/research/` | Team research: a build-our-own Obsidian, Blender with GPT-6 Astra and Claude, SF buildings in 3D, floorplans, building energy simulation (start with its `README.md`) |
 | `.claude/skills/` | Claude Code skills, including the Crusoe inference reference |
 | `CLAUDE.md` | Instructions for Claude Code agents working in this repo |
@@ -23,6 +24,7 @@ nvm install          # reads .nvmrc at the repo root
 nvm use
 cd frontend
 npm ci
+[ -f .env ] || echo "DATABASE_URL=local.db" > .env   # mock agent until: npm run set-key
 npm run db:push      # create the local SQLite database
 npm start            # http://localhost:5173
 ```
@@ -34,6 +36,7 @@ nvm install 24.22.0
 nvm use 24.22.0
 cd frontend
 npm ci
+if (!(Test-Path .env)) { Set-Content .env "DATABASE_URL=local.db" }
 npm run db:push
 npm start
 ```

@@ -10,33 +10,43 @@ POSSIBLE TECHNICAL FEATURES
   - Built items move to DONE at bottom
   - "<-- Gaelan" marks what Gaelan is on now
 - Freeze features at 4:00; NOW items first
+- Cozy room designer: planned parallel extension, not built
+  - Plan and ownership: docs/cozy-implementation-plan.md
+  - C0 freezes contracts; C1/C2/C3 then run in parallel
+  - Preserve lane IDs and status in doc-sync updates
 
 
 ================ FRONTEND (FE) ================
+Ranked: most essential first, most optional last
 
 NOW
-- [S] Live agent tree in the UI
-  - Shows status, model, cost and time
-  - Needs sub-agent run events from BE
-- [M] Visit feedback form and visit task view
-  - Ratings feed BE's next search round
-- [S] Comparison table view of shortlisted homes
+1. [S] Live agent tree in the UI
+   - Shows status, model, cost and time
+   - Needs sub-agent run events from BE
+2. [S] Comparison table view of shortlisted homes
+3. [M] Visit feedback form and visit task view
+   - Ratings feed BE's next search round
 
 LATER
-- [M] Users can reword or delete questions
-  - BE treats edits as preference data
-- [M] Weight sliders re-rank shortlist
-  - Plain code re-sorts, no model call
-- [S] Live "options remaining" counter on forms
-- [S] Real-world task list with checkboxes
-- [S] Run log view of every call
-- [M] Map with listing pins
-  - Sandbox blocks network; inline or static
-- [M] Charts: rents, price versus commute
-- [L] 3D buildings or floorplan via three.js
-  - See floorplan-2d-to-3d.md, sf-buildings-3d.md
-- [L] Synthetic floorplan inside building footprint
-- [S] Landing page copy and one-line pitch
+4. [S] Landing page copy and one-line pitch
+5. [S] Run log view of every call
+6. [S] Real-world task list with checkboxes
+7. [M] Weight sliders re-rank shortlist
+   - Plain code re-sorts, no model call
+8. [M] Users can reword or delete questions
+   - BE treats edits as preference data
+9. [S] Live "options remaining" counter on forms
+10. [M] Map with listing pins
+    - Sandbox blocks network; inline or static
+11. [M] Charts: rents, price versus commute
+12. [L] 3D buildings or floorplan via three.js
+    - See floorplan-2d-to-3d.md, sf-buildings-3d.md
+13. [L] Synthetic floorplan inside building footprint
+14. [L] C1: Cozy room editor and furniture assets (planned)
+    - Fixture scenes first; move, rotate, lock, save, reload
+    - Own new room UI/renderer files; C0 wires shared UI
+    - Use BE's shared run events for the live agent tree
+    - Starts after C0 contract freeze; integrates with C2 at G1
 
 
 ================ BACKEND (BE) ================
@@ -86,6 +96,15 @@ LATER
 - [S] Fallback model after repeated errors
 - [S] Validate tool arguments; return errors
 - [M] Eval script replays a fixed scenario
+- [L] C2: Cozy scene validation and persistence (planned)
+  - Version checks, locks, idempotent writes, scene endpoints
+  - Own new room modules; C0 coordinates shared schema/store
+  - Starts after C0 contract freeze; supplies C1/C3 adapters
+- [L] C3: Cozy room generation and steering (planned)
+  - One layout, then three options; reject stale agent results
+  - Reuse Gaelan's scheduler/cancellation/run-event contract
+  - Fake adapters until BE handoff; no separate global pool
+  - Starts after C0 contract freeze; integrates at G2/G3
 
 
 ================ BOTH (demo and submission) ================
@@ -95,6 +114,15 @@ NOW
 - [M] Backup screen recording of full flow
 - [S] Verify README setup from fresh clone
   - Include copying .env.example to .env
+
+LATER: PARALLEL ROOM-DESIGN EXTENSION
+- [L] C0: Cozy contracts and integration (planned)
+  - One integrator plus three workers; owners unassigned
+  - Single writer for shared files; coordinate with FE/BE owners
+  - G0 contracts -> C1/C2/C3 parallel -> G1 editor/save
+  - G2 agents -> G3 steering races -> G4 demo regressions
+  - Add to home-search flow only after gates pass
+  - Proposed APIs stay in plan until implemented in docs/api.md
 
 
 ==================== DONE ====================
@@ -114,5 +142,8 @@ NOW
 - Offline mock mode: unset CRUSOE_API_KEY
 - npm run set-key and npm run models
   - Save Crusoe key; list live model IDs
+- Self-check: mentioned artifacts must exist
+- Approved redo updates the same artifacts
+- Live model prices from /v1/models, hourly
 - Verified end to end on real Crusoe
   - 13 calls, $0.0027, 73% cache hits
