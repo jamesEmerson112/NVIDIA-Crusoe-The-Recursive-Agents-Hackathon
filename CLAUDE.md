@@ -13,7 +13,7 @@ Team research lives in `docs/research/` (start with `docs/research/README.md`). 
 - **Who works on what:** James = frontend, Gaelan = backend (the Workbench agent in `frontend/src/lib/server/`), Laurie = `formloop/` (a self-improving apartment intake form with its own README and demo). Everyone commits directly to `main`.
 - **`docs/possible-technical-features.txt` is the tracked feature list.** Read it before starting work. It has TODO lanes FRONTEND (FE, ranked most essential first), BACKEND (BE) and BOTH, each with NOW then LATER, and a DONE list at the bottom.
   - `<-- Name` after an item marks who is on it now. Add your owner's arrow when you start an item, and don't start an item someone else's arrow is on without asking.
-  - When you finish an item, move it to DONE (dropping the arrow). Add new items to the lane whose code they need. Keep every item and sub-point to 8 words or fewer, and keep arrows in a section aligned to one column.
+  - When you finish an item, move it to DONE and keep the arrow there: DONE arrows record who built each feature, so you know whom to ask when debugging it. Add new items to the lane whose code they need. Keep every item and sub-point to 8 words or fewer, and keep arrows in a section aligned to one column.
   - A 10-minute job in James's session also syncs this file from commits, so commit your changes to it promptly.
 
 ## Frontend (`frontend/`)

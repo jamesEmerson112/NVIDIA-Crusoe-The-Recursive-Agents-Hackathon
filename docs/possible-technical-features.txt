@@ -8,7 +8,7 @@ POSSIBLE TECHNICAL FEATURES
   - L over 90 min
 - Kept current by the 10-minute doc-sync job
   - Built items move to DONE at bottom
-  - "<-- Name" marks who is on it now
+  - "<-- Name": who is on it (TODO) or built it (DONE)
 - Team: James = FE, Gaelan = BE (Workbench agent)
   - Laurie = formloop (self-improving intake form)
 - Freeze features at 4:00; NOW items first
@@ -22,25 +22,28 @@ POSSIBLE TECHNICAL FEATURES
 Ranked: most essential first, most optional last
 
 NOW
-1. [S] Comparison table view of shortlisted homes   <-- James
-2. [M] Visit feedback form and visit task view      <-- James
+1. [M] Low/High render quality for /plans           <-- James
+   - High: shadows, GTAO, SSGI, SSR, TRAA
+   - Auto-detects M3 Max; ?quality= overrides
+2. [S] Comparison table view of shortlisted homes   <-- James
+3. [M] Visit feedback form and visit task view      <-- James
    - Ratings feed BE's next search round
 
 LATER
-3. [S] Landing page copy and one-line pitch
-4. [S] Run log view of every call
-5. [S] Real-world task list with checkboxes
-6. [M] Weight sliders re-rank shortlist             <-- Laurie
+4. [S] Landing page copy and one-line pitch
+5. [S] Run log view of every call
+6. [S] Real-world task list with checkboxes
+7. [M] Weight sliders re-rank shortlist             <-- Laurie
    - Plain code re-sorts, no model call
-   - Built in formloop demo, not Workbench
-7. [S] Live "options remaining" counter on forms
-8. [M] Map with listing pins
+   - formloop has drag-to-rank; Workbench not yet
+8. [S] Live "options remaining" counter on forms
+9. [M] Map with listing pins
    - Sandbox blocks network; inline or static
-9. [M] Charts: rents, price versus commute
-10. [M] Plan artifacts open in 3D viewer
+10. [M] Charts: rents, price versus commute
+11. [M] Plan artifacts open in 3D viewer
     - Reuse PlanViewer from /plans
-11. [L] Synthetic floorplan inside building footprint
-12. [L] C1: Cozy room editor and furniture assets (planned)
+12. [L] Synthetic floorplan inside building footprint
+13. [L] C1: Cozy room editor and furniture assets (planned)
     - Fixture scenes first; move, rotate, lock, save, reload
     - Own new room UI/renderer files; C0 wires shared UI
     - Use BE's shared run events for the live agent tree
@@ -50,19 +53,19 @@ LATER
 ================ BACKEND (BE) ================
 
 NOW
-- [M] Research fan-out tool (spawn_research)        <-- Gaelan
+- [M] Research fan-out tool (spawn_research)   <-- Gaelan
   - Orchestrator starts N parallel research sub-agents
   - One brief each: neighborhood or price band
   - Each returns a linked document artifact
   - Emit run events FE's agent tree needs
-- [S] Concurrency cap and model spreading           <-- Gaelan
+- [S] Concurrency cap and model spreading      <-- Gaelan
   - At most K sub-agents at once
   - Alternate two models; avoid 30 RPM cap
-- [M] Rental listings tool over scraped data        <-- Gaelan
+- [M] Rental listings tool over scraped data   <-- Gaelan
   - Speaker B's Bay Area listings in SQLite
   - Reuse formloop's You.com listings source
   - Fallback: DataSF context tool below
-- [S] Market snapshot: median rent via SQL          <-- Gaelan
+- [S] Market snapshot: median rent via SQL     <-- Gaelan
 - [S] You.com search and research agent tools
   - Listings and neighborhood briefs, cited sources
   - See docs/research/you-com-api.md
@@ -84,7 +87,6 @@ LATER
 - [S] Commute estimate from listing to work
   - Straight-line distance; routing APIs need keys
 - [M] Cached neighborhood profiles, built by sub-agents
-- [S] Skipped questions read as preference signal   <-- Laurie
 - [S] Preference profile artifact
   - What user wants versus what they said
 - [L] Energy and sun exposure per listing
@@ -129,38 +131,46 @@ LATER: PARALLEL ROOM-DESIGN EXTENSION
 
 ==================== DONE ====================
 
-- Agent plans and updates its own steps
-- quick_edit sub-agents patch stale artifacts
+- Agent plans and updates its own steps             <-- Gaelan
+- quick_edit sub-agents patch stale artifacts       <-- Gaelan
   - Run in parallel on fast model
-- Redo approval shows cost before big changes
-- Agent-built forms embedded in chat
-- Form edits mark downstream artifacts stale
-- Markdown and sandboxed HTML artifacts
+- Redo approval shows cost before big changes       <-- Gaelan
+- Agent-built forms embedded in chat                <-- Gaelan
+- Form edits mark downstream artifacts stale        <-- Gaelan
+- Markdown and sandboxed HTML artifacts             <-- Gaelan
   - Versioned, with lineage between them
-- Artifact library and version diffs
-- Everything persists in SQLite
-- Retry and throttle on rate limits
-- Usage table: cost, tokens, cache hits
-- Offline mock mode: unset CRUSOE_API_KEY
-- npm run set-key and npm run models
+- Artifact library and version diffs                <-- Gaelan
+- Everything persists in SQLite                     <-- Gaelan
+- Retry and throttle on rate limits                 <-- Gaelan
+- Usage table: cost, tokens, cache hits             <-- Gaelan
+- Offline mock mode: unset CRUSOE_API_KEY           <-- Gaelan
+- npm run set-key and npm run models                <-- Gaelan
   - Save Crusoe key; list live model IDs
-- Self-check: mentioned artifacts must exist
-- Approved redo updates the same artifacts
-- Live model prices from /v1/models, hourly
-- Verified end to end on real Crusoe
+- Self-check: mentioned artifacts must exist        <-- Gaelan
+- Approved redo updates the same artifacts          <-- Gaelan
+- Live model prices from /v1/models, hourly         <-- Gaelan
+- Verified end to end on real Crusoe                <-- James
   - 13 calls, $0.0027, 73% cache hits
-- Live agent map, subway-style, ?panel=map
+- Live agent map, subway-style, ?panel=map          <-- James
   - Orchestrator, builder, patch, self-check, redo lanes
-- ChatGPT-style start page with example prompts
-- Collapsible sidebar, collapsed by default
-- data-testid on every element; docs/test-ids.md
-- 3D blueprint viewer at /plans, WebGPU
+- ChatGPT-style start page with example prompts     <-- James
+- Collapsible sidebar, collapsed by default         <-- James
+- data-testid on every element; docs/test-ids.md    <-- James
+- 3D blueprint viewer at /plans, WebGPU             <-- James
   - Debug mode: stats-gl, lil-gui, ?debug=1
   - Four plans incl. one traced from image
-- Every form question optional and editable
-- Tool errors go back to model; bodies validated
-- Default agent model now GLM-5.3-Flash
-- formloop engine (lsarta), outside Workbench
+- Every form question optional and editable         <-- Gaelan
+- Tool errors go back to model; bodies validated    <-- Gaelan
+- Default agent model now GLM-5.3-Flash             <-- Gaelan
+- formloop engine (lsarta), outside Workbench       <-- Laurie
   - Listings incl. You.com, renter simulator
   - Agent, matcher, scorer, reviewer, eval
   - Two-pane demo: editable form, live listings
+- Petite-vue widgets the agent writes, in chat      <-- Gaelan
+  - Return JSON; schema enforced; leaf-level diffs
+- Forms and widgets stay embedded after submit      <-- Gaelan
+- formloop: drag-to-rank form sets answer weights   <-- Laurie
+- formloop: agent writes follow-up questions        <-- Laurie
+- formloop: skipped questions dropped by reviewer   <-- Laurie
+- formloop: form v3 beats v1 on unseen renters      <-- Laurie
+  - Quality 0.776 vs 0.741; 5 vs 8 questions
