@@ -7,6 +7,7 @@ Our entry for the Crusoe × Cerebral Valley Recursive Agents Hackathon (Oct 17, 
 | Path | What |
 |---|---|
 | `frontend/` | Angular 22 app with three.js |
+| `docs/research/` | Team research: a build-our-own Obsidian, Blender with GPT-6 Astra and Claude, SF buildings in 3D (start with its `README.md`) |
 | `.claude/skills/` | Claude Code skills, including the Crusoe inference reference |
 | `CLAUDE.md` | Instructions for Claude Code agents working in this repo |
 
