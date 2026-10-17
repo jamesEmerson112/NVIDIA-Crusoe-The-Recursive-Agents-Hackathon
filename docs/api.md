@@ -2,7 +2,7 @@
 
 The contract between the frontend (Svelte components) and the backend (SvelteKit server code in `frontend/src/lib/server/`). Generated from the code and kept current by the 10-minute API-sync job; if this file and the code disagree, the code wins.
 
-Last synced: `run-log merge` (2026-10-17 15:10).
+Last synced: `4bca1a6` (2026-10-17 15:32).
 
 `<-- Name` marks parts a teammate added or changed in the last hour (usually Gaelan, backend), so the frontend knows what is still moving. The sync job adds and expires these arrows.
 
@@ -19,7 +19,7 @@ All under `/api`, JSON unless noted. Errors are SvelteKit errors: `{ "message": 
 | DELETE | `/api/conversations/[id]` | none | 204; cancels any run first | |
 | POST | `/api/conversations/[id]/run` | `RunBody` | NDJSON stream of `RunEvent` | 400, 404, 409 |
 | POST | `/api/conversations/[id]/cancel` | none | 204 | |
-| PUT | `/api/conversations/[id]/artifacts/[artifactId]` | `{ spec: FormSpec }` | `{ version }`; replaces the questions of a form still awaiting answers, with no agent run; forms only (a widget id gives 404) | 400 (`spec is required`, `A form needs at least one question`, `Nothing changed`), 404 (`Unknown form`), 409 (`Form already answered…`: use `artifact_edit` with `spec` instead) `<-- Gaelan` |
+| PUT | `/api/conversations/[id]/artifacts/[artifactId]` | `{ spec: FormSpec }` | `{ version }`; replaces the questions of a form still awaiting answers, with no agent run; forms only (a widget id gives 404) | 400 (`spec is required`, `A form needs at least one question`, `Nothing changed`), 404 (`Unknown form`), 409 (`Form already answered…`: use `artifact_edit` with `spec` instead) |
 
 ### `POST /api/conversations/[id]/run`
 
@@ -54,7 +54,7 @@ Response: `Content-Type: application/x-ndjson`, one JSON `RunEvent` per line:
 
 | Route | Load returns | Invalidate with |
 |---|---|---|
-| all pages (`+layout.server.ts`) | `{ conversations: Conversation[], mock: boolean, model: string \| null }` (`mock` is true when no Crusoe key is set; `model` is `CRUSOE_AGENT_MODEL`, or null in mock mode) | `app:conversations` `<-- James` |
+| all pages (`+layout.server.ts`) | `{ conversations: Conversation[], mock: boolean, model: string \| null }` (`mock` is true when no Crusoe key is set; `model` is `CRUSOE_AGENT_MODEL`, or null in mock mode) | `app:conversations` |
 | `/c/[id]` | `{ state: ConversationState, running: boolean }`; 404 if missing | `app:conversation` |
 | `/library?q=&kind=` | `{ q, kind: ArtifactKind or null, results: LibraryResult[] }`; `kind` accepts `form`, `widget`, `document`, `html`, anything else is null `<-- Gaelan` | URL change |
 
@@ -87,7 +87,7 @@ Timestamps are `Date` objects in `load` data and ISO strings in JSON responses.
 
 **Artifact `content` by kind:** `form` is a JSON string of `FormSpec`; `widget` is a JSON string of `WidgetSpec` `<-- Gaelan`; `document` is markdown; `html` is a full HTML page rendered in an iframe with `sandbox="allow-scripts"` (no network).
 
-**`FormSpec`:** `{ description?, fields: FormField[], submitLabel? }`. Every question is optional (there is no `required` flag `<-- Gaelan`). A `FormField` has `name`, `label`, `type`, and optionally `options`, `placeholder`, `help` and `default`. `type` is one of `text`, `textarea`, `number`, `email`, `date`, `select`, `radio`, `checkbox`, `checkboxes`.
+**`FormSpec`:** `{ description?, fields: FormField[], submitLabel? }`. Every question is optional and every answer is free text, so values are strings. A `FormField` has `name`, `label`, `type`, and optionally `options`, `placeholder`, `help` and `default`. `type` is `text` or `textarea` only; `options` are suggestion chips the UI toggles into a comma-separated answer. Older specs with `select`, `radio`, `date` and so on are converted by `normalizeFormSpec` (`frontend/src/lib/forms.ts`). `<-- Gaelan`
 
 **`WidgetSpec`** (`<-- Gaelan`; created by the agent's `create_widget` tool, which sets the artifact to `awaiting_input`; `data_schema` there is stored as `schema`): `{ html, description?, schema?: DataSchema }`. `html` is a petite-vue fragment (at most 40,000 characters, must call `$submit`, no external `<script src>` or http `<link>`) run in a sandboxed iframe with no network. Inside it `$submit(obj)` sends a JSON object back (the frontend turns it into a `form_submit` run, or `artifact_edit` once answered) and `$initial` is the last submitted object or null. `DataSchema` is a JSON Schema subset: `type` (`object`, `array`, `string`, `number`, `integer`, `boolean`), `properties`, `required`, `items`, `enum`, `minimum`, `maximum`, `description`; submissions that fail it are rejected with the 400 above. Widgets have no question-editing endpoint. The agent can fix an unanswered widget in place with `update_artifact` (new version, still `awaiting_input`); answered widgets and forms can only be re-asked with a new artifact. An edit message to the agent lists leaf-level changes like `- people[0].name: "Person 1" → "Alex"`. The library snippet for a widget is its submitted data as `key: value` pairs.
 
