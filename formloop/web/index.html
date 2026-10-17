@@ -4,6 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Formloop</title>
+<script src="/floorplan.js"></script>
 <style>
 	:root {
 		--bg: #f6f5f2; --panel: #ffffff; --ink: #1d1d1f; --muted: #6b6b70; --line: #e4e2dc;
@@ -71,6 +72,10 @@
 	.hard { color: var(--bad); font-size: 11px; font-weight: 600; text-transform: uppercase; margin-left: 4px; }
 	.empty { color: var(--muted); font-size: 14px; padding: 18px; border: 1px dashed var(--line); border-radius: 12px; text-align: center; }
 	.saved { font-size: 13px; color: var(--muted); margin: 6px 0 16px; }
+	.plan { background: var(--plan-bg); border-radius: 8px; margin: 2px 0 10px; padding: 6px; display: flex; justify-content: center; }
+	.plan svg { width: 100%; max-height: 300px; }
+	:root { --plan-bg: #ffffff; --plan-ink: #16291f; }
+	@media (prefers-color-scheme: dark) { :root { --plan-bg: #f4f2ec; --plan-ink: #16291f; } }
 	.toast { position: fixed; bottom: 16px; left: 50%; transform: translateX(-50%); background: var(--ink); color: var(--bg); padding: 8px 14px; border-radius: 8px; font-size: 13px; opacity: 0; transition: opacity .3s; pointer-events: none; }
 	.toast.show { opacity: 1; }
 </style>
@@ -194,6 +199,8 @@ function renderForm() {
 	}
 }
 
+function planEl(l) { const d = el('div', { class: 'plan' }); d.innerHTML = window.floorplanSVG ? window.floorplanSVG(l) : ''; return d; }
+
 const MARK = (s) => (s === null ? ['unk', '?'] : s >= 1 ? ['ok', '✓'] : s <= 0 ? ['no', '✗'] : ['mid', '~']);
 
 function listingCard(c, shownRank) {
@@ -210,6 +217,7 @@ function listingCard(c, shownRank) {
 	const bits = [l.neighborhood, l.sqft && `${l.sqft} sq ft`, l.floor != null && `floor ${l.floor}`, l.layout, l.laundry && `laundry: ${l.laundry.replace('_', ' ')}`, l.parking ? 'parking' : null, l.pets && `pets: ${l.pets}`, l.street_noise && `${l.street_noise} street`, l.available && `available ${l.available}`].filter(Boolean);
 	return el('div', { class: 'card' },
 		el('div', { class: 'card-top' }, el('span', { class: 'title' }, `#${shownRank} · ${l.title}`), el('span', { class: 'price' }, money(l.price))),
+		planEl(l),
 		el('div', { class: 'meta' }, bits.join(' · '), l.url ? el('span', {}, ' · ', el('a', { href: l.url, target: '_blank', rel: 'noopener' }, 'source')) : ''),
 		c.checks.length ? el('ul', { class: 'checks' }, c.checks.map((k) => { const [cls, m] = MARK(k.sat); return el('li', { class: cls }, `${m} ${k.label}`, k.hard ? el('span', { class: 'hard' }, 'dealbreaker') : '', k.from ? el('small', {}, ` · from ${k.from}`) : ''); })) : el('div', { class: 'meta' }, 'Answer a question and the agent will explain its picks.'),
 		el('div', { class: 'actions' },
