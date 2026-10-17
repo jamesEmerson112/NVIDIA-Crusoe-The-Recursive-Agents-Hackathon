@@ -8,6 +8,7 @@ Our entry for the Crusoe × Cerebral Valley Recursive Agents Hackathon (Oct 17, 
 |---|---|
 | `frontend/` | SvelteKit app (UI and server-side agent code) |
 | `docs/api.md` | Workbench API reference: endpoints, run stream events, data shapes |
+| `docs/cozy-implementation-plan.md` | Planned room designer: parallel workstreams C0–C3, shared contracts, project integration gates, and acceptance tests |
 | `docs/research/` | Team research: a build-our-own Obsidian, Blender with GPT-6 Astra and Claude, SF buildings in 3D, floorplans, building energy simulation (start with its `README.md`) |
 | `.claude/skills/` | Claude Code skills, including the Crusoe inference reference |
 | `CLAUDE.md` | Instructions for Claude Code agents working in this repo |
