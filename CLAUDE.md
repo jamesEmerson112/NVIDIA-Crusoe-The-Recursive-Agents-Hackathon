@@ -8,9 +8,9 @@ Entry for the Crusoe × Cerebral Valley **Recursive Agents Hackathon** (Sat Oct 
 
 There is no application code yet, so no build, lint, or test commands exist. Add them here once a stack is chosen.
 
-## Source of truth: `docs/crusoe-agent-docs.md`
+## Source of truth: the `crusoe-recursive-agents-hackathon` skill
 
-Read this file before writing any inference code. It is written as a skill file (refreshed Oct 13, 2026) and explicitly overrides training data: model IDs, prices, endpoints, and API behavior from memory are stale. If something is not in that doc (event rules, judging, schedule, credits, submission — see §14), say so instead of guessing. When the doc and `GET /v1/models` disagree, `/v1/models` wins.
+Invoke this project skill (`.claude/skills/crusoe-recursive-agents-hackathon/SKILL.md`) before writing any inference code. It was refreshed Oct 13, 2026 and explicitly overrides training data: model IDs, prices, endpoints, and API behavior from memory are stale. If something is not in that doc (event rules, judging, schedule, credits, submission — see §14), say so instead of guessing. When the doc and `GET /v1/models` disagree, `/v1/models` wins.
 
 ## Gotchas that break code (section numbers refer to the doc)
 
