@@ -7,7 +7,12 @@ import type { MessageMeta, RunEvent } from '#lib/types.ts';
 type Body =
 	| { type: 'message'; content: string }
 	| { type: 'form_submit'; artifactId: string; values: Record<string, unknown> }
-	| { type: 'artifact_edit'; artifactId: string; values?: Record<string, unknown>; content?: string };
+	| {
+			type: 'artifact_edit';
+			artifactId: string;
+			values?: Record<string, unknown>;
+			content?: string;
+	  };
 
 /** Start an agent run and stream its events as newline-delimited JSON. */
 export async function POST({ params, request }) {

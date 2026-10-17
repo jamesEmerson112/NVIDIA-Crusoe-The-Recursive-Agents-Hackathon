@@ -4,7 +4,12 @@ import type { RunEvent } from '#lib/types.ts';
 export type RunBody =
 	| { type: 'message'; content: string }
 	| { type: 'form_submit'; artifactId: string; values: Record<string, unknown> }
-	| { type: 'artifact_edit'; artifactId: string; values?: Record<string, unknown>; content?: string };
+	| {
+			type: 'artifact_edit';
+			artifactId: string;
+			values?: Record<string, unknown>;
+			content?: string;
+	  };
 
 /** Live state of the agent run in the open conversation (one at a time per tab). */
 export const live = $state({
@@ -27,7 +32,15 @@ function refresh() {
 }
 
 export async function startRun(cid: string, body: RunBody) {
-	Object.assign(live, { cid, running: true, text: '', reasoning: '', status: 'Starting', activity: [], error: '' });
+	Object.assign(live, {
+		cid,
+		running: true,
+		text: '',
+		reasoning: '',
+		status: 'Starting',
+		activity: [],
+		error: ''
+	});
 	try {
 		const res = await fetch(`/api/conversations/${cid}/run`, {
 			method: 'POST',
@@ -35,7 +48,8 @@ export async function startRun(cid: string, body: RunBody) {
 			body: JSON.stringify(body)
 		});
 		if (!res.ok || !res.body) {
-			live.error = (await res.json().catch(() => null))?.message ?? `Request failed (${res.status})`;
+			live.error =
+				(await res.json().catch(() => null))?.message ?? `Request failed (${res.status})`;
 			return;
 		}
 		const reader = res.body.pipeThrough(new TextDecoderStream()).getReader();

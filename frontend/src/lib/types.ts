@@ -17,7 +17,16 @@ export type MessageMeta =
 	| { kind: 'artifact'; artifactId: string }
 	| { kind: 'error' };
 
-export type FieldType = 'text' | 'textarea' | 'number' | 'email' | 'date' | 'select' | 'radio' | 'checkbox' | 'checkboxes';
+export type FieldType =
+	| 'text'
+	| 'textarea'
+	| 'number'
+	| 'email'
+	| 'date'
+	| 'select'
+	| 'radio'
+	| 'checkbox'
+	| 'checkboxes';
 
 export interface FormField {
 	name: string;

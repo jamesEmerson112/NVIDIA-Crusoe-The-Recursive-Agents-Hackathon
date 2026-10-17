@@ -27,7 +27,10 @@ A ChatGPT-desktop-style chat where the agent also builds a **process**: a number
 - **Crusoe client** (`src/lib/server/crusoe.ts`): streaming fetch, jittered backoff on 429/503 before the first byte, per-model throttle on `x-ratelimit-remaining-requests`, reads `reasoning_content`/`reasoning`, price table for cost.
 - **Agent** (`src/lib/server/agent/`): `prompt.ts` (stable system prompt; edit-policy rules), `tools.ts` (`set_plan`, `update_step`, `create_form`, `create_artifact`, `update_artifact`, `read_artifact`, `quick_edit`, `mark_fresh`; schema order is part of the cached prefix), `run.ts` (loop, max 12 turns, one run per conversation, tool calls run concurrently and results are appended in call order), `subagent.ts` (`quick_edit` on the fast model), `edits.ts` (form submit / user edit → `[Form submitted]` / `[Edit]` messages with diff, stale list and redo estimate).
 - **API**: `POST /api/conversations`; `GET|DELETE /api/conversations/[id]`; `POST /api/conversations/[id]/run` (body `message` | `form_submit` | `artifact_edit`; streams NDJSON `RunEvent`s from `#lib/types.ts`); `POST /api/conversations/[id]/cancel`.
-- **UI** (being built): `src/lib/client/run.svelte.ts` holds live run state and invalidates `app:conversation` / `app:conversations` on `changed`; components in `src/lib/components/`. HTML artifacts render in an iframe with `sandbox="allow-scripts"` and no same-origin; markdown is sanitized with DOMPurify in the browser.
+- **Agent loop details**: tool calls run in call order (a form can reference a step that `set_plan` created in the same turn); only consecutive `quick_edit` calls run in parallel.
+- **UI**: `/` is the start page (creates a conversation, then runs); `/c/[id]` loads `conversationState` (`depends('app:conversation')`) and renders `components/Workspace.svelte`: chat in the middle, with pending forms embedded inline where the agent asked and other artifacts as cards; on the right, `ProcessPanel` (steps, artifacts per step, usage and cache-hit rate) or `ArtifactView` (versions, lineage links, edit → `artifact_edit`). The open artifact is in `?a=<id>`, so links deep-link. `src/lib/client/run.svelte.ts` holds the live run state and invalidates on `changed` events. HTML artifacts render in an iframe with `sandbox="allow-scripts"`, no same-origin and a CSP that blocks network; markdown is sanitized with DOMPurify in the browser.
+- **Svelte/Kit 3 gotchas hit so far**: `browser` comes from `$app/env` (`$app/environment` is deprecated and untyped); `goto` options are `reset`/`replace`, not `noScroll`/`keepFocus`; `page.url.searchParams` is read-only (copy via `new URLSearchParams(page.url.search)`); don't name a prop `state` (it clashes with the `$state` rune).
+- **Status (2026-10-17)**: the full flow works end to end with the mock agent: goal → plan + inline form → submit → brief → edit the form → brief marked stale → `quick_edit` sub-agent patches it. Not yet run against the real Crusoe API (no key in this environment); model IDs `openai/gpt-oss-120b` and `deepseek-ai/Deepseek-V4-Flash` are confirmed in the skill doc but not yet against `/v1/models`.
 
 ## Environment and commands
 
@@ -47,7 +50,9 @@ Commands, from `frontend/`:
 - `npm run check`: svelte-check type checking
 - `npm test`: all unit tests once; `npm test -- src/lib/foo.spec.ts` for one file
 - `npm run lint` / `npm run format`: Prettier check / write
-- `npm run db:push`: apply `schema.ts` to the local database (run it after pulling schema changes) (`db:generate` / `db:migrate` for migrations, `db:studio` to browse)
+- `npm run db:push`: apply `schema.ts` to the local database (run it after pulling schema changes)
+
+Browser preview in the Claude desktop app: the preview runner can't read `~/Documents` (macOS privacy), so start the dev server from Bash in the background (`npm start -- --port 5180 --strictPort`) and point a gitignored `.claude/launch.json` entry at it with `"url": "http://localhost:5180"` and no command. (`db:generate` / `db:migrate` for migrations, `db:studio` to browse)
 
 ## Source of truth: the `crusoe-recursive-agents-hackathon` skill
 

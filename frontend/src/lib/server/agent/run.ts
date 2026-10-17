@@ -4,7 +4,7 @@ import * as store from '../store';
 import type { MessageMeta, RunEvent } from '#lib/types.ts';
 import { mockChat } from './mock';
 import { SYSTEM_PROMPT } from './prompt';
-import { TOOL_SCHEMAS, runTool } from './tools';
+import { TOOL_SCHEMAS, runTool, type ToolOutput } from './tools';
 
 const MAX_TURNS = 12;
 const running = new Map<string, AbortController>();
@@ -24,7 +24,8 @@ export async function runAgent(
 	input: { content: string; meta?: MessageMeta },
 	emit: (e: RunEvent) => void
 ) {
-	if (running.has(conversationId)) throw new Error('The agent is already working in this conversation');
+	if (running.has(conversationId))
+		throw new Error('The agent is already working in this conversation');
 	const controller = new AbortController();
 	running.set(conversationId, controller);
 	const { signal } = controller;
@@ -36,7 +37,10 @@ export async function runAgent(
 		const conversation = await store.getConversation(conversationId);
 		await store.appendMessage(conversationId, { role: 'user', content: input.content }, input.meta);
 		if (!input.meta && conversation?.title === 'New conversation') {
-			await store.touchConversation(conversationId, input.content.replace(/\s+/g, ' ').slice(0, 60));
+			await store.touchConversation(
+				conversationId,
+				input.content.replace(/\s+/g, ' ').slice(0, 60)
+			);
 		} else {
 			await store.touchConversation(conversationId);
 		}
@@ -55,7 +59,10 @@ export async function runAgent(
 				onDelta: (text) => emit({ type: 'delta', text }),
 				onReasoning: (text) => emit({ type: 'reasoning', text }),
 				onRetry: (attempt, waitMs, status) =>
-					emit({ type: 'status', text: `Crusoe returned ${status}; retry ${attempt} in ${Math.round(waitMs / 1000)}s` })
+					emit({
+						type: 'status',
+						text: `Crusoe returned ${status}; retry ${attempt} in ${Math.round(waitMs / 1000)}s`
+					})
 			});
 			await store.recordUsage(conversationId, model, 'agent', result.usage);
 			await store.appendMessage(conversationId, {
@@ -78,13 +85,25 @@ export async function runAgent(
 				costUsd: result.usage.costUsd / result.toolCalls.length,
 				durationMs: Math.round(result.usage.durationMs / result.toolCalls.length)
 			};
-			// Tool calls from one turn run concurrently (e.g. parallel quick_edit sub-agents);
-			// results are appended in call order, right after the assistant message (skill §7.3).
-			const outputs = await Promise.all(
-				result.toolCalls.map((c) =>
-					runTool(c.function.name, c.function.arguments, { conversationId, model, usage: share, signal, emit })
-				)
-			);
+			// Tools run in call order (a form may reference a step set_plan just created), except
+			// that consecutive quick_edit sub-agents run in parallel. Results are appended in call
+			// order, right after the assistant message (skill §7.3).
+			const ctx = { conversationId, model, usage: share, signal, emit };
+			const outputs: ToolOutput[] = [];
+			for (let i = 0; i < result.toolCalls.length;) {
+				let j = i + 1;
+				if (result.toolCalls[i].function.name === 'quick_edit') {
+					while (j < result.toolCalls.length && result.toolCalls[j].function.name === 'quick_edit')
+						j++;
+				}
+				const batch = result.toolCalls.slice(i, j);
+				outputs.push(
+					...(await Promise.all(
+						batch.map((c) => runTool(c.function.name, c.function.arguments, ctx))
+					))
+				);
+				i = j;
+			}
 			for (const [i, c] of result.toolCalls.entries()) {
 				await store.appendMessage(
 					conversationId,
@@ -105,7 +124,11 @@ export async function runAgent(
 			});
 		}
 		const message = (err as Error).message;
-		await store.appendMessage(conversationId, { role: 'assistant', content: message }, { kind: 'error' });
+		await store.appendMessage(
+			conversationId,
+			{ role: 'assistant', content: message },
+			{ kind: 'error' }
+		);
 		emit({ type: 'error', message });
 	} finally {
 		running.delete(conversationId);

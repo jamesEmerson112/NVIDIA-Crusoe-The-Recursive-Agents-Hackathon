@@ -1,5 +1,11 @@
 import { index, integer, primaryKey, real, sqliteTable, text } from 'drizzle-orm/sqlite-core';
-import type { ArtifactKind, ArtifactStatus, MessageMeta, StepStatus, ToolCall } from '#lib/types.ts';
+import type {
+	ArtifactKind,
+	ArtifactStatus,
+	MessageMeta,
+	StepStatus,
+	ToolCall
+} from '#lib/types.ts';
 
 const id = () =>
 	text('id')

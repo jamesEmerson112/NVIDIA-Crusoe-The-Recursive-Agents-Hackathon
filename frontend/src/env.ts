@@ -10,7 +10,8 @@ export const variables = defineEnvVars({
 		schema: optional
 	},
 	CRUSOE_AGENT_MODEL: {
-		description: 'Model for the main agent loop. Must support tools; copy the id from GET /v1/models.',
+		description:
+			'Model for the main agent loop. Must support tools; copy the id from GET /v1/models.',
 		schema: (value) => value || 'openai/gpt-oss-120b'
 	},
 	CRUSOE_FAST_MODEL: {
