@@ -10,6 +10,8 @@
 	};
 </script>
 
-<span class="rounded-full px-2 py-0.5 text-[11px] font-medium whitespace-nowrap {styles[status][1]}"
+<span
+	data-testid="status-badge"
+	class="rounded-full px-2 py-0.5 text-[11px] font-medium whitespace-nowrap {styles[status][1]}"
 	>{styles[status][0]}</span
 >

@@ -91,7 +91,7 @@
 	const kindLabel = { form: 'Form', document: 'Document', html: 'Interactive' };
 </script>
 
-<div class="flex h-full flex-col">
+<div data-testid="artifact-view" class="flex h-full flex-col">
 	<header class="flex items-start gap-3 border-b border-zinc-200 px-5 py-4 dark:border-zinc-800">
 		<div class="min-w-0 flex-1">
 			<div class="mb-1 flex items-center gap-2 text-xs text-zinc-500">
@@ -104,12 +104,14 @@
 		</div>
 		<button
 			class="rounded-md p-1.5 text-zinc-500 hover:bg-zinc-100 dark:hover:bg-zinc-800"
+			data-testid="artifact-view-close"
 			onclick={onclose}
 			aria-label="Close artifact">✕</button
 		>
 	</header>
 
 	<div
+		data-testid="artifact-view-versions"
 		class="flex items-center gap-2 overflow-x-auto border-b border-zinc-200 px-5 py-2 dark:border-zinc-800"
 	>
 		<span class="text-xs text-zinc-500">Versions</span>
@@ -118,6 +120,7 @@
 				class="rounded-md px-2 py-0.5 text-xs whitespace-nowrap {v.version === version.version
 					? 'bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-900'
 					: 'text-zinc-600 hover:bg-zinc-100 dark:text-zinc-400 dark:hover:bg-zinc-800'}"
+				data-testid="artifact-view-version"
 				title="{v.note ?? ''} · {authorLabel[v.author]} · {when(v.createdAt)}"
 				onclick={() => {
 					selected = v.version;
@@ -130,7 +133,7 @@
 	</div>
 
 	<div class="min-h-0 flex-1 overflow-y-auto px-5 py-4">
-		<p class="mb-4 text-xs text-zinc-500">
+		<p data-testid="artifact-view-meta" class="mb-4 text-xs text-zinc-500">
 			v{version.version} · {version.note} · {authorLabel[version.author]}{version.model
 				? ` (${version.model})`
 				: ''} · {when(version.createdAt)}
@@ -139,6 +142,7 @@
 				·
 				<button
 					class="font-medium text-zinc-700 underline-offset-2 hover:underline dark:text-zinc-300"
+					data-testid="artifact-view-toggle-changes"
 					onclick={() => (showChanges = !showChanges)}
 				>
 					{showChanges ? 'Hide changes' : `Show changes since v${previous.version}`}
@@ -148,6 +152,7 @@
 
 		{#if artifact.status === 'stale' && isCurrent}
 			<div
+				data-testid="artifact-view-stale-notice"
 				class="mb-4 rounded-lg border border-amber-300 bg-amber-50 px-3 py-2 text-sm text-amber-900 dark:border-amber-700 dark:bg-amber-950 dark:text-amber-200"
 			>
 				Something this was built from has changed. The agent is deciding whether to update it.
@@ -157,7 +162,7 @@
 		{#if spec}
 			{#key `${version.id}-${editing}`}
 				{#if artifact.status === 'awaiting_input'}
-					<p class="text-sm text-zinc-500">
+					<p data-testid="artifact-view-awaiting-input" class="text-sm text-zinc-500">
 						Waiting for your answers. Fill in the form in the chat.
 					</p>
 				{:else if editing}
@@ -173,24 +178,34 @@
 						oncancel={() => (editing = false)}
 					/>
 				{:else}
-					<dl class="space-y-3">
+					<dl data-testid="artifact-view-answers" class="space-y-3">
 						{#each spec.fields as f (f.name)}
 							<div
+								data-testid="artifact-view-answer"
 								class={changedFields.has(f.name)
 									? '-mx-2 rounded-md bg-amber-500/10 px-2 py-1'
 									: ''}
 							>
-								<dt class="text-xs font-medium text-zinc-500">
+								<dt
+									data-testid="artifact-view-answer-label"
+									class="text-xs font-medium text-zinc-500"
+								>
 									{f.label}
-									{#if changedFields.has(f.name)}<span class="text-amber-700 dark:text-amber-400">
+									{#if changedFields.has(f.name)}<span
+											data-testid="artifact-view-answer-changed"
+											class="text-amber-700 dark:text-amber-400"
+										>
 											· changed in v{version.version}</span
 										>{/if}
 								</dt>
-								<dd class="text-sm whitespace-pre-wrap">
+								<dd data-testid="artifact-view-answer-value" class="text-sm whitespace-pre-wrap">
 									{display(version.data?.[f.name])}
 								</dd>
 								{#if changedFields.has(f.name)}
-									<dd class="text-xs text-zinc-500 line-through">
+									<dd
+										data-testid="artifact-view-answer-previous"
+										class="text-xs text-zinc-500 line-through"
+									>
 										{display(previous?.data?.[f.name])}
 									</dd>
 								{/if}
@@ -201,10 +216,12 @@
 			{/key}
 		{:else if editing}
 			<textarea
+				data-testid="artifact-view-editor"
 				class="h-96 w-full rounded-lg border border-zinc-300 bg-white p-3 font-mono text-xs dark:border-zinc-700 dark:bg-zinc-900"
 				bind:value={draft}></textarea>
 			<div class="mt-2 flex gap-2">
 				<button
+					data-testid="artifact-view-save"
 					class="rounded-lg bg-emerald-700 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-800 disabled:opacity-50"
 					disabled={busy}
 					onclick={() => {
@@ -213,12 +230,14 @@
 					}}>Save and tell the agent</button
 				>
 				<button
+					data-testid="artifact-view-cancel"
 					class="rounded-lg px-4 py-2 text-sm text-zinc-600 hover:bg-zinc-100 dark:text-zinc-300 dark:hover:bg-zinc-800"
 					onclick={() => (editing = false)}>Cancel</button
 				>
 			</div>
 		{:else if showChanges}
 			<pre
+				data-testid="artifact-view-diff"
 				class="overflow-x-auto rounded-lg border border-zinc-200 bg-white py-2 font-mono text-xs leading-5 dark:border-zinc-800 dark:bg-zinc-900">{#each diff as line, i (i)}{#if line === null}<span
 							class="block px-3 text-zinc-400">⋯</span
 						>{:else}<span
@@ -233,6 +252,7 @@
 		{:else if artifact.kind === 'html'}
 			<iframe
 				title={artifact.title}
+				data-testid="artifact-view-iframe"
 				sandbox="allow-scripts"
 				srcdoc={CSP + version.content}
 				class="h-[520px] w-full rounded-lg border border-zinc-200 bg-white dark:border-zinc-800"
@@ -244,24 +264,26 @@
 
 	<footer class="space-y-3 border-t border-zinc-200 px-5 py-3 dark:border-zinc-800">
 		{#if upstream.length || downstream.length}
-			<div class="space-y-1 text-xs">
+			<div data-testid="artifact-view-lineage" class="space-y-1 text-xs">
 				{#if upstream.length}
-					<div class="flex flex-wrap items-center gap-1.5">
+					<div data-testid="artifact-view-upstream" class="flex flex-wrap items-center gap-1.5">
 						<span class="text-zinc-500">Built from</span>
 						{#each upstream as u (u.id)}
 							<button
 								class="rounded-md bg-zinc-100 px-2 py-0.5 hover:bg-zinc-200 dark:bg-zinc-800 dark:hover:bg-zinc-700"
+								data-testid="artifact-view-lineage-link"
 								onclick={() => onopen(u.id)}>{u.title}</button
 							>
 						{/each}
 					</div>
 				{/if}
 				{#if downstream.length}
-					<div class="flex flex-wrap items-center gap-1.5">
+					<div data-testid="artifact-view-downstream" class="flex flex-wrap items-center gap-1.5">
 						<span class="text-zinc-500">Feeds into</span>
 						{#each downstream as d (d.id)}
 							<button
 								class="rounded-md bg-zinc-100 px-2 py-0.5 hover:bg-zinc-200 dark:bg-zinc-800 dark:hover:bg-zinc-700"
+								data-testid="artifact-view-lineage-link"
 								onclick={() => onopen(d.id)}>{d.title}</button
 							>
 						{/each}
@@ -272,6 +294,7 @@
 		{#if !editing && artifact.status !== 'awaiting_input'}
 			<div class="flex items-center gap-2">
 				<button
+					data-testid="artifact-view-edit"
 					class="rounded-lg border border-zinc-300 px-3 py-1.5 text-sm font-medium hover:bg-zinc-50 disabled:opacity-50 dark:border-zinc-700 dark:hover:bg-zinc-800"
 					disabled={busy}
 					onclick={() => {
@@ -282,7 +305,7 @@
 					{isCurrent ? 'Edit' : `Edit from v${version.version}`}
 				</button>
 				{#if downstream.length}
-					<span class="text-xs text-zinc-500"
+					<span data-testid="artifact-view-dependents-notice" class="text-xs text-zinc-500"
 						>Changes flag {downstream.length} dependent artifact{downstream.length > 1 ? 's' : ''} for
 						review.</span
 					>

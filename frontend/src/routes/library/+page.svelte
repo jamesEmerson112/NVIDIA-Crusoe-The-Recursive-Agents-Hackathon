@@ -31,14 +31,15 @@
 
 <svelte:head><title>Library · Workbench</title></svelte:head>
 
-<div class="min-w-0 flex-1 overflow-y-auto">
+<div data-testid="library-root" class="min-w-0 flex-1 overflow-y-auto">
 	<div class="mx-auto max-w-3xl px-5 py-8">
-		<h1 class="text-2xl font-semibold tracking-tight">Library</h1>
+		<h1 data-testid="library-heading" class="text-2xl font-semibold tracking-tight">Library</h1>
 		<p class="mt-1 text-sm text-zinc-500">
 			Everything the agent has made or asked you, across all conversations.
 		</p>
 
 		<input
+			data-testid="library-search"
 			type="search"
 			class="mt-5 w-full rounded-xl border border-zinc-300 bg-white px-4 py-2.5 text-sm outline-none focus:border-zinc-500 dark:border-zinc-700 dark:bg-zinc-900"
 			placeholder="Search titles, answers and content…"
@@ -48,9 +49,10 @@
 				timer = setTimeout(() => search({ q }), 200);
 			}}
 		/>
-		<div class="mt-3 flex gap-1.5">
+		<div data-testid="library-kinds" class="mt-3 flex gap-1.5">
 			{#each kinds as k (k.label)}
 				<button
+					data-testid="library-kind"
 					class="rounded-full px-3 py-1 text-xs font-medium {data.kind === k.value
 						? 'bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-900'
 						: 'bg-zinc-100 text-zinc-600 hover:bg-zinc-200 dark:bg-zinc-800 dark:text-zinc-300'}"
@@ -59,10 +61,11 @@
 			{/each}
 		</div>
 
-		<ul class="mt-5 space-y-2">
+		<ul data-testid="library-results" class="mt-5 space-y-2">
 			{#each data.results as r (r.id)}
 				<li>
 					<a
+						data-testid="library-result"
 						href="/c/{r.conversationId}?a={r.id}"
 						class="block rounded-xl border border-zinc-200 bg-white px-4 py-3 hover:border-zinc-400 dark:border-zinc-800 dark:bg-zinc-900 dark:hover:border-zinc-600"
 					>
@@ -82,7 +85,7 @@
 					</a>
 				</li>
 			{:else}
-				<li class="py-10 text-center text-sm text-zinc-500">
+				<li data-testid="library-empty" class="py-10 text-center text-sm text-zinc-500">
 					{data.q
 						? `Nothing matches “${data.q}”.`
 						: 'No artifacts yet. Start a conversation and they will collect here.'}

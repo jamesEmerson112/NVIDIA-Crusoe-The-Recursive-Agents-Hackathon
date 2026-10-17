@@ -11,7 +11,10 @@
 	);
 </script>
 
-<div class="prose prose-sm max-w-none dark:prose-invert prose-pre:bg-zinc-900 {className}">
+<div
+	data-testid="markdown"
+	class="prose prose-sm max-w-none dark:prose-invert prose-pre:bg-zinc-900 {className}"
+>
 	{#if browser}
 		{@html html}
 	{:else}

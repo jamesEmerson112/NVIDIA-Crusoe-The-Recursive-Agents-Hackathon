@@ -16,6 +16,8 @@ SvelteKit 3 + Svelte 5 (runes mode forced in `vite.config.ts`), TypeScript, Tail
 
 Persistence is SQLite through Node's built-in `node:sqlite` with Drizzle ORM (schema in `src/lib/server/db/schema.ts`, database path from `DATABASE_URL` in `frontend/.env`, default `local.db`). `drizzle-orm` and `drizzle-kit` are pinned to `1.0.0-rc.4`: the `node-sqlite` driver doesn't exist in stable 0.45, and 1.0 takes `drizzle({ client })`, not `drizzle(client, { schema })`. Using `node:sqlite` avoids native builds, so install scripts can stay blocked.
 
+**Test IDs**: every interactive element (`button`, `a`, `input`, `textarea`, `select`, `iframe`, clickable `label`/`summary`), major region, repeated item and status readout gets `data-testid="<area>-<thing>"` in kebab-case, where `<area>` is the component or route (`composer-send`, `sidebar-conversation`, `proposal-approve`). Repeated items share one static id (never interpolate database ids). Put it on an HTML element inside the component, since Svelte 5 doesn't forward it from a component tag. New UI ships with ids; don't rename or remove one without updating tests. All current ids are listed in `docs/test-ids.md`; regenerate that list when you add some.
+
 Imports through `#lib/...` (Node subpath imports in `package.json`) need the file extension: `#lib/types.ts`, not `#lib/types`.
 
 Env vars are declared in `src/env.ts` (`defineEnvVars`) and read from `$app/env/private`: `DATABASE_URL`, `CRUSOE_API_KEY` (optional: unset runs the scripted mock agent in `agent/mock.ts`, so the UI works offline), `CRUSOE_AGENT_MODEL` (default `zai-org/GLM-5.3-Flash` since 2026-10-17; `openai/gpt-oss-120b` is the cheaper, faster, terser alternative), `CRUSOE_FAST_MODEL` (default `deepseek-ai/Deepseek-V4-Flash`).

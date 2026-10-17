@@ -84,22 +84,26 @@
 <div class="relative flex h-full min-w-0 flex-1">
 	<section class="flex min-w-0 flex-1 flex-col">
 		<header class="flex items-center gap-3 border-b border-zinc-200 px-5 py-3 dark:border-zinc-800">
-			<h1 class="min-w-0 flex-1 truncate text-sm font-semibold">{cs.conversation.title}</h1>
+			<h1 data-testid="workspace-title" class="min-w-0 flex-1 truncate text-sm font-semibold">
+				{cs.conversation.title}
+			</h1>
 			<button
+				data-testid="workspace-toggle-process"
 				class="rounded-md px-2 py-1 text-xs text-zinc-600 hover:bg-zinc-100 dark:text-zinc-300 dark:hover:bg-zinc-800"
 				onclick={() => (panelOpen = !panelOpen)}
 				>{panelOpen ? 'Hide process' : 'Show process'}</button
 			>
 		</header>
 
-		<div class="min-h-0 flex-1 overflow-y-auto" bind:this={scroller}>
+		<div data-testid="workspace-chat" class="min-h-0 flex-1 overflow-y-auto" bind:this={scroller}>
 			<div class="mx-auto max-w-3xl space-y-5 px-5 py-6">
 				{#each cs.messages as m (m.id)}
 					{@const meta = m.meta as MessageMeta | null}
 					{#if m.role === 'user' && meta?.kind === 'form_submit'}
 						{@const a = byId.get(meta.artifactId)}
-						<div class="flex justify-end">
+						<div data-testid="workspace-message-form-submit" class="flex justify-end">
 							<button
+								data-testid="workspace-form-submit-open"
 								class="rounded-full bg-zinc-100 px-3 py-1 text-xs text-zinc-600 hover:bg-zinc-200 dark:bg-zinc-800 dark:text-zinc-300"
 								onclick={() => open(meta.artifactId)}
 							>
@@ -108,8 +112,9 @@
 						</div>
 					{:else if m.role === 'user' && meta?.kind === 'artifact_edit'}
 						{@const a = byId.get(meta.artifactId)}
-						<div class="flex justify-end">
+						<div data-testid="workspace-message-artifact-edit" class="flex justify-end">
 							<button
+								data-testid="workspace-artifact-edit-open"
 								class="rounded-full bg-amber-500/10 px-3 py-1 text-xs text-amber-900 hover:bg-amber-500/20 dark:text-amber-200"
 								onclick={() => open(meta.artifactId)}
 							>
@@ -119,18 +124,23 @@
 							</button>
 						</div>
 					{:else if m.role === 'user' && meta?.kind === 'check'}
-						<details class="text-xs text-violet-800 dark:text-violet-300">
-							<summary class="cursor-pointer select-none">
+						<details
+							data-testid="workspace-message-check"
+							class="text-xs text-violet-800 dark:text-violet-300"
+						>
+							<summary data-testid="workspace-check-summary" class="cursor-pointer select-none">
 								↻ Self-check caught {meta.problems.length} problem{meta.problems.length > 1
 									? 's'
 									: ''} and sent the agent back to fix {meta.problems.length > 1 ? 'them' : 'it'}
 							</summary>
 							<ul class="mt-1 list-disc space-y-0.5 pl-5 text-zinc-600 dark:text-zinc-400">
-								{#each meta.problems as p, i (i)}<li>{p}</li>{/each}
+								{#each meta.problems as p, i (i)}<li data-testid="workspace-check-problem">
+										{p}
+									</li>{/each}
 							</ul>
 						</details>
 					{:else if m.role === 'user' && meta?.kind === 'proposal_reply'}
-						<div class="flex justify-end">
+						<div data-testid="workspace-message-proposal-reply" class="flex justify-end">
 							<span
 								class="rounded-full bg-zinc-100 px-3 py-1 text-xs text-zinc-600 dark:bg-zinc-800 dark:text-zinc-300"
 							>
@@ -150,6 +160,7 @@
 					{:else if m.role === 'user'}
 						<div class="flex justify-end">
 							<div
+								data-testid="workspace-message-user"
 								class="max-w-[85%] rounded-2xl bg-zinc-100 px-4 py-2.5 text-sm whitespace-pre-wrap dark:bg-zinc-800"
 							>
 								{m.content}
@@ -157,6 +168,7 @@
 						</div>
 					{:else if m.role === 'assistant' && meta?.kind === 'error'}
 						<div
+							data-testid="workspace-message-error"
 							class="rounded-lg border border-rose-300 bg-rose-50 px-3 py-2 text-sm text-rose-900 dark:border-rose-800 dark:bg-rose-950 dark:text-rose-200"
 						>
 							{m.content}
@@ -169,6 +181,7 @@
 							{@const v = a.versions.find((x) => x.version === a.currentVersion) ?? a.versions[0]}
 							{@const spec = JSON.parse(v.content) as FormSpec}
 							<div
+								data-testid="workspace-inline-form"
 								class="max-w-xl rounded-2xl border border-sky-200 bg-white p-5 shadow-sm dark:border-sky-900 dark:bg-zinc-900"
 							>
 								<h3 class="mb-3 font-semibold">{a.title}</h3>
@@ -190,23 +203,26 @@
 				{/each}
 
 				{#if busy}
-					<div class="space-y-2">
+					<div data-testid="workspace-live" class="space-y-2">
 						{#if live.text}
 							<Markdown source={live.text} />
 						{/if}
 						<div class="flex flex-wrap items-center gap-2 text-xs text-zinc-500">
-							<span class="inline-flex items-center gap-1.5">
+							<span data-testid="workspace-live-status" class="inline-flex items-center gap-1.5">
 								<span class="size-1.5 animate-pulse rounded-full bg-emerald-600"></span>
 								{live.status || 'Working'}{live.reasoning && !live.text ? ' (reasoning)' : ''}
 							</span>
 							{#each live.activity as a, i (i)}
-								<span class="rounded-full bg-zinc-100 px-2 py-0.5 dark:bg-zinc-800">{a}</span>
+								<span
+									data-testid="workspace-live-activity"
+									class="rounded-full bg-zinc-100 px-2 py-0.5 dark:bg-zinc-800">{a}</span
+								>
 							{/each}
 						</div>
 					</div>
 				{/if}
 				{#if live.error && live.cid === cid && !busy}
-					<p class="text-sm text-rose-600">{live.error}</p>
+					<p data-testid="workspace-error" class="text-sm text-rose-600">{live.error}</p>
 				{/if}
 			</div>
 		</div>
@@ -222,6 +238,7 @@
 
 	{#if panelOpen || opened}
 		<aside
+			data-testid="workspace-panel"
 			class="w-[420px] shrink-0 border-l border-zinc-200 bg-zinc-50 max-xl:absolute max-xl:inset-y-0 max-xl:right-0 max-xl:z-10 max-xl:w-[min(420px,100%)] max-xl:shadow-2xl dark:border-zinc-800 dark:bg-zinc-950"
 		>
 			{#if opened}

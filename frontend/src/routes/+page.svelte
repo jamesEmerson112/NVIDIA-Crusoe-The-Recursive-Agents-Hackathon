@@ -24,9 +24,11 @@
 	}
 </script>
 
-<div class="flex flex-1 flex-col items-center justify-center px-5">
+<div data-testid="start-root" class="flex flex-1 flex-col items-center justify-center px-5">
 	<div class="w-full max-w-3xl space-y-8">
-		<h1 class="text-center text-3xl font-normal tracking-tight">What's on your mind today?</h1>
+		<h1 data-testid="start-heading" class="text-center text-3xl font-normal tracking-tight">
+			What's on your mind today?
+		</h1>
 		<Composer
 			variant="hero"
 			model={data.model}
@@ -34,9 +36,10 @@
 			busy={creating || live.running}
 			onsend={send}
 		/>
-		<div class="flex flex-wrap justify-center gap-2">
+		<div data-testid="start-examples" class="flex flex-wrap justify-center gap-2">
 			{#each examples as prompt (prompt)}
 				<button
+					data-testid="start-example"
 					class="rounded-full border border-zinc-300 px-3 py-1.5 text-sm text-zinc-600 hover:bg-zinc-100 disabled:opacity-40 dark:border-zinc-700 dark:text-zinc-300 dark:hover:bg-zinc-800"
 					disabled={creating || live.running}
 					onclick={() => send(prompt)}>{prompt}</button

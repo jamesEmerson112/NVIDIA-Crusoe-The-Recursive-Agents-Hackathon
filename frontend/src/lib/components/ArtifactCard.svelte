@@ -12,6 +12,7 @@
 </script>
 
 <button
+	data-testid="artifact-card-open"
 	class="group flex w-full max-w-md items-center gap-3 rounded-xl border border-zinc-200 bg-white px-3 py-2.5 text-left hover:border-zinc-400 dark:border-zinc-800 dark:bg-zinc-900 dark:hover:border-zinc-600"
 	onclick={onopen}
 >
