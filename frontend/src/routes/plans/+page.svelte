@@ -182,6 +182,12 @@
 			title="Toggle debug mode (D)"
 			onclick={() => setParam('debug', debug ? null : '1')}>Debug {debug ? 'on' : 'off'}</button
 		>
+		<a
+			data-testid="plans-showcase-link"
+			href="/plans/room"
+			class="rounded-lg border border-zinc-300 px-3 py-1 text-sm hover:bg-zinc-100 dark:border-zinc-700 dark:hover:bg-zinc-800"
+			>Showcase room</a
+		>
 	</header>
 	{#if problems.length}
 		<ul
