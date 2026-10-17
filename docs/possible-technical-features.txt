@@ -8,36 +8,57 @@ POSSIBLE TECHNICAL FEATURES
   - L over 90 min
 - Kept current by the 10-minute doc-sync job
   - Built items move to DONE at bottom
-  - "<-- Gaelan" marks backend items, Gaelan's lane
-  - Unmarked NOW items are frontend or shared
+  - "<-- Gaelan" marks what Gaelan is on now
+- Freeze features at 4:00; NOW items first
 
 
-==================== TODO ====================
+================ FRONTEND (FE) ================
 
-NOW: CUT FOR 5 PM (freeze at 4:00)
-1. [M] Research fan-out tool (spawn_research)   <-- Gaelan
-   - Orchestrator starts N parallel research sub-agents
-   - One brief each: neighborhood or price band
-   - Each returns a linked document artifact
-   - The visible "spawns multiple agents" demo moment
-2. [S] Concurrency cap and model spreading   <-- Gaelan
-   - At most K sub-agents at once
-   - Alternate two models; avoid 30 RPM cap
-3. [S] Live agent tree in the UI
-   - Shows status, model, cost and time
-4. [M] Rental listings tool over scraped data   <-- Gaelan
-   - Speaker B's Bay Area listings in SQLite
-   - Needs the data file first
-   - Fallback: DataSF context tool below
-5. [S] Market snapshot: median rent via SQL   <-- Gaelan
-6. [M] Visit list, then visit feedback form
-   - Ratings drive the next search round
-7. [S] Side-by-side comparison table of homes
-8. [S] Pre-run demo conversation, no live latency
-9. [M] Backup screen recording of full flow
+NOW
+- [S] Live agent tree in the UI
+  - Shows status, model, cost and time
+  - Needs sub-agent run events from BE
+- [M] Visit feedback form and visit task view
+  - Ratings feed BE's next search round
+- [S] Comparison table view of shortlisted homes
+
+LATER
+- [M] Users can reword or delete questions
+  - BE treats edits as preference data
+- [M] Weight sliders re-rank shortlist
+  - Plain code re-sorts, no model call
+- [S] Live "options remaining" counter on forms
+- [S] Real-world task list with checkboxes
+- [S] Run log view of every call
+- [M] Map with listing pins
+  - Sandbox blocks network; inline or static
+- [M] Charts: rents, price versus commute
+- [L] 3D buildings or floorplan via three.js
+  - See floorplan-2d-to-3d.md, sf-buildings-3d.md
+- [L] Synthetic floorplan inside building footprint
+- [S] Landing page copy and one-line pitch
 
 
-LATER: ORCHESTRATION
+================ BACKEND (BE) ================
+
+NOW
+- [M] Research fan-out tool (spawn_research)   <-- Gaelan
+  - Orchestrator starts N parallel research sub-agents
+  - One brief each: neighborhood or price band
+  - Each returns a linked document artifact
+  - Emit run events FE's agent tree needs
+- [S] Concurrency cap and model spreading      <-- Gaelan
+  - At most K sub-agents at once
+  - Alternate two models; avoid 30 RPM cap
+- [M] Rental listings tool over scraped data   <-- Gaelan
+  - Speaker B's Bay Area listings in SQLite
+  - Needs the data file first
+  - Fallback: DataSF context tool below
+- [S] Market snapshot: median rent via SQL     <-- Gaelan
+- [M] Visit list and feedback round in prompt
+  - Ratings drive the next search round
+
+LATER
 - [M] Sub-agents call data tools themselves
 - [M] Verifier agent checks definition of done
   - Scores artifacts against user's criteria
@@ -45,8 +66,6 @@ LATER: ORCHESTRATION
 - [L] Recursive delegation with depth limit
 - [M] Budget guard per conversation
   - Plans within cap, stops cleanly
-
-LATER: DATA
 - [S] DataSF context tool, free, no key
   - Land use and units: c5ge-t6pj
   - Year built and stories: wv5m-vpq2
@@ -54,43 +73,26 @@ LATER: DATA
 - [S] Commute estimate from listing to work
   - Straight-line distance; routing APIs need keys
 - [M] Cached neighborhood profiles, built by sub-agents
-
-LATER: USER PREFERENCE LOOP
 - [S] All answers optional; skips are signal
-- [M] Users can reword or delete questions
-  - Agent treats edits as preference data
-- [M] Weight sliders re-rank shortlist
-  - Plain code re-sorts, no model call
 - [S] Preference profile artifact
   - What user wants versus what they said
-- [S] Live "options remaining" counter on forms
-
-LATER: VISUALS
-- [M] Map with listing pins
-  - Sandbox blocks network; inline or static
-- [M] Charts: rents, price versus commute
-- [L] 3D buildings or floorplan via three.js
-  - See floorplan-2d-to-3d.md, sf-buildings-3d.md
-- [L] Synthetic floorplan inside building footprint
 - [L] Energy and sun exposure per listing
   - See building-performance-simulation.md
-
-LATER: LONG-RUNNING
 - [M] Background runs survive closed browser
   - Server already continues after client disconnects
 - [M] Daily re-check flags new listings
   - Demo can fake it with a button
 - [S] Resume failed runs from last step
-- [S] Real-world task list with checkboxes
-
-LATER: RELIABILITY
-- [S] Run log of every call
 - [S] Fallback model after repeated errors
 - [S] Validate tool arguments; return errors
 - [M] Eval script replays a fixed scenario
 
-LATER: SUBMISSION
-- [S] Landing page copy and one-line pitch
+
+================ BOTH (demo and submission) ================
+
+NOW
+- [S] Pre-run demo conversation, no live latency
+- [M] Backup screen recording of full flow
 - [S] Verify README setup from fresh clone
   - Include copying .env.example to .env
 
