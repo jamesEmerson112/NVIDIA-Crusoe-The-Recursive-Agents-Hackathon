@@ -7,111 +7,169 @@
 <script src="/floorplan.js"></script>
 <style>
 	:root {
-		--bg: #f6f5f2; --panel: #ffffff; --ink: #1d1d1f; --muted: #6b6b70; --line: #e4e2dc;
-		--accent: #2f5bd3; --accent-soft: #e8eefc; --good: #1f8a4c; --bad: #c2412d; --warn: #a86b00;
-	}
-	@media (prefers-color-scheme: dark) {
-		:root { --bg: #141416; --panel: #1d1d20; --ink: #ececee; --muted: #9a9aa2; --line: #2e2e33; --accent: #7d9cff; --accent-soft: #232a40; --good: #4cc483; --bad: #ff7a66; --warn: #e3a93b; }
+		--bg: #f4f1ea; --paper: #fbfaf6; --card: #ffffff; --ink: #1b1d1a; --muted: #77756d; --faint: #b7b3a8;
+		--line: #e6e1d6; --green: #1f3a2e; --green-soft: #e3ebe5; --clay: #b8562f; --clay-soft: #f6e3d9;
+		--good: #2e7d4f; --bad: #b8432f; --plan-bg: #fbfaf6; --plan-ink: #1f3a2e;
+		--serif: ui-serif, "New York", "Iowan Old Style", Georgia, serif;
+		--sans: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Inter, sans-serif;
 	}
 	* { box-sizing: border-box; }
-	body { margin: 0; background: var(--bg); color: var(--ink); font: 15px/1.45 -apple-system, BlinkMacSystemFont, "Segoe UI", Inter, sans-serif; }
-	header { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; padding: 14px 20px; border-bottom: 1px solid var(--line); background: var(--panel); position: sticky; top: 0; z-index: 2; }
-	header h1 { font-size: 17px; margin: 0; letter-spacing: -0.01em; }
-	header .sub { color: var(--muted); font-size: 13px; }
-	.badge { font-size: 12px; padding: 2px 8px; border-radius: 999px; background: var(--accent-soft); color: var(--accent); white-space: nowrap; }
-	.badge.offline { background: #f3e9d2; color: var(--warn); }
-	header select { margin-left: auto; font: inherit; padding: 4px 6px; border-radius: 6px; border: 1px solid var(--line); background: var(--panel); color: var(--ink); }
-	main { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 0; min-height: calc(100vh - 56px); }
-	@media (max-width: 860px) { main { grid-template-columns: 1fr; } }
-	@media (min-width: 861px) { body { height: 100vh; display: flex; flex-direction: column; } main { flex: 1; min-height: 0; } .pane { min-height: 0; } }
-	.pane { padding: 20px; overflow: auto; }
-	.pane + .pane { border-left: 1px solid var(--line); }
-	@media (max-width: 860px) { .pane + .pane { border-left: 0; border-top: 1px solid var(--line); } }
-	.pane h2 { font-size: 13px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); margin: 0 0 12px; font-weight: 600; }
-	.q { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 12px 14px; margin-bottom: 10px; }
-	.q.skipped { opacity: 0.55; }
-	.q-head { display: flex; gap: 8px; align-items: flex-start; }
-	.q-text { flex: 1; font-weight: 600; }
-	.q-text.edited { color: var(--accent); }
-	.q-orig { font-size: 12px; color: var(--muted); margin-top: 2px; }
-	.q-help { font-size: 12px; color: var(--muted); margin: 4px 0 8px; }
-	button { font: inherit; cursor: pointer; border-radius: 6px; border: 1px solid var(--line); background: var(--panel); color: var(--ink); padding: 4px 10px; }
-	button.link { border: 0; background: none; color: var(--muted); padding: 2px 4px; font-size: 13px; }
-	button.link:hover { color: var(--accent); }
-	button.on { background: var(--accent); border-color: var(--accent); color: #fff; }
-	input[type=text], input[type=number], textarea, select.answer { width: 100%; font: inherit; padding: 7px 9px; border: 1px solid var(--line); border-radius: 7px; background: var(--bg); color: var(--ink); }
-	textarea { min-height: 56px; resize: vertical; }
+	html, body { height: 100%; }
+	body { margin: 0; background: var(--bg); color: var(--ink); font: 15px/1.45 var(--sans); -webkit-font-smoothing: antialiased; display: flex; flex-direction: column; }
+	button { font: inherit; color: inherit; background: none; border: 0; cursor: pointer; padding: 0; }
+
+	header { display: flex; align-items: center; gap: 18px; padding: 16px 28px; border-bottom: 1px solid var(--line); background: var(--paper); flex-wrap: wrap; }
+	.brand { font: 600 22px/1 var(--serif); letter-spacing: -0.01em; color: var(--green); }
+	.brand span { color: var(--clay); }
+	.tag { color: var(--muted); font-size: 13.5px; }
+	.versions { margin-left: auto; display: flex; align-items: center; gap: 4px; background: var(--bg); border: 1px solid var(--line); border-radius: 999px; padding: 3px; }
+	.versions span { font-size: 12px; color: var(--muted); padding: 0 6px 0 8px; }
+	.versions button { font-size: 13px; padding: 4px 11px; border-radius: 999px; color: var(--muted); }
+	.versions button.on { background: var(--green); color: #fff; }
+	.live { display: flex; align-items: center; gap: 6px; font-size: 12.5px; color: var(--muted); }
+	.live i { width: 7px; height: 7px; border-radius: 50%; background: var(--good); box-shadow: 0 0 0 3px #2e7d4f22; }
+	.live.offline i { background: var(--faint); box-shadow: none; }
+
+	main { flex: 1; min-height: 0; display: grid; grid-template-columns: minmax(340px, 0.85fr) minmax(0, 1.3fr); }
+	@media (max-width: 920px) { body { display: block; } main { grid-template-columns: 1fr; } }
+	.pane { overflow: auto; padding: 26px 28px 40px; }
+	.pane.form { background: var(--paper); border-right: 1px solid var(--line); }
+	.eyebrow { font-size: 11.5px; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); }
+	.pane h2 { font: 500 26px/1.15 var(--serif); margin: 6px 0 6px; letter-spacing: -0.01em; }
+	.hint { color: var(--muted); font-size: 13.5px; margin: 0 0 22px; }
+
+	/* Questions */
+	.q { position: relative; padding: 16px 0 18px; border-top: 1px solid var(--line); }
+	.q:last-child { border-bottom: 1px solid var(--line); }
+	.q-row { display: flex; align-items: flex-start; gap: 10px; }
+	.q-num { font: 500 13px/1.6 var(--serif); color: var(--faint); min-width: 20px; text-align: right; }
+	.q-text { flex: 1; font-weight: 600; font-size: 15.5px; line-height: 1.4; padding: 1px 4px; margin: -1px -4px; border-radius: 5px; outline: none; cursor: text; transition: background .15s; }
+	.q-text:hover { background: #efe9dc; }
+	.q-text:focus { background: #fff; box-shadow: 0 0 0 2px var(--clay); }
+	.yours { display: inline-block; margin: 6px 0 0 46px; font-size: 11.5px; color: var(--clay); background: var(--clay-soft); border-radius: 999px; padding: 2px 9px; }
+	.yours s { color: var(--muted); }
+	.handle { cursor: grab; color: var(--faint); font-size: 15px; line-height: 1.5; padding: 0 2px; user-select: none; letter-spacing: -2px; }
+	.handle:hover { color: var(--green); }
+	.q.dragging { opacity: .35; }
+	.q.drop-before { box-shadow: inset 0 3px 0 var(--clay); }
+	.q.drop-after { box-shadow: inset 0 -3px 0 var(--clay); }
+	.weight { font-size: 11px; color: var(--faint); white-space: nowrap; padding-top: 3px; }
+	.q.answered .weight { color: var(--green); }
+	.q.fresh { animation: glow 2.4s ease; }
+	@keyframes glow { 0% { background: var(--clay-soft); } 100% { background: transparent; } }
+	.badge { display: inline-block; margin: 6px 0 0 46px; font-size: 11.5px; color: var(--clay); background: var(--clay-soft); border-radius: 999px; padding: 2px 9px; }
+	.divider { margin: 22px 0 4px; display: flex; align-items: center; gap: 10px; }
+	.divider::after { content: ""; flex: 1; height: 1px; background: var(--line); }
+	.ask { display: flex; align-items: center; gap: 12px; margin: 0 0 18px; }
+	.btn.ghost { background: transparent; color: var(--green); border: 1.5px solid var(--green); }
+	.btn.ghost:hover { background: var(--green-soft); }
+	.btn[disabled] { opacity: .5; cursor: wait; }
+	.q-body { margin: 10px 0 0 46px; }
+	.q-body input { width: 100%; font: inherit; font-size: 15px; padding: 6px 0 7px; border: 0; border-bottom: 1.5px solid var(--line); background: transparent; color: var(--ink); outline: none; transition: border-color .15s; }
+	.q-body input::placeholder { color: var(--faint); }
+	.q-body input:focus { border-color: var(--green); }
 	.chips { display: flex; flex-wrap: wrap; gap: 6px; }
-	.chip { font-size: 13px; padding: 3px 10px; border-radius: 999px; border: 1px solid var(--line); background: var(--bg); cursor: pointer; user-select: none; }
-	.chip.on { background: var(--accent); border-color: var(--accent); color: #fff; }
-	.weight { display: flex; align-items: center; gap: 8px; margin-top: 8px; font-size: 13px; color: var(--muted); }
-	.weight input { flex: 0 0 120px; accent-color: var(--accent); }
-	.weight b { color: var(--ink); font-weight: 600; min-width: 74px; }
-	.foot { display: flex; gap: 10px; align-items: center; margin-top: 14px; color: var(--muted); font-size: 13px; }
-	.status { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; font-size: 13px; color: var(--muted); margin-bottom: 12px; }
-	.status .spin { display: none; color: var(--accent); }
-	.status.busy .spin { display: inline; }
-	.card { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 14px 16px; margin-bottom: 12px; transition: opacity .2s; }
-	.status.busy ~ #cards .card { opacity: .6; }
-	.card-top { display: flex; justify-content: space-between; gap: 10px; align-items: baseline; }
-	.price { font-size: 22px; font-weight: 700; letter-spacing: -0.02em; }
-	.title { font-weight: 600; }
-	.meta { color: var(--muted); font-size: 13px; margin: 4px 0 10px; }
-	.checks { list-style: none; padding: 0; margin: 0 0 12px; font-size: 13px; display: grid; gap: 3px; }
-	.checks .ok { color: var(--good); } .checks .no { color: var(--bad); } .checks .mid { color: var(--warn); } .checks .unk { color: var(--muted); }
-	.checks small { color: var(--muted); }
-	.actions { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
-	.like { border-color: var(--good); color: var(--good); }
-	.pass { border-color: var(--bad); color: var(--bad); }
-	.reason { display: none; margin-top: 10px; }
-	.reason.open { display: block; }
-	.reason .chips { margin: 6px 0; }
-	.prefs { list-style: none; padding: 0; margin: 0; font-size: 13px; display: grid; gap: 4px; }
-	.prefs li { display: flex; gap: 8px; justify-content: space-between; border-bottom: 1px dashed var(--line); padding-bottom: 3px; }
-	.prefs .from { color: var(--muted); font-size: 12px; }
-	.hard { color: var(--bad); font-size: 11px; font-weight: 600; text-transform: uppercase; margin-left: 4px; }
-	.empty { color: var(--muted); font-size: 14px; padding: 18px; border: 1px dashed var(--line); border-radius: 12px; text-align: center; }
-	.saved { font-size: 13px; color: var(--muted); margin: 6px 0 16px; }
-	.plan { background: var(--plan-bg); border-radius: 8px; margin: 2px 0 10px; padding: 6px; display: flex; justify-content: center; }
-	.plan svg { width: 100%; max-height: 300px; }
-	:root { --plan-bg: #ffffff; --plan-ink: #16291f; }
-	@media (prefers-color-scheme: dark) { :root { --plan-bg: #f4f2ec; --plan-ink: #16291f; } }
-	.toast { position: fixed; bottom: 16px; left: 50%; transform: translateX(-50%); background: var(--ink); color: var(--bg); padding: 8px 14px; border-radius: 8px; font-size: 13px; opacity: 0; transition: opacity .3s; pointer-events: none; }
-	.toast.show { opacity: 1; }
+	.chip { font-size: 13px; padding: 5px 12px; border-radius: 999px; background: var(--card); border: 1px solid var(--line); cursor: pointer; user-select: none; transition: all .12s; }
+	.chip:hover { border-color: var(--faint); }
+	.chip.on { background: var(--green); border-color: var(--green); color: #fff; }
+	.submit { margin-top: 22px; display: flex; align-items: center; gap: 12px; color: var(--muted); font-size: 13px; }
+	.btn { background: var(--green); color: #fff; padding: 9px 16px; border-radius: 999px; font-size: 14px; font-weight: 500; }
+	.btn:hover { background: #29503f; }
+
+	/* Matches */
+	.matches-head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-bottom: 18px; }
+	.count { font-size: 13.5px; color: var(--muted); }
+	.count strong { color: var(--ink); font-weight: 600; }
+	.working { display: none; font-size: 12.5px; color: var(--clay); }
+	.busy .working { display: inline; }
+	.working::before { content: ""; display: inline-block; width: 7px; height: 7px; border-radius: 50%; background: var(--clay); margin-right: 6px; animation: pulse 1s infinite; }
+	@keyframes pulse { 50% { opacity: .25; } }
+	.card { background: var(--card); border: 1px solid var(--line); border-radius: 18px; overflow: hidden; margin-bottom: 18px; display: grid; grid-template-columns: minmax(220px, 0.9fr) 1.1fr; box-shadow: 0 1px 2px #0000000a, 0 8px 24px -12px #00000014; transition: opacity .2s, transform .25s; animation: rise .35s ease both; }
+	@keyframes rise { from { opacity: 0; transform: translateY(8px); } }
+	.busy .card { opacity: .55; }
+	@media (max-width: 1180px) { .card { grid-template-columns: 1fr; } }
+	.plan { background: var(--plan-bg); border-right: 1px solid var(--line); display: flex; align-items: center; justify-content: center; padding: 14px; min-height: 260px; }
+	.plan svg { width: 100%; max-height: 330px; }
+	.info { padding: 20px 22px 18px; display: flex; flex-direction: column; gap: 12px; }
+	.where { display: flex; justify-content: space-between; align-items: center; }
+	.hood { font-size: 11.5px; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; color: var(--clay); }
+	.rank { font: 500 13px var(--serif); color: var(--faint); }
+	.price { font: 500 34px/1 var(--serif); letter-spacing: -0.02em; }
+	.price small { font: 14px var(--sans); color: var(--muted); margin-left: 4px; }
+	.facts { display: flex; gap: 16px; flex-wrap: wrap; font-size: 13.5px; color: var(--ink); }
+	.facts span { display: flex; align-items: center; gap: 5px; }
+	.facts svg { width: 15px; height: 15px; stroke: var(--muted); fill: none; stroke-width: 1.6; }
+	.amen { display: flex; flex-wrap: wrap; gap: 6px; }
+	.amen span { font-size: 12px; padding: 3px 9px; border-radius: 999px; background: var(--bg); color: var(--muted); }
+	.fit { display: flex; align-items: center; gap: 10px; font-size: 12.5px; color: var(--muted); }
+	.bar { flex: 1; height: 6px; background: var(--bg); border-radius: 999px; overflow: hidden; }
+	.bar i { display: block; height: 100%; background: var(--green); border-radius: 999px; transition: width .4s; }
+	.fit strong { color: var(--green); font-size: 13px; }
+	.why { display: flex; flex-wrap: wrap; gap: 6px; }
+	.why span { font-size: 12px; padding: 3px 9px 3px 7px; border-radius: 6px; }
+	.why .ok { background: var(--green-soft); color: var(--green); }
+	.why .no { background: var(--clay-soft); color: var(--bad); }
+	.why .mid { background: #f3ecd8; color: #8a6a12; }
+	.why .unk { background: var(--bg); color: var(--muted); }
+	.actions { display: flex; gap: 8px; margin-top: auto; padding-top: 4px; }
+	.like, .pass { padding: 8px 16px; border-radius: 999px; font-size: 14px; font-weight: 500; }
+	.like { background: var(--green); color: #fff; }
+	.like:hover { background: #29503f; }
+	.pass { border: 1px solid var(--line); color: var(--muted); }
+	.pass:hover { border-color: var(--bad); color: var(--bad); }
+	.reasons { display: none; flex-direction: column; gap: 8px; }
+	.card.asking .reasons { display: flex; }
+	.card.asking .actions { display: none; }
+	.reasons .chip { font-size: 12.5px; }
+	.reasons input { font: inherit; font-size: 14px; border: 0; border-bottom: 1.5px solid var(--line); padding: 5px 0; outline: none; background: transparent; }
+	.reasons input:focus { border-color: var(--clay); }
+	.empty { padding: 40px; text-align: center; color: var(--muted); border: 1.5px dashed var(--line); border-radius: 18px; }
+	.saved { display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 22px; }
+	.saved:empty { display: none; }
+	.saved span { font-size: 12.5px; padding: 4px 11px; border-radius: 999px; background: var(--green-soft); color: var(--green); }
+	.heard { margin-top: 10px; }
+	.heard .chips { margin-top: 10px; }
+	.heard .chip { cursor: default; font-size: 12.5px; }
+	.heard .chip em { font-style: normal; color: var(--faint); margin-left: 6px; font-size: 11.5px; }
+	.heard .chip.hard { border-color: var(--clay); }
+	.toast { position: fixed; bottom: 22px; left: 50%; transform: translate(-50%, 10px); background: var(--green); color: #fff; padding: 10px 16px; border-radius: 999px; font-size: 13.5px; opacity: 0; transition: all .3s; pointer-events: none; }
+	.toast.show { opacity: 1; transform: translate(-50%, 0); }
 </style>
 </head>
 <body>
 <header>
-	<h1>Formloop</h1>
-	<span class="sub">The intake form is the product, and it rewrites itself.</span>
-	<span id="mode" class="badge">…</span>
-	<select id="version" title="Form version"></select>
+	<div class="brand">formloop<span>.</span></div>
+	<div class="tag">An apartment intake form that rewrites itself from how people answer it.</div>
+	<div class="live" id="mode"><i></i><span>…</span></div>
+	<div class="versions" id="versions"><span>form</span></div>
 </header>
 <main>
-	<section class="pane">
-		<h2>Tell us what matters <span style="text-transform:none;letter-spacing:0;font-weight:400">· every question is optional</span></h2>
-		<div id="form"></div>
-		<div class="foot">
-			<button id="submit">Done, help improve this form</button>
-			<span>Skips and edited questions teach the next version.</span>
-		</div>
+	<section class="pane form">
+		<div class="eyebrow" id="formEyebrow">Form</div>
+		<h2>What matters to you?</h2>
+		<p class="hint">Drag <span style="color:var(--green)">⋮⋮</span> to rank what matters most: the top counts most. Answer anything, leave the rest blank, and click any question to put it in your own words.</p>
+		<div class="ask"><button class="btn ghost" id="ask">Ask me better questions</button><span class="count" id="askNote">The agent writes new questions from how you ranked, answered and passed.</span></div>
+		<div id="questions"></div>
+		<div class="submit"><button class="btn" id="submit">Done, improve the form</button><span id="submitNote"></span></div>
 	</section>
-	<section class="pane">
-		<h2>Best matches right now</h2>
-		<div id="status" class="status"><span class="spin">● agent working</span><span id="count"></span><span id="cost"></span></div>
-		<div id="cards"></div>
+	<section class="pane" id="right">
+		<div class="matches-head">
+			<div class="eyebrow">Best matches right now</div>
+			<div class="count"><span class="working">agent re-ranking</span> <span id="count"></span></div>
+		</div>
 		<div id="saved" class="saved"></div>
-		<h2>What the agent heard</h2>
-		<ul id="prefs" class="prefs"></ul>
+		<div id="cards"></div>
+		<div class="heard">
+			<div class="eyebrow">What the agent heard</div>
+			<div class="chips" id="prefs"></div>
+		</div>
 	</section>
 </main>
 <div id="toast" class="toast"></div>
 <script>
-const WEIGHTS = ['Not at all', 'A little', 'Somewhat', 'A lot'];
-const QUICK_REASONS = ['too expensive', 'commute is too long', 'street is too loud', 'I need in-unit laundry', "don't like the layout", 'floor is too low', 'not this neighborhood'];
-const state = { form: null, answers: {}, reactions: [], seq: 0 };
-
-const $ = (sel) => document.querySelector(sel);
+const QUICK = ['too expensive', 'commute is too long', 'street is too loud', 'I need in-unit laundry', "don't like the layout", 'floor is too low', 'not this neighborhood'];
+const state = { form: null, latest: 1, answers: {}, reactions: [], followups: [], order: [], fresh: new Set(), seq: 0 };
+const $ = (s) => document.querySelector(s);
 const el = (tag, attrs = {}, ...kids) => {
 	const n = document.createElement(tag);
 	for (const [k, v] of Object.entries(attrs)) {
@@ -119,162 +177,239 @@ const el = (tag, attrs = {}, ...kids) => {
 		else if (k.startsWith('on')) n.addEventListener(k.slice(2), v);
 		else if (v !== false && v != null) n.setAttribute(k, v === true ? '' : v);
 	}
-	for (const kid of kids.flat()) if (kid != null) n.append(kid.nodeType ? kid : String(kid));
+	for (const kid of kids.flat()) if (kid != null && kid !== false) n.append(kid.nodeType ? kid : String(kid));
 	return n;
 };
 const money = (n) => '$' + Math.round(n).toLocaleString('en-US');
-function toast(msg) { const t = $('#toast'); t.textContent = msg; t.classList.add('show'); setTimeout(() => t.classList.remove('show'), 1800); }
+const pretty = (s) => String(s).replace(/_/g, ' ');
+function toast(msg) { const t = $('#toast'); t.textContent = msg; t.classList.add('show'); clearTimeout(toast.t); toast.t = setTimeout(() => t.classList.remove('show'), 2200); }
+const ans = (id) => (state.answers[id] ??= { started: Date.now() });
+const allQs = () => [...state.followups, ...state.form.questions, ...state.form.extra];
+const qById = (id) => allQs().find((q) => q.id === id);
+const isAnswered = (a) => a && !(a.value == null || a.value === '' || (Array.isArray(a.value) && !a.value.length));
+/** Weight from rank among answered questions: top third 3, middle 2, bottom 1. */
+function weights() {
+	const answered = state.order.filter((id) => isAnswered(state.answers[id]));
+	return new Map(answered.map((id, i) => [id, 3 - Math.floor((3 * i) / Math.max(1, answered.length))]));
+}
 
-function answerOf(id) { return (state.answers[id] ??= { question_id: id, action: 'answer', importance: 1, started: Date.now() }); }
-
-function payloadAnswers() {
-	return state.form.questions.map((q) => {
-		const a = state.answers[q.id];
-		const empty = !a || a.value == null || a.value === '' || (Array.isArray(a.value) && !a.value.length);
-		if (!a || a.skipped || empty) return { question_id: q.id, action: 'skip', seconds: a?.seconds ?? 0 };
-		const rewritten = a.rewritten_text && a.rewritten_text.trim() && a.rewritten_text.trim() !== q.text;
-		return { question_id: q.id, action: rewritten ? 'rewrite' : 'answer', value: a.value, ...(rewritten ? { rewritten_text: a.rewritten_text.trim() } : {}), importance: a.importance, seconds: Math.round((a.seconds ?? 0)) };
+function payload() {
+	const w = weights();
+	return state.order.map((id) => {
+		const q = qById(id);
+		const a = state.answers[id];
+		if (!q || !isAnswered(a)) return { question_id: id, action: 'skip', seconds: Math.round(a?.seconds ?? 0) };
+		const edited = a.rewritten_text && a.rewritten_text !== q.text;
+		return { question_id: id, action: edited ? 'rewrite' : 'answer', value: a.value, ...(edited ? { rewritten_text: a.rewritten_text } : {}), importance: w.get(id), seconds: Math.round(a.seconds ?? 0) };
 	});
 }
+const requestBody = () => ({ version: state.form.version, answers: payload(), ranking: state.order, followups: state.followups, reactions: state.reactions });
+function touch(id) { const a = ans(id); a.seconds = Math.min(120, (Date.now() - a.started) / 1000); schedule(); }
 
-function touch(id) {
-	const a = answerOf(id);
-	a.seconds = Math.min(120, (Date.now() - a.started) / 1000);
-	schedule();
-}
-
-function control(q) {
-	const a = answerOf(q.id);
-	const set = (v) => { a.value = v; touch(q.id); };
-	if (q.type === 'select') {
-		return el('div', { class: 'chips' }, q.options.map((o) => el('span', { class: 'chip' + (a.value === o ? ' on' : ''), onclick: (e) => {
-			set(a.value === o ? undefined : o);
-			e.target.parentNode.querySelectorAll('.chip').forEach((c) => c.classList.toggle('on', c.textContent === a.value));
-		} }, o.replace('_', ' '))));
-	}
-	if (q.type === 'multiselect') {
-		a.value ??= [];
-		return el('div', { class: 'chips' }, q.options.map((o) => el('span', { class: 'chip', onclick: (e) => {
-			a.value = a.value.includes(o) ? a.value.filter((x) => x !== o) : [...a.value, o];
-			e.target.classList.toggle('on', a.value.includes(o));
+function chips(q, a, multi) {
+	const box = el('div', { class: 'chips' });
+	const opts = q.type === 'yesno' ? ['yes', 'no'] : q.options;
+	for (const o of opts) {
+		const on = multi ? (a.value ?? []).includes(o) : a.value === o;
+		box.append(el('span', { class: 'chip' + (on ? ' on' : ''), 'data-v': o, onclick: (e) => {
+			if (multi) { const v = a.value ?? []; a.value = v.includes(o) ? v.filter((x) => x !== o) : [...v, o]; e.target.classList.toggle('on'); }
+			else { a.value = a.value === o ? undefined : o; box.querySelectorAll('.chip').forEach((c) => c.classList.toggle('on', c.dataset.v === a.value)); }
 			touch(q.id);
-		} }, o)));
+		} }, pretty(o)));
 	}
-	if (q.type === 'yesno') {
-		return el('div', { class: 'chips' }, ['yes', 'no'].map((o) => el('span', { class: 'chip', onclick: (e) => {
-			set(a.value === o ? undefined : o);
-			e.target.parentNode.querySelectorAll('.chip').forEach((c) => c.classList.toggle('on', c.textContent === a.value));
-		} }, o)));
-	}
-	if (q.type === 'number') return el('input', { type: 'number', placeholder: q.help || '', oninput: (e) => set(e.target.value === '' ? undefined : Number(e.target.value)) });
-	return el('textarea', { placeholder: q.help || '', oninput: (e) => set(e.target.value) });
+	return box;
 }
 
-function renderForm() {
-	const box = $('#form');
-	box.replaceChildren();
-	for (const q of state.form.questions) {
-		const a = answerOf(q.id);
-		const card = el('div', { class: 'q' + (a.skipped ? ' skipped' : '') });
-		const text = el('div', { class: 'q-text' + (a.rewritten_text ? ' edited' : '') }, a.rewritten_text || q.text);
-		const orig = el('div', { class: 'q-orig' }, a.rewritten_text ? `You reworded: "${q.text}"` : '');
-		const editBtn = el('button', { class: 'link', title: 'Reword this question so it fits you', onclick: () => {
-			const input = el('input', { type: 'text', value: a.rewritten_text || q.text });
-			const done = () => { const v = input.value.trim(); a.rewritten_text = v && v !== q.text ? v : undefined; renderForm(); touch(q.id); };
-			input.addEventListener('keydown', (e) => { if (e.key === 'Enter') done(); if (e.key === 'Escape') renderForm(); });
-			input.addEventListener('blur', done);
-			text.replaceWith(input); input.focus(); input.select();
-		} }, '✎ edit question');
-		const skipBtn = el('button', { class: 'link', onclick: () => { a.skipped = !a.skipped; renderForm(); touch(q.id); } }, a.skipped ? 'undo skip' : 'skip');
-		const weightLabel = el('b', {}, WEIGHTS[a.importance]);
-		const slider = el('input', { type: 'range', min: 0, max: 3, step: 1, value: a.importance, oninput: (e) => { a.importance = Number(e.target.value); weightLabel.textContent = WEIGHTS[a.importance]; touch(q.id); } });
-		card.append(
-			el('div', { class: 'q-head' }, text, editBtn, skipBtn),
-			orig,
-			q.help ? el('div', { class: 'q-help' }, q.help) : el('div', { style: 'height:8px' }),
-			a.skipped ? '' : control(q),
-			a.skipped ? '' : el('label', { class: 'weight' }, 'How much it matters', slider, weightLabel)
-		);
-		box.append(card);
+function questionRow(q, i) {
+	const a = ans(q.id);
+	const text = el('div', { class: 'q-text', contenteditable: 'plaintext-only', spellcheck: 'false', title: 'Click to reword this question' }, a.rewritten_text || q.text);
+	const commit = () => {
+		const v = text.textContent.trim();
+		a.rewritten_text = v && v !== q.text ? v : undefined;
+		renderQuestions();
+		touch(q.id);
+		if (a.rewritten_text) toast('Reworded. The agent reads your version, and the reviewer sees it next round.');
+	};
+	text.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); text.blur(); } if (e.key === 'Escape') { text.textContent = a.rewritten_text || q.text; text.blur(); } });
+	text.addEventListener('blur', () => { if ((text.textContent.trim() || q.text) !== (a.rewritten_text || q.text)) commit(); else text.textContent = a.rewritten_text || q.text; });
+	let body;
+	if (q.type === 'select' || q.type === 'yesno') body = chips(q, a, false);
+	else if (q.type === 'multiselect') body = chips(q, a, true);
+	else {
+		body = el('input', { type: q.type === 'number' ? 'number' : 'text', placeholder: (q.help || '').replace(/^e\.g\.\s*/i, '').replace(/^['"]|['"]$/g, ''), value: a.value ?? '' });
+		body.addEventListener('input', (e) => { a.value = e.target.value; touch(q.id); row.classList.toggle('answered', isAnswered(a)); });
 	}
+	const w = weights().get(q.id);
+	const handle = el('span', { class: 'handle', draggable: 'true', title: 'Drag to rank' }, '⋮⋮');
+	const row = el('div', { class: 'q' + (isAnswered(a) ? ' answered' : '') + (state.fresh.has(q.id) ? ' fresh' : ''), 'data-id': q.id },
+		el('div', { class: 'q-row' }, handle, el('span', { class: 'q-num' }, String(i + 1)), text, el('span', { class: 'weight' }, w ? ['', 'low', 'medium', 'high'][w] + ' weight' : '')),
+		q.why ? el('span', { class: 'badge' }, `new · ${q.why}`) : null,
+		a.rewritten_text ? el('span', { class: 'yours' }, 'your wording · was ', el('s', {}, q.text)) : null,
+		el('div', { class: 'q-body' }, body)
+	);
+	handle.addEventListener('dragstart', (e) => { e.dataTransfer.setData('text/plain', q.id); e.dataTransfer.effectAllowed = 'move'; e.dataTransfer.setDragImage(row, 30, 20); row.classList.add('dragging'); });
+	handle.addEventListener('dragend', () => row.classList.remove('dragging'));
+	row.addEventListener('dragover', (e) => { e.preventDefault(); const r = row.getBoundingClientRect(); const after = e.clientY > r.top + r.height / 2; row.classList.toggle('drop-after', after); row.classList.toggle('drop-before', !after); });
+	row.addEventListener('dragleave', () => row.classList.remove('drop-before', 'drop-after'));
+	row.addEventListener('drop', (e) => {
+		e.preventDefault();
+		const from = e.dataTransfer.getData('text/plain');
+		const after = row.classList.contains('drop-after');
+		row.classList.remove('drop-before', 'drop-after');
+		if (!from || from === q.id) return;
+		const order = state.order.filter((id) => id !== from);
+		order.splice(order.indexOf(q.id) + (after ? 1 : 0), 0, from);
+		state.order = order;
+		renderQuestions();
+		schedule(0);
+		toast(`Ranked "${(qById(from)?.text || '').slice(0, 38)}…" #${order.indexOf(from) + 1}. Weights updated.`);
+	});
+	return row;
 }
 
-function planEl(l) { const d = el('div', { class: 'plan' }); d.innerHTML = window.floorplanSVG ? window.floorplanSVG(l) : ''; return d; }
+function renderQuestions() {
+	const inForm = new Set(state.form.questions.map((q) => q.id));
+	const nodes = [];
+	let dividerDone = false;
+	state.order.forEach((id, i) => {
+		const q = qById(id);
+		if (!q) return;
+		// Extra bank fields sit under a divider until the renter ranks them up.
+		if (!dividerDone && !inForm.has(id) && !q.why && state.order.slice(i).every((x) => !inForm.has(x) && !qById(x)?.why)) {
+			nodes.push(el('div', { class: 'divider eyebrow' }, 'More details'));
+			dividerDone = true;
+		}
+		nodes.push(questionRow(q, i));
+	});
+	$('#questions').replaceChildren(...nodes);
+	$('#formEyebrow').textContent = `Form v${state.form.version} · ${state.form.questions.length} questions + ${state.form.extra.length} more${state.followups.length ? ` + ${state.followups.length} new` : ''}`;
+}
 
-const MARK = (s) => (s === null ? ['unk', '?'] : s >= 1 ? ['ok', '✓'] : s <= 0 ? ['no', '✗'] : ['mid', '~']);
+const ICON = {
+	bed: '<svg viewBox="0 0 24 24"><path d="M3 18V7M3 13h18v5M21 18v-3M7 13v-2a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v2"/></svg>',
+	bath: '<svg viewBox="0 0 24 24"><path d="M4 12h16v3a4 4 0 0 1-4 4H8a4 4 0 0 1-4-4v-3ZM6 12V6a2 2 0 0 1 4 0"/></svg>',
+	area: '<svg viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="1"/><path d="M4 10h6v10"/></svg>',
+	floor: '<svg viewBox="0 0 24 24"><path d="M4 20h4v-4h4v-4h4V8h4"/></svg>',
+	train: '<svg viewBox="0 0 24 24"><rect x="6" y="3" width="12" height="13" rx="3"/><path d="M6 11h12M9 20l-2 2M15 20l2 2M9 16l-1 3M15 16l1 3"/></svg>'
+};
+const fact = (icon, text) => { const s = el('span'); s.innerHTML = ICON[icon]; s.append(text); return s; };
+const DEST = { fidi: 'FiDi', soma: 'SoMa', mission_bay: 'Mission Bay', palo_alto: 'Palo Alto' };
 
-function listingCard(c, shownRank) {
+function card(c, i) {
 	const l = c.listing;
-	const reasonBox = el('div', { class: 'reason' });
-	const reasonInput = el('input', { type: 'text', placeholder: 'Why not? (optional, the agent re-ranks from this)' });
-	const doPass = () => { state.reactions.push({ listing_id: l.id, liked: false, reason: reasonInput.value.trim() || undefined }); schedule(0); };
-	reasonBox.append(
-		el('div', { class: 'chips' }, QUICK_REASONS.map((r) => el('span', { class: 'chip', onclick: () => { reasonInput.value = r; } }, r))),
-		reasonInput,
-		el('div', { class: 'actions', style: 'margin-top:8px' }, el('button', { class: 'pass', onclick: doPass }, 'Pass'), el('button', { class: 'link', onclick: () => reasonBox.classList.remove('open') }, 'cancel'))
+	const plan = el('div', { class: 'plan' });
+	plan.innerHTML = window.floorplanSVG ? floorplanSVG(l) : '';
+	const nearest = Object.entries(l.commute || {}).filter(([, m]) => m != null).sort((a, b) => a[1] - b[1])[0];
+	const amen = [
+		l.layout && `${l.layout} layout`,
+		l.laundry && `laundry ${pretty(l.laundry)}`,
+		l.parking ? 'parking' : null,
+		l.pets ? (l.pets === 'none' ? 'no pets' : `${l.pets === 'both' ? 'cats & dogs' : l.pets} ok`) : null,
+		l.street_noise && `${l.street_noise} street`,
+		l.available && `from ${new Date(l.available + 'T12:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}`
+	].filter(Boolean);
+	const pct = Math.max(0, Math.round(c.utility * 100));
+	const node = el('article', { class: 'card' });
+	const reasonInput = el('input', { type: 'text', placeholder: 'or say why in your own words, then Enter' });
+	const pass = (reason) => { state.reactions.push({ listing_id: l.id, liked: false, reason: reason || undefined }); toast(reason ? `Passed: "${reason}". Re-ranking…` : 'Passed. Re-ranking…'); schedule(0); };
+	reasonInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') pass(reasonInput.value.trim()); if (e.key === 'Escape') node.classList.remove('asking'); });
+	const checks = c.checks.map((k) => {
+		const cls = k.sat === null ? 'unk' : k.sat >= 1 ? 'ok' : k.sat <= 0 ? 'no' : 'mid';
+		return el('span', { class: cls, title: k.from ? `from: ${k.from}` : '' }, `${{ ok: '✓', no: '✗', mid: '~', unk: '?' }[cls]} ${k.label}`);
+	});
+	node.append(
+		plan,
+		el('div', { class: 'info' },
+			el('div', { class: 'where' }, el('span', { class: 'hood' }, l.neighborhood), el('span', { class: 'rank' }, `No. ${i + 1}`)),
+			el('div', { class: 'price' }, money(l.price), el('small', {}, '/ month')),
+			el('div', { class: 'facts' },
+				fact('bed', l.bedrooms === 0 ? 'Studio' : `${l.bedrooms} bed`),
+				fact('bath', `${l.bathrooms} bath`),
+				l.sqft ? fact('area', `${l.sqft} ft²`) : null,
+				l.floor != null ? fact('floor', `Floor ${l.floor}`) : null,
+				nearest ? fact('train', `${nearest[1]} min to ${DEST[nearest[0]]}`) : null),
+			el('div', { class: 'amen' }, amen.map((a) => el('span', {}, a))),
+			checks.length ? el('div', { class: 'fit' }, el('strong', {}, `${pct}% fit`), el('div', { class: 'bar' }, el('i', { style: `width:${pct}%` }))) : null,
+			checks.length ? el('div', { class: 'why' }, checks) : el('div', { class: 'count' }, 'Answer anything on the left and these re-rank live.'),
+			el('div', { class: 'actions' },
+				el('button', { class: 'like', onclick: () => { state.reactions.push({ listing_id: l.id, liked: true }); toast('Saved. Here are the next best.'); schedule(0); } }, '♥ Like'),
+				el('button', { class: 'pass', onclick: () => { node.classList.add('asking'); reasonInput.focus(); } }, 'Pass')),
+			el('div', { class: 'reasons' }, el('div', { class: 'chips' }, QUICK.map((r) => el('span', { class: 'chip', onclick: () => pass(r) }, r))), reasonInput)
+		)
 	);
-	reasonInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') doPass(); });
-	const bits = [l.neighborhood, l.sqft && `${l.sqft} sq ft`, l.floor != null && `floor ${l.floor}`, l.layout, l.laundry && `laundry: ${l.laundry.replace('_', ' ')}`, l.parking ? 'parking' : null, l.pets && `pets: ${l.pets}`, l.street_noise && `${l.street_noise} street`, l.available && `available ${l.available}`].filter(Boolean);
-	return el('div', { class: 'card' },
-		el('div', { class: 'card-top' }, el('span', { class: 'title' }, `#${shownRank} · ${l.title}`), el('span', { class: 'price' }, money(l.price))),
-		planEl(l),
-		el('div', { class: 'meta' }, bits.join(' · '), l.url ? el('span', {}, ' · ', el('a', { href: l.url, target: '_blank', rel: 'noopener' }, 'source')) : ''),
-		c.checks.length ? el('ul', { class: 'checks' }, c.checks.map((k) => { const [cls, m] = MARK(k.sat); return el('li', { class: cls }, `${m} ${k.label}`, k.hard ? el('span', { class: 'hard' }, 'dealbreaker') : '', k.from ? el('small', {}, ` · from ${k.from}`) : ''); })) : el('div', { class: 'meta' }, 'Answer a question and the agent will explain its picks.'),
-		el('div', { class: 'actions' },
-			el('button', { class: 'like', onclick: () => { state.reactions.push({ listing_id: l.id, liked: true }); toast('Saved. Showing the next best.'); schedule(0); } }, '♥ Like'),
-			el('button', { class: 'pass', onclick: () => { reasonBox.classList.add('open'); reasonInput.focus(); } }, 'Pass…')
-		),
-		reasonBox
-	);
+	return node;
 }
 
 let timer;
-function schedule(ms = 700) { clearTimeout(timer); timer = setTimeout(recommend, ms); }
+function schedule(ms = 650) { clearTimeout(timer); timer = setTimeout(recommend, ms); }
 
 async function recommend() {
 	const seq = ++state.seq;
-	$('#status').classList.add('busy');
+	$('#right').classList.add('busy');
 	try {
-		const res = await fetch('/api/recommend', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ version: state.form.version, answers: payloadAnswers(), reactions: state.reactions }) });
-		const data = await res.json();
+		const res = await fetch('/api/recommend', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(requestBody()) });
+		const d = await res.json();
 		if (seq !== state.seq) return;
-		if (data.error) throw new Error(data.error);
-		$('#count').textContent = `${data.remaining} of ${data.total} listings still fit your dealbreakers`;
-		$('#cost').textContent = data.calls ? `· ${data.calls} model calls, $${data.cost.toFixed(4)}` : '';
-		setMode(data.mode);
-		$('#cards').replaceChildren(...(data.top.length ? data.top.map((c, i) => listingCard(c, i + 1)) : [el('div', { class: 'empty' }, 'Nothing left that fits. Loosen a dealbreaker or edit an answer.')]));
-		$('#saved').textContent = data.liked.length ? `♥ Saved: ${data.liked.map((c) => `${c.listing.title} (${money(c.listing.price)})`).join(' · ')}` : '';
-		$('#prefs').replaceChildren(...(data.prefs.length ? data.prefs.map((p) => el('li', {}, el('span', {}, p.label, p.hard ? el('span', { class: 'hard' }, 'dealbreaker') : ''), el('span', { class: 'from' }, `${p.from || 'agent'} · weight ${p.weight}`))) : [el('li', { class: 'from' }, 'Nothing yet. Answer any question and the ranking updates.')]));
+		if (d.error) throw new Error(d.error);
+		setMode(d.mode);
+		$('#count').innerHTML = `<strong>${d.remaining}</strong> of ${d.total} homes fit your dealbreakers${d.calls ? ` · ${d.calls} model calls · $${d.cost.toFixed(4)}` : ''}`;
+		$('#cards').replaceChildren(...(d.top.length ? d.top.map(card) : [el('div', { class: 'empty' }, 'Nothing fits every dealbreaker. Loosen one on the left.')]));
+		$('#saved').replaceChildren(...d.liked.map((c) => el('span', {}, `♥ ${c.listing.neighborhood} · ${money(c.listing.price)}`)));
+		$('#prefs').replaceChildren(...(d.prefs.length ? d.prefs.map((p) => el('span', { class: 'chip' + (p.hard ? ' hard' : '') }, p.label, el('em', {}, p.hard ? 'dealbreaker' : p.from || ''))) : [el('span', { class: 'count' }, 'Nothing yet.')]));
 	} catch (e) {
 		toast('Agent error: ' + e.message);
 	} finally {
-		if (seq === state.seq) $('#status').classList.remove('busy');
+		if (seq === state.seq) $('#right').classList.remove('busy');
 	}
 }
 
 function setMode(mode) {
 	const m = $('#mode');
-	m.textContent = mode === 'live' ? 'agent: live Crusoe models' : 'agent: offline rules';
 	m.classList.toggle('offline', mode !== 'live');
+	m.querySelector('span').textContent = mode === 'live' ? 'live on Crusoe' : 'offline rules';
 }
 
 async function load(version) {
-	const res = await fetch('/api/form' + (version ? `?version=${version}` : ''));
-	const form = await res.json();
-	state.form = form; state.answers = {}; state.reactions = [];
+	const form = await (await fetch('/api/form' + (version ? `?version=${version}` : ''))).json();
+	if (!version) state.latest = form.version;
+	state.form = form;
+	state.answers = {};
+	state.reactions = [];
+	state.followups = [];
+	state.order = [...form.questions, ...form.extra].map((q) => q.id);
 	setMode(form.mode);
-	const sel = $('#version');
-	if (!sel.options.length) {
-		for (let v = form.version; v >= 1; v--) sel.append(el('option', { value: v }, `form v${v}${v === form.version ? ' (latest)' : ''}`));
-		sel.addEventListener('change', () => load(Number(sel.value)));
-	}
-	renderForm();
+	$('#versions').replaceChildren(el('span', {}, 'form'), ...Array.from({ length: state.latest }, (_, i) => el('button', { class: i + 1 === form.version ? 'on' : '', title: i + 1 === state.latest ? 'latest accepted version' : '', onclick: () => load(i + 1) }, `v${i + 1}`)));
+	renderQuestions();
 	recommend();
 }
 
+$('#ask').addEventListener('click', async () => {
+	const btn = $('#ask');
+	btn.disabled = true;
+	$('#askNote').textContent = 'Reading your ranking, answers and passes…';
+	try {
+		const d = await (await fetch('/api/followups', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(requestBody()) })).json();
+		if (d.error) throw new Error(d.error);
+		const fresh = (d.followups || []).filter((q) => !state.order.includes(q.id));
+		if (!fresh.length) { $('#askNote').textContent = 'Nothing new to ask yet. Answer or pass on a few more first.'; return; }
+		state.followups = [...fresh, ...state.followups];
+		state.order = [...fresh.map((q) => q.id), ...state.order];
+		state.fresh = new Set(fresh.map((q) => q.id));
+		renderQuestions();
+		$('#questions').parentElement.scrollTo({ top: 0, behavior: 'smooth' });
+		$('#askNote').textContent = `${fresh.length} new question${fresh.length > 1 ? 's' : ''} written for you, at the top.`;
+	} catch (e) {
+		toast('Agent error: ' + e.message);
+	} finally {
+		btn.disabled = false;
+	}
+});
+
 $('#submit').addEventListener('click', async () => {
-	await fetch('/api/submit', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ version: state.form.version, answers: payloadAnswers() }) });
-	toast('Thanks. Your skips and edits go to the reviewer for the next form version.');
+	const p = payload();
+	await fetch('/api/submit', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(requestBody()) });
+	$('#submitNote').textContent = `${p.filter((a) => a.action === 'skip').length} skipped, ${p.filter((a) => a.action === 'rewrite').length} reworded: logged for the reviewer.`;
+	toast('Thanks. Your answers go into the next review.');
 });
 
 load();
