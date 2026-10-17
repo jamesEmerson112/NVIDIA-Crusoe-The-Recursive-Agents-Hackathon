@@ -34,7 +34,8 @@ const FURNITURE_COLORS: Record<string, string> = {
 	tub: '#f5f7f8',
 	toilet: '#f5f7f8',
 	sink: '#eceff1',
-	washer: '#e6e8ea'
+	washer: '#e6e8ea',
+	wardrobe: '#c4a882'
 };
 
 export interface BuildResult {

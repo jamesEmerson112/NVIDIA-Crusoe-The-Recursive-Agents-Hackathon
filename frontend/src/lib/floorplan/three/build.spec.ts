@@ -8,20 +8,23 @@ const load = (id: string): Plan =>
 	JSON.parse(readFileSync(new URL(`../../../../static/plans/${id}.json`, import.meta.url), 'utf8'));
 
 describe('buildPlan', () => {
-	it.each(['sf-studio', 'sf-1br', 'sf-2br'])('%s builds one merged mesh per surface', (id) => {
-		const result = buildPlan(load(id));
-		const meshes: Mesh[] = [];
-		result.group.traverse((o) => o instanceof Mesh && meshes.push(o));
-		expect(meshes.map((m) => m.name).sort()).toEqual(
-			['doors', 'floors', 'furniture', 'glass', 'walls'].sort()
-		);
-		for (const m of meshes) {
-			const pos = m.geometry.getAttribute('position').array as Float32Array;
-			expect(pos.length).toBeGreaterThan(0);
-			expect(pos.every(Number.isFinite)).toBe(true);
+	it.each(['sf-studio', 'sf-1br', 'sf-2br', 'sample-1br'])(
+		'%s builds one merged mesh per surface',
+		(id) => {
+			const result = buildPlan(load(id));
+			const meshes: Mesh[] = [];
+			result.group.traverse((o) => o instanceof Mesh && meshes.push(o));
+			expect(meshes.map((m) => m.name).sort()).toEqual(
+				['doors', 'floors', 'furniture', 'glass', 'walls'].sort()
+			);
+			for (const m of meshes) {
+				const pos = m.geometry.getAttribute('position').array as Float32Array;
+				expect(pos.length).toBeGreaterThan(0);
+				expect(pos.every(Number.isFinite)).toBe(true);
+			}
+			disposeBuild(result);
 		}
-		disposeBuild(result);
-	});
+	);
 
 	it('cuts walls at the given height', () => {
 		const top = (cut: number) => {

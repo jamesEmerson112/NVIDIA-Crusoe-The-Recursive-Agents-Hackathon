@@ -10,7 +10,8 @@ describe('sample blueprints', () => {
 	it.each([
 		['sf-studio', 35.84],
 		['sf-1br', 55.44],
-		['sf-2br', 85.12]
+		['sf-2br', 85.12],
+		['sample-1br', 59.03]
 	])('%s is valid and %d m²', (id, m2) => {
 		const plan = load(id);
 		expect(validatePlan(plan)).toEqual([]);

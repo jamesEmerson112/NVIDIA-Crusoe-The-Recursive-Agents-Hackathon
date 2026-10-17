@@ -9,7 +9,8 @@
 	const PLANS = [
 		{ id: 'sf-studio', label: 'Studio' },
 		{ id: 'sf-1br', label: '1 bedroom' },
-		{ id: 'sf-2br', label: '2 bedroom' }
+		{ id: 'sf-2br', label: '2 bedroom' },
+		{ id: 'sample-1br', label: 'Sample 1BR' }
 	];
 	const VIEWS: { id: View; label: string }[] = [
 		{ id: 'dollhouse', label: 'Dollhouse' },
