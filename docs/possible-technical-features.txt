@@ -63,6 +63,9 @@ NOW
   - Reuse formloop's You.com listings source
   - Fallback: DataSF context tool below
 - [S] Market snapshot: median rent via SQL          <-- Gaelan
+- [S] You.com search and research agent tools
+  - Listings and neighborhood briefs, cited sources
+  - See docs/research/you-com-api.md
 - [M] Visit list and feedback round in prompt
   - Ratings drive the next search round
 
