@@ -8,6 +8,8 @@ grep -rnoE 'data-testid="[^"]+"' frontend/src --include=*.svelte
 
 Repeated items (messages, steps, list rows, chips) share one id; pick one by text or index. Ids listed twice in a file sit in mutually exclusive branches (e.g. the two Composer variants).
 
+**`lib/components/AgentMap.svelte`**: `agent-map`, `agent-map-header`, `agent-map-title`, `agent-map-summary`, `agent-map-live`, `agent-map-empty`, `agent-map-scroll`, `agent-map-svg`, `agent-map-column`, `agent-map-edge`, `agent-map-lane`, `agent-map-lane-label`, `agent-map-node` (clickable when it maps to an artifact), `agent-map-node-label`
+
 **`lib/components/ArtifactCard.svelte`**: `artifact-card-open`
 
 **`lib/components/ArtifactView.svelte`**: `artifact-view`, `artifact-view-close`, `artifact-view-versions`, `artifact-view-version`, `artifact-view-meta`, `artifact-view-toggle-changes`, `artifact-view-stale-notice`, `artifact-view-awaiting-input`, `artifact-view-answers`, `artifact-view-answer`, `artifact-view-answer-label`, `artifact-view-answer-changed`, `artifact-view-answer-value`, `artifact-view-answer-previous`, `artifact-view-editor`, `artifact-view-save`, `artifact-view-cancel`, `artifact-view-diff`, `artifact-view-iframe`, `artifact-view-lineage`, `artifact-view-upstream`, `artifact-view-lineage-link`, `artifact-view-downstream`, `artifact-view-edit`, `artifact-view-dependents-notice`
@@ -24,7 +26,7 @@ Repeated items (messages, steps, list rows, chips) share one id; pick one by tex
 
 **`lib/components/StatusBadge.svelte`**: `status-badge`
 
-**`lib/components/Workspace.svelte`**: `workspace-title`, `workspace-toggle-process`, `workspace-chat`, `workspace-message-form-submit`, `workspace-form-submit-open`, `workspace-message-artifact-edit`, `workspace-artifact-edit-open`, `workspace-message-check`, `workspace-check-summary`, `workspace-check-problem`, `workspace-message-proposal-reply`, `workspace-message-user`, `workspace-message-error`, `workspace-inline-form`, `workspace-live`, `workspace-live-status`, `workspace-live-activity`, `workspace-error`, `workspace-panel`
+**`lib/components/Workspace.svelte`**: `workspace-title`, `workspace-open-map`, `workspace-toggle-process`, `workspace-chat`, `workspace-message-form-submit`, `workspace-form-submit-open`, `workspace-message-artifact-edit`, `workspace-artifact-edit-open`, `workspace-message-check`, `workspace-check-summary`, `workspace-check-problem`, `workspace-message-proposal-reply`, `workspace-message-user`, `workspace-message-error`, `workspace-inline-form`, `workspace-live`, `workspace-live-status`, `workspace-live-activity`, `workspace-error`, `workspace-panel`, `workspace-panel-tabs`, `workspace-panel-tab`
 
 **`routes/+layout.svelte`**: `app-root`, `sidebar`, `sidebar-toggle`, `sidebar-new`, `sidebar-library`, `sidebar-conversations`, `sidebar-item`, `sidebar-conversation`, `sidebar-working`, `sidebar-delete`, `sidebar-mock-notice`, `app-main`
 
