@@ -7,6 +7,9 @@ Our entry for the Crusoe × Cerebral Valley Recursive Agents Hackathon (Oct 17, 
 | Path | What |
 |---|---|
 | `frontend/` | SvelteKit app (UI and server-side agent code) |
+| `formloop/` | Self-improving apartment intake form: renter simulator, recommender agent, reviewer agent, held-out eval, two-pane demo (see its `README.md`) |
+| `research/` | Research-owned inputs the form loop loads at runtime: question bank, simulated renters, eval config, design notes |
+| `results/` | Held-out evaluation tables written by `formloop` |
 | `docs/api.md` | Workbench API reference: endpoints, run stream events, data shapes |
 | `docs/cozy-implementation-plan.md` | Planned room designer: parallel workstreams C0–C3, shared contracts, project integration gates, and acceptance tests |
 | `docs/research/` | Team research: a build-our-own Obsidian, Blender with GPT-6 Astra and Claude, SF buildings in 3D, floorplans, building energy simulation (start with its `README.md`) |
@@ -74,6 +77,25 @@ npm run models    # verifies the key and the configured model IDs
 Then restart the dev server. Without a key the app runs a scripted mock agent.
 
 Don't edit the key into `.env` by hand: keys can contain `$`, and Vite expands `$name` in `.env` values even inside single quotes, which silently corrupts the key (401/403). `set-key` writes each `$` as `\$`. Never commit the key or put it in frontend code: anything in the browser bundle is public. Details are in section 3 of `.claude/skills/crusoe-recursive-agents-hackathon/SKILL.md`.
+
+## For researchers
+
+The form loop reads everything it learns from in `research/`, so you can change it without touching code:
+
+- `question_bank.yaml`: the seed questions.
+- `personas.yaml`: simulated renters with hidden preferences and form-filling habits.
+- `eval_config.yaml`: batch sizes, friction weight, questions shown and the random seed.
+- `NOTES.md`: your findings. The reviewer agent reads this file every time it proposes a new form version.
+
+Files are validated on load, and errors name the file and the entry. One command each, from `formloop/`:
+
+```
+npm run validate     # check the research files
+npm run generation   # one outer-loop generation: reactions -> reviewer -> acceptance test on fresh renters
+npm run eval         # held-out renters: form v1 vs the latest version, table saved to results/
+```
+
+Details are in [`formloop/README.md`](formloop/README.md).
 
 ## Working with Claude Code
 
