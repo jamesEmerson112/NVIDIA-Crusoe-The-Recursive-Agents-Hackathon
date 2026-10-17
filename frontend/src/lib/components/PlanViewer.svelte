@@ -2,13 +2,24 @@
 	import { onMount } from 'svelte';
 	import type { Plan } from '#lib/floorplan/types.ts';
 	import type { ExternalTimings, View, Viewer } from '#lib/floorplan/three/viewer.ts';
+	import type { Quality } from '#lib/floorplan/three/quality.ts';
 
 	let {
 		plan,
 		view = 'dollhouse',
 		debug = false,
-		timings = {}
-	}: { plan: Plan | null; view?: View; debug?: boolean; timings?: ExternalTimings } = $props();
+		timings = {},
+		quality = null,
+		onquality
+	}: {
+		plan: Plan | null;
+		view?: View;
+		debug?: boolean;
+		timings?: ExternalTimings;
+		/** Forced preset; null lets the viewer auto-detect. Changing it requires a remount. */
+		quality?: Quality | null;
+		onquality?: (info: { quality: Quality; reason: string }) => void;
+	} = $props();
 
 	let host: HTMLDivElement;
 	let viewer = $state.raw<Viewer | null>(null);
@@ -18,10 +29,13 @@
 		let disposed = false;
 		// three loads here, in the browser only, as its own lazy chunk.
 		import('#lib/floorplan/three/viewer.ts')
-			.then(({ mount }) => mount(host, { debug }))
+			.then(({ mount }) => mount(host, { debug, quality }))
 			.then((v) => {
 				if (disposed) v.dispose();
-				else viewer = v;
+				else {
+					viewer = v;
+					onquality?.(v.quality);
+				}
 			})
 			.catch((err: Error) => (error = `3D rendering failed: ${err.message}`));
 		return () => {

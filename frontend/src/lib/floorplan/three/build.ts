@@ -136,7 +136,7 @@ export function buildPlan(plan: Plan, cut = Infinity): BuildResult {
 	}
 	const pieces = parts.walls.length;
 	const materials = {
-		walls: new MeshStandardMaterial({ color: '#f4f1ea', roughness: 0.9 }),
+		walls: new MeshStandardMaterial({ color: '#efe9de', roughness: 0.9 }),
 		glass: new MeshStandardMaterial({
 			color: '#9ecbff',
 			transparent: true,
@@ -145,8 +145,8 @@ export function buildPlan(plan: Plan, cut = Infinity): BuildResult {
 			roughness: 0.1
 		}),
 		doors: new MeshStandardMaterial({ color: '#b08560', roughness: 0.7 }),
-		floors: new MeshStandardMaterial({ vertexColors: true, roughness: 1 }),
-		furniture: new MeshStandardMaterial({ vertexColors: true, roughness: 0.8 })
+		floors: new MeshStandardMaterial({ vertexColors: true, roughness: 0.55 }),
+		furniture: new MeshStandardMaterial({ vertexColors: true, roughness: 0.7 })
 	};
 	const group = new Group();
 	for (const key of Object.keys(parts) as (keyof typeof parts)[]) {
@@ -155,6 +155,9 @@ export function buildPlan(plan: Plan, cut = Infinity): BuildResult {
 		for (const g of parts[key]) g.dispose();
 		const mesh = new Mesh(merged, materials[key]);
 		mesh.name = key;
+		// Glass neither casts nor receives; floors only receive.
+		mesh.castShadow = key === 'walls' || key === 'doors' || key === 'furniture';
+		mesh.receiveShadow = key !== 'glass';
 		group.add(mesh);
 	}
 	const story = plan.stories[0];

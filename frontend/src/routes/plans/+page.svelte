@@ -5,6 +5,7 @@
 	import type { Plan } from '#lib/floorplan/types.ts';
 	import { floorArea, validatePlan } from '#lib/floorplan/validate.ts';
 	import type { ExternalTimings, View } from '#lib/floorplan/three/viewer.ts';
+	import { parseQuality, type Quality } from '#lib/floorplan/three/quality.ts';
 
 	const PLANS = [
 		{ id: 'sf-studio', label: 'Studio' },
@@ -22,6 +23,8 @@
 		PLANS.find((p) => p.id === page.url.searchParams.get('plan'))?.id ?? PLANS[0].id
 	);
 	const debug = $derived(page.url.searchParams.get('debug') === '1');
+	const forced = $derived(parseQuality(page.url.searchParams.get('quality')));
+	let active = $state<{ quality: Quality; reason: string } | null>(null);
 	let view = $state<View>('dollhouse');
 	let plan = $state.raw<Plan | null>(null);
 	let timings = $state.raw<ExternalTimings>({});
@@ -93,9 +96,30 @@
 				>{plan.name} · {floorArea(plan).toFixed(1)} m² · synthetic layout</span
 			>
 		{/if}
+		<div
+			data-testid="plans-quality"
+			class="ml-auto flex items-center gap-1 text-sm"
+			role="group"
+			aria-label="Render quality"
+			title={active?.reason ?? ''}
+		>
+			<span class="text-xs text-zinc-500"
+				>Quality{active ? `: ${forced ? '' : 'auto · '}${active.quality}` : ''}</span
+			>
+			{#each [null, 'low', 'high'] as const as q (q ?? 'auto')}
+				<button
+					data-testid="plans-quality-{q ?? 'auto'}"
+					class="rounded-lg px-2 py-1 {forced === q
+						? 'bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-900'
+						: 'hover:bg-zinc-100 dark:hover:bg-zinc-800'}"
+					aria-pressed={forced === q}
+					onclick={() => setParam('quality', q)}>{q ?? 'Auto'}</button
+				>
+			{/each}
+		</div>
 		<button
 			data-testid="plans-debug-toggle"
-			class="ml-auto rounded-lg border border-zinc-300 px-3 py-1 text-sm dark:border-zinc-700 {debug
+			class="rounded-lg border border-zinc-300 px-3 py-1 text-sm dark:border-zinc-700 {debug
 				? 'bg-amber-500/15'
 				: ''}"
 			aria-pressed={debug}
@@ -112,6 +136,15 @@
 		</ul>
 	{/if}
 	<div class="min-h-0 flex-1">
-		<PlanViewer {plan} {view} {debug} {timings} />
+		{#key forced}
+			<PlanViewer
+				{plan}
+				{view}
+				{debug}
+				{timings}
+				quality={forced}
+				onquality={(info) => (active = info)}
+			/>
+		{/key}
 	</div>
 </div>

@@ -5,10 +5,8 @@ import {
 	Box3,
 	Box3Helper,
 	Color,
-	DirectionalLight,
 	GridHelper,
 	Group,
-	HemisphereLight,
 	PerspectiveCamera,
 	Scene,
 	Vector3,
@@ -21,6 +19,9 @@ import Stats from 'stats-gl';
 import type { Plan } from '../types.ts';
 import { area, centroid } from '../validate.ts';
 import { buildPlan, disposeBuild, type BuildResult } from './build.ts';
+import { createLighting } from './lighting.ts';
+import { createPost, type PostEffect } from './post.ts';
+import { detectQuality, PRESETS, type Quality } from './quality.ts';
 
 export type View = 'dollhouse' | 'top' | 'full';
 
@@ -31,6 +32,8 @@ export interface ExternalTimings {
 }
 
 export interface Viewer {
+	/** The preset in use and why it was chosen (auto-detected or forced by `?quality=`). */
+	readonly quality: { quality: Quality; reason: string };
 	setPlan(plan: Plan, timings?: ExternalTimings): void;
 	setView(view: View): void;
 	setDebug(on: boolean): void;
@@ -39,16 +42,27 @@ export interface Viewer {
 
 const DOLLHOUSE_CUT = 1.2;
 
-export async function mount(host: HTMLElement, opts: { debug: boolean }): Promise<Viewer> {
-	const renderer = new WebGPURenderer({ antialias: true });
+export async function mount(
+	host: HTMLElement,
+	opts: { debug: boolean; quality?: Quality | null }
+): Promise<Viewer> {
+	// Neither preset uses MSAA (High anti-aliases with TRAA), so the renderer can be created before
+	// the preset is known; detection needs the backend that init() picks.
+	const renderer = new WebGPURenderer({ antialias: false });
 	await renderer.init();
-	renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
 	renderer.domElement.dataset.testid = 'plan-viewer-canvas';
 	renderer.domElement.style.display = 'block';
 	host.appendChild(renderer.domElement);
 	const backend = (renderer.backend as { isWebGPUBackend?: boolean }).isWebGPUBackend
 		? 'WebGPU'
 		: 'WebGL2';
+	const detected = detectQuality({
+		hardwareConcurrency: navigator.hardwareConcurrency ?? 0,
+		webgpu: backend === 'WebGPU',
+		urlOverride: opts.quality
+	});
+	const preset = PRESETS[detected.quality];
+	renderer.setPixelRatio(Math.min(devicePixelRatio, preset.pixelRatioCap));
 
 	const labelRenderer = new CSS2DRenderer();
 	Object.assign(labelRenderer.domElement.style, {
@@ -63,12 +77,11 @@ export async function mount(host: HTMLElement, opts: { debug: boolean }): Promis
 	scene.background = new Color(
 		matchMedia('(prefers-color-scheme: dark)').matches ? '#18181b' : '#f4f4f5'
 	);
-	scene.add(new HemisphereLight('#ffffff', '#b9b2a6', 1.6));
-	const sun = new DirectionalLight('#ffffff', 1.8);
-	sun.position.set(6, 12, 4);
-	scene.add(sun);
+	const lighting = createLighting(scene, renderer, preset);
 
 	const camera = new PerspectiveCamera(45, 1, 0.1, 200);
+	// Null on Low, or if the effects can't be built on this backend; then we render directly.
+	const post = createPost(renderer, scene, camera, preset);
 	const controls = new OrbitControls(camera, renderer.domElement);
 	controls.enableDamping = true;
 	controls.maxPolarAngle = Math.PI / 2 - 0.05;
@@ -96,9 +109,13 @@ export async function mount(host: HTMLElement, opts: { debug: boolean }): Promis
 		wallIds: false,
 		boundingBoxes: false,
 		gridAxes: false,
-		cutHeight: DOLLHOUSE_CUT
+		cutHeight: DOLLHOUSE_CUT,
+		shadows: preset.shadows,
+		...(post ? post.effects() : {})
 	};
 	const stats = {
+		quality: detected.quality,
+		reason: detected.reason,
 		backend,
 		drawCalls: 0,
 		triangles: 0,
@@ -147,6 +164,7 @@ export async function mount(host: HTMLElement, opts: { debug: boolean }): Promis
 		const cut = view === 'full' ? Infinity : settings.cutHeight;
 		build = buildPlan(plan, cut);
 		scene.add(build.group);
+		lighting.fitTo(new Box3().setFromObject(build.group));
 		for (const m of build.materials) m.wireframe = settings.wireframe;
 		const story = plan.stories[0];
 		for (const r of story.rooms) {
@@ -217,7 +235,8 @@ export async function mount(host: HTMLElement, opts: { debug: boolean }): Promis
 	let lastStats = 0;
 	renderer.setAnimationLoop((time) => {
 		controls.update();
-		renderer.render(scene, camera);
+		if (post) post.render();
+		else renderer.render(scene, camera);
 		labelRenderer.render(scene, camera);
 		if (pendingFirstFrame) {
 			stats.firstFrameMs = performance.now() - pendingFirstFrame;
@@ -248,6 +267,15 @@ export async function mount(host: HTMLElement, opts: { debug: boolean }): Promis
 				right: '8px',
 				zIndex: '10'
 			});
+			const q = gui.addFolder('Quality');
+			q.add(stats, 'quality').disable();
+			q.add(stats, 'reason').disable();
+			q.add(settings, 'shadows').onChange((v: boolean) => lighting.setShadows(v));
+			if (post)
+				for (const name of ['ao', 'ssgi', 'ssr', 'taa'] as PostEffect[])
+					q.add(settings as Record<string, unknown>, name).onChange((v: boolean) =>
+						post.setEffect(name, v)
+					);
 			const r = gui.addFolder('Renderer');
 			for (const key of [
 				'backend',
@@ -290,6 +318,7 @@ export async function mount(host: HTMLElement, opts: { debug: boolean }): Promis
 	setDebug(opts.debug);
 
 	return {
+		quality: detected,
 		setPlan(next, timings = {}) {
 			plan = next;
 			external = timings;
@@ -311,6 +340,8 @@ export async function mount(host: HTMLElement, opts: { debug: boolean }): Promis
 		dispose() {
 			renderer.setAnimationLoop(null);
 			observer.disconnect();
+			post?.dispose();
+			lighting.dispose();
 			setDebug(false);
 			clearOverlays();
 			if (build) disposeBuild(build);
