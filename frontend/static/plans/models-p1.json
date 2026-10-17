@@ -1,0 +1,430 @@
+{
+  "id": "models-p1",
+  "name": "Original Japandi collection: p1",
+  "synthetic": true,
+  "origin": [
+    0,
+    0
+  ],
+  "stories": [
+    {
+      "level": 0,
+      "elevation": 0,
+      "height": 2.7,
+      "walls": [],
+      "openings": [],
+      "rooms": [
+        {
+          "id": "bed",
+          "name": "Bed",
+          "type": "living",
+          "polygon": [
+            [
+              0.0,
+              0.0
+            ],
+            [
+              3.6,
+              0.0
+            ],
+            [
+              3.6,
+              3.3
+            ],
+            [
+              0.0,
+              3.3
+            ]
+          ]
+        },
+        {
+          "id": "bed-single",
+          "name": "Bed Single",
+          "type": "living",
+          "polygon": [
+            [
+              3.6,
+              0.0
+            ],
+            [
+              7.2,
+              0.0
+            ],
+            [
+              7.2,
+              3.3
+            ],
+            [
+              3.6,
+              3.3
+            ]
+          ]
+        },
+        {
+          "id": "counter",
+          "name": "Counter",
+          "type": "living",
+          "polygon": [
+            [
+              7.2,
+              0.0
+            ],
+            [
+              10.8,
+              0.0
+            ],
+            [
+              10.8,
+              3.3
+            ],
+            [
+              7.2,
+              3.3
+            ]
+          ]
+        },
+        {
+          "id": "fridge",
+          "name": "Fridge",
+          "type": "living",
+          "polygon": [
+            [
+              0.0,
+              3.3
+            ],
+            [
+              3.6,
+              3.3
+            ],
+            [
+              3.6,
+              6.6
+            ],
+            [
+              0.0,
+              6.6
+            ]
+          ]
+        },
+        {
+          "id": "sink",
+          "name": "Sink",
+          "type": "living",
+          "polygon": [
+            [
+              3.6,
+              3.3
+            ],
+            [
+              7.2,
+              3.3
+            ],
+            [
+              7.2,
+              6.6
+            ],
+            [
+              3.6,
+              6.6
+            ]
+          ]
+        },
+        {
+          "id": "toilet",
+          "name": "Toilet",
+          "type": "living",
+          "polygon": [
+            [
+              7.2,
+              3.3
+            ],
+            [
+              10.8,
+              3.3
+            ],
+            [
+              10.8,
+              6.6
+            ],
+            [
+              7.2,
+              6.6
+            ]
+          ]
+        },
+        {
+          "id": "tub",
+          "name": "Tub",
+          "type": "living",
+          "polygon": [
+            [
+              0.0,
+              6.6
+            ],
+            [
+              3.6,
+              6.6
+            ],
+            [
+              3.6,
+              9.899999999999999
+            ],
+            [
+              0.0,
+              9.899999999999999
+            ]
+          ]
+        },
+        {
+          "id": "washer",
+          "name": "Washer",
+          "type": "living",
+          "polygon": [
+            [
+              3.6,
+              6.6
+            ],
+            [
+              7.2,
+              6.6
+            ],
+            [
+              7.2,
+              9.899999999999999
+            ],
+            [
+              3.6,
+              9.899999999999999
+            ]
+          ]
+        },
+        {
+          "id": "wardrobe",
+          "name": "Wardrobe",
+          "type": "living",
+          "polygon": [
+            [
+              7.2,
+              6.6
+            ],
+            [
+              10.8,
+              6.6
+            ],
+            [
+              10.8,
+              9.899999999999999
+            ],
+            [
+              7.2,
+              9.899999999999999
+            ]
+          ]
+        },
+        {
+          "id": "sofa-fabric",
+          "name": "Sofa Fabric",
+          "type": "living",
+          "polygon": [
+            [
+              0.0,
+              9.899999999999999
+            ],
+            [
+              3.6,
+              9.899999999999999
+            ],
+            [
+              3.6,
+              13.2
+            ],
+            [
+              0.0,
+              13.2
+            ]
+          ]
+        },
+        {
+          "id": "table",
+          "name": "Table",
+          "type": "living",
+          "polygon": [
+            [
+              3.6,
+              9.899999999999999
+            ],
+            [
+              7.2,
+              9.899999999999999
+            ],
+            [
+              7.2,
+              13.2
+            ],
+            [
+              3.6,
+              13.2
+            ]
+          ]
+        },
+        {
+          "id": "table-coffee",
+          "name": "Table Coffee",
+          "type": "living",
+          "polygon": [
+            [
+              7.2,
+              9.899999999999999
+            ],
+            [
+              10.8,
+              9.899999999999999
+            ],
+            [
+              10.8,
+              13.2
+            ],
+            [
+              7.2,
+              13.2
+            ]
+          ]
+        }
+      ],
+      "furniture": [
+        {
+          "id": "bed",
+          "type": "bed",
+          "room": "bed",
+          "x": 1.8,
+          "y": 1.65,
+          "w": 1.6,
+          "d": 2.1,
+          "h": 1,
+          "rot": 0
+        },
+        {
+          "id": "bed-single",
+          "type": "bed-single",
+          "room": "bed-single",
+          "x": 5.4,
+          "y": 1.65,
+          "w": 0.95,
+          "d": 2,
+          "h": 0.9,
+          "rot": 0
+        },
+        {
+          "id": "counter",
+          "type": "counter",
+          "room": "counter",
+          "x": 9.0,
+          "y": 1.65,
+          "w": 0.6,
+          "d": 0.62,
+          "h": 0.92,
+          "rot": 0
+        },
+        {
+          "id": "fridge",
+          "type": "fridge",
+          "room": "fridge",
+          "x": 1.8,
+          "y": 4.949999999999999,
+          "w": 0.7,
+          "d": 0.72,
+          "h": 1.85,
+          "rot": 0
+        },
+        {
+          "id": "sink",
+          "type": "sink",
+          "room": "sink",
+          "x": 5.4,
+          "y": 4.949999999999999,
+          "w": 0.8,
+          "d": 0.5,
+          "h": 0.86,
+          "rot": 0
+        },
+        {
+          "id": "toilet",
+          "type": "toilet",
+          "room": "toilet",
+          "x": 9.0,
+          "y": 4.949999999999999,
+          "w": 0.4,
+          "d": 0.7,
+          "h": 0.78,
+          "rot": 0
+        },
+        {
+          "id": "tub",
+          "type": "tub",
+          "room": "tub",
+          "x": 1.8,
+          "y": 8.25,
+          "w": 1.7,
+          "d": 0.75,
+          "h": 0.56,
+          "rot": 0
+        },
+        {
+          "id": "washer",
+          "type": "washer",
+          "room": "washer",
+          "x": 5.4,
+          "y": 8.25,
+          "w": 0.6,
+          "d": 0.6,
+          "h": 0.85,
+          "rot": 0
+        },
+        {
+          "id": "wardrobe",
+          "type": "wardrobe",
+          "room": "wardrobe",
+          "x": 9.0,
+          "y": 8.25,
+          "w": 1.2,
+          "d": 0.6,
+          "h": 2.1,
+          "rot": 0
+        },
+        {
+          "id": "sofa-fabric",
+          "type": "sofa-fabric",
+          "room": "sofa-fabric",
+          "x": 1.8,
+          "y": 11.549999999999999,
+          "w": 2.2,
+          "d": 0.95,
+          "h": 0.8,
+          "rot": 0
+        },
+        {
+          "id": "table",
+          "type": "table",
+          "room": "table",
+          "x": 5.4,
+          "y": 11.549999999999999,
+          "w": 1.6,
+          "d": 0.9,
+          "h": 0.75,
+          "rot": 0
+        },
+        {
+          "id": "table-coffee",
+          "type": "table-coffee",
+          "room": "table-coffee",
+          "x": 9.0,
+          "y": 11.549999999999999,
+          "w": 1.1,
+          "d": 0.6,
+          "h": 0.4,
+          "rot": 0
+        }
+      ]
+    }
+  ]
+}

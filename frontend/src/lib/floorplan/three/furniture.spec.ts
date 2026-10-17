@@ -1,5 +1,7 @@
-import { describe, expect, it } from 'vitest';
-import { FURNITURE_MODELS, fitTransform, modelKey, tileItem } from './furniture.ts';
+import { describe, expect, it, vi } from 'vitest';
+import { BoxGeometry, Group, Mesh, MeshStandardMaterial } from 'three/webgpu';
+import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+import { FURNITURE_MODELS, fitTransform, loadFurniture, modelKey, tileItem } from './furniture.ts';
 import type { Furniture } from '../types.ts';
 
 const box = (x: number, y: number, z: number) => ({
@@ -73,6 +75,32 @@ describe('fitTransform', () => {
 		const r = fitTransform(box(1, 1, 1), item({ w: 2, d: 2, h: 0.5 }), { ignoreHeight: true });
 		expect(r.scale).toEqual([2, 1, 2]);
 	});
+
+	it('hangs wall furniture at h above the story without stretching its height', () => {
+		const r = fitTransform(box(0.9, 1.2, 0.04), item({ w: 0.9, d: 0.04, h: 1.4 }), {
+			mount: 'bottom',
+			elevation: 3
+		});
+		expect(r.position[1]).toBeCloseTo(4.4);
+		expect(r.scale).toEqual([1, 1, 1]);
+	});
+
+	it('supports an explicit tabletop base while h remains the object height', () => {
+		const r = fitTransform(box(1.25, 0.72, 0.08), item({ w: 1.25, d: 0.08, h: 0.72, base: 0.5 }), {
+			elevation: 3
+		});
+		expect(r.position[1]).toBe(3.5);
+		expect(r.scale).toEqual([1, 1, 1]);
+	});
+
+	it('anchors pendants by their top and scales them from footprint dimensions', () => {
+		const r = fitTransform(box(0.45, 0.35, 0.45), item({ w: 0.9, d: 0.9, h: 2.5 }), {
+			mount: 'top',
+			elevation: 3
+		});
+		expect(r.position[1] + 0.35 * r.scale[1]).toBeCloseTo(5.5);
+		expect(r.scale).toEqual([2, 2, 2]);
+	});
 });
 
 describe('runAxis', () => {
@@ -98,9 +126,61 @@ describe('tileItem', () => {
 });
 
 describe('modelKey', () => {
+	it('uses the original fabric sofa by default and retains the leather option', () => {
+		expect(modelKey({ type: 'sofa', h: 0.8 })).toBe('sofa-fabric');
+		expect(modelKey({ type: 'sofa-leather', h: 0.8 })).toBe('sofa-leather');
+	});
+	it('chooses the single bed by the short footprint side, including rotated plan boxes', () => {
+		expect(modelKey({ type: 'bed', w: 0.95, d: 2, h: 0.5 })).toBe('bed-single');
+		expect(modelKey({ type: 'bed', w: 2, d: 0.95, h: 0.5 })).toBe('bed-single');
+		expect(modelKey({ type: 'bed', w: 1.6, d: 2.1, h: 0.5 })).toBe('bed');
+	});
 	it('uses the coffee table model for low tables', () => {
 		expect(modelKey({ type: 'table', h: 0.45 })).toBe('table-coffee');
 		expect(modelKey({ type: 'table', h: 0.75 })).toBe('table');
 		expect(FURNITURE_MODELS.bed).toBe('/models/bed.glb');
+	});
+});
+
+describe('mounted model loading', () => {
+	it('passes mounting metadata through the real loader and adds the story elevation', async () => {
+		const types = [
+			'wall-art',
+			'mirror',
+			'wall-cabinet',
+			'range-hood',
+			'towel-rail',
+			'pendant-lamp'
+		];
+		const spy = vi.spyOn(GLTFLoader.prototype, 'loadAsync').mockImplementation(async () => {
+			const scene = new Group();
+			const mesh = new Mesh(new BoxGeometry(1, 0.8, 1), new MeshStandardMaterial());
+			mesh.position.y = 0.4;
+			scene.add(mesh);
+			return { scene } as unknown as Awaited<ReturnType<GLTFLoader['loadAsync']>>;
+		});
+		let result: Awaited<ReturnType<typeof loadFurniture>> | undefined;
+		try {
+			result = await loadFurniture(
+				types.map((type) => item({ id: type, type, h: 1.5 })),
+				{ elevation: 3 }
+			);
+			expect(result.missing).toEqual([]);
+			for (const type of types) {
+				const holder = result.group.getObjectByName(`furniture:${type}`)!;
+				expect(holder.position.y).toBeCloseTo(type === 'pendant-lamp' ? 3.7 : 4.5);
+				expect(holder.children[0].scale.y).toBe(1);
+			}
+		} finally {
+			result?.dispose();
+			spy.mockRestore();
+		}
+	});
+
+	it('reports unavailable types without losing the fallback path', async () => {
+		const result = await loadFurniture([item({ type: 'not-in-the-catalog' })]);
+		expect(result.missing).toEqual(['not-in-the-catalog']);
+		expect(result.group.children).toHaveLength(0);
+		result.dispose();
 	});
 });

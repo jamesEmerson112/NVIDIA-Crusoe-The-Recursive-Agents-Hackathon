@@ -1,0 +1,369 @@
+{
+  "id": "models-bedroom-bath",
+  "name": "Original Japandi collection: bedroom-bath",
+  "synthetic": true,
+  "origin": [
+    0,
+    0
+  ],
+  "stories": [
+    {
+      "level": 0,
+      "elevation": 0,
+      "height": 2.7,
+      "walls": [
+        {
+          "id": "mirror-display-wall",
+          "a": [
+            0.6,
+            9.8
+          ],
+          "b": [
+            3.0,
+            9.8
+          ],
+          "t": 0.1,
+          "exterior": false,
+          "party": false
+        },
+        {
+          "id": "towel-rail-display-wall",
+          "a": [
+            4.2,
+            9.8
+          ],
+          "b": [
+            6.6,
+            9.8
+          ],
+          "t": 0.1,
+          "exterior": false,
+          "party": false
+        }
+      ],
+      "openings": [],
+      "rooms": [
+        {
+          "id": "nightstand",
+          "name": "Nightstand",
+          "type": "living",
+          "polygon": [
+            [
+              0.0,
+              0.0
+            ],
+            [
+              3.6,
+              0.0
+            ],
+            [
+              3.6,
+              3.3
+            ],
+            [
+              0.0,
+              3.3
+            ]
+          ]
+        },
+        {
+          "id": "dresser",
+          "name": "Dresser",
+          "type": "living",
+          "polygon": [
+            [
+              3.6,
+              0.0
+            ],
+            [
+              7.2,
+              0.0
+            ],
+            [
+              7.2,
+              3.3
+            ],
+            [
+              3.6,
+              3.3
+            ]
+          ]
+        },
+        {
+          "id": "desk",
+          "name": "Desk",
+          "type": "living",
+          "polygon": [
+            [
+              7.2,
+              0.0
+            ],
+            [
+              10.8,
+              0.0
+            ],
+            [
+              10.8,
+              3.3
+            ],
+            [
+              7.2,
+              3.3
+            ]
+          ]
+        },
+        {
+          "id": "desk-chair",
+          "name": "Desk Chair",
+          "type": "living",
+          "polygon": [
+            [
+              0.0,
+              3.3
+            ],
+            [
+              3.6,
+              3.3
+            ],
+            [
+              3.6,
+              6.6
+            ],
+            [
+              0.0,
+              6.6
+            ]
+          ]
+        },
+        {
+          "id": "table-lamp",
+          "name": "Table Lamp",
+          "type": "living",
+          "polygon": [
+            [
+              3.6,
+              3.3
+            ],
+            [
+              7.2,
+              3.3
+            ],
+            [
+              7.2,
+              6.6
+            ],
+            [
+              3.6,
+              6.6
+            ]
+          ]
+        },
+        {
+          "id": "shower",
+          "name": "Shower",
+          "type": "living",
+          "polygon": [
+            [
+              7.2,
+              3.3
+            ],
+            [
+              10.8,
+              3.3
+            ],
+            [
+              10.8,
+              6.6
+            ],
+            [
+              7.2,
+              6.6
+            ]
+          ]
+        },
+        {
+          "id": "mirror",
+          "name": "Mirror",
+          "type": "living",
+          "polygon": [
+            [
+              0.0,
+              6.6
+            ],
+            [
+              3.6,
+              6.6
+            ],
+            [
+              3.6,
+              9.899999999999999
+            ],
+            [
+              0.0,
+              9.899999999999999
+            ]
+          ]
+        },
+        {
+          "id": "towel-rail",
+          "name": "Towel Rail",
+          "type": "living",
+          "polygon": [
+            [
+              3.6,
+              6.6
+            ],
+            [
+              7.2,
+              6.6
+            ],
+            [
+              7.2,
+              9.899999999999999
+            ],
+            [
+              3.6,
+              9.899999999999999
+            ]
+          ]
+        },
+        {
+          "id": "dryer",
+          "name": "Dryer",
+          "type": "living",
+          "polygon": [
+            [
+              7.2,
+              6.6
+            ],
+            [
+              10.8,
+              6.6
+            ],
+            [
+              10.8,
+              9.899999999999999
+            ],
+            [
+              7.2,
+              9.899999999999999
+            ]
+          ]
+        }
+      ],
+      "furniture": [
+        {
+          "id": "nightstand",
+          "type": "nightstand",
+          "room": "nightstand",
+          "x": 1.8,
+          "y": 1.65,
+          "w": 0.5,
+          "d": 0.4,
+          "h": 0.55,
+          "rot": 0
+        },
+        {
+          "id": "dresser",
+          "type": "dresser",
+          "room": "dresser",
+          "x": 5.4,
+          "y": 1.65,
+          "w": 1.2,
+          "d": 0.5,
+          "h": 0.8,
+          "rot": 0
+        },
+        {
+          "id": "desk",
+          "type": "desk",
+          "room": "desk",
+          "x": 9.0,
+          "y": 1.65,
+          "w": 1.2,
+          "d": 0.6,
+          "h": 0.75,
+          "rot": 0
+        },
+        {
+          "id": "desk-chair",
+          "type": "desk-chair",
+          "room": "desk-chair",
+          "x": 1.8,
+          "y": 4.949999999999999,
+          "w": 0.6,
+          "d": 0.6,
+          "h": 1,
+          "rot": 0
+        },
+        {
+          "id": "table-lamp",
+          "type": "table-lamp",
+          "room": "table-lamp",
+          "x": 5.4,
+          "y": 4.949999999999999,
+          "w": 0.3,
+          "d": 0.3,
+          "h": 0.45,
+          "rot": 0,
+          "base": 0.55
+        },
+        {
+          "id": "table-lamp-support",
+          "type": "nightstand",
+          "room": "table-lamp",
+          "x": 5.4,
+          "y": 4.949999999999999,
+          "w": 0.5,
+          "d": 0.4,
+          "h": 0.55,
+          "rot": 0
+        },
+        {
+          "id": "shower",
+          "type": "shower",
+          "room": "shower",
+          "x": 9.0,
+          "y": 4.949999999999999,
+          "w": 0.9,
+          "d": 0.9,
+          "h": 2,
+          "rot": 0
+        },
+        {
+          "id": "mirror",
+          "type": "mirror",
+          "room": "mirror",
+          "x": 1.8,
+          "y": 9.735,
+          "w": 0.6,
+          "d": 0.03,
+          "h": 1.15,
+          "rot": 0
+        },
+        {
+          "id": "towel-rail",
+          "type": "towel-rail",
+          "room": "towel-rail",
+          "x": 5.4,
+          "y": 9.7,
+          "w": 0.6,
+          "d": 0.1,
+          "h": 0.8,
+          "rot": 0
+        },
+        {
+          "id": "dryer",
+          "type": "dryer",
+          "room": "dryer",
+          "x": 9.0,
+          "y": 8.25,
+          "w": 0.6,
+          "d": 0.6,
+          "h": 0.85,
+          "rot": 0
+        }
+      ]
+    }
+  ]
+}

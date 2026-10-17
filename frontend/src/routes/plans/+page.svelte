@@ -13,6 +13,12 @@
 		{ id: 'sf-2br', label: '2 bedroom' },
 		{ id: 'sample-1br', label: 'Sample 1BR' }
 	];
+	const MODEL_PLANS = [
+		{ id: 'models-p1', label: 'P1 essentials' },
+		{ id: 'models-living', label: 'Living room' },
+		{ id: 'models-kitchen', label: 'Dining / kitchen' },
+		{ id: 'models-bedroom-bath', label: 'Bedroom / bath' }
+	];
 	// Laurie's formloop demo serves every listing as a Plan (GET /api/plan/<id>, CORS enabled).
 	const FORMLOOP_URL = 'http://localhost:5190';
 	const VIEWS: { id: View; label: string }[] = [
@@ -22,7 +28,8 @@
 	];
 
 	const planId = $derived(
-		PLANS.find((p) => p.id === page.url.searchParams.get('plan'))?.id ?? PLANS[0].id
+		[...PLANS, ...MODEL_PLANS].find((p) => p.id === page.url.searchParams.get('plan'))?.id ??
+			PLANS[0].id
 	);
 	/** `?listing=syn_000` loads a formloop listing instead of a bundled plan. */
 	const listing = $derived(page.url.searchParams.get('listing')?.match(/^[\w-]+$/)?.[0] ?? null);
@@ -94,6 +101,26 @@
 				>
 			{/each}
 		</div>
+		<select
+			data-testid="plans-model-collection"
+			aria-label="Furniture model collection"
+			class="rounded-lg border border-zinc-300 bg-transparent px-2 py-1 text-sm dark:border-zinc-700"
+			value={MODEL_PLANS.some((p) => p.id === planId) ? planId : ''}
+			onchange={(event) => {
+				if (!event.currentTarget.value) return;
+				const params = new URLSearchParams(page.url.search);
+				params.delete('listing');
+				params.set('plan', event.currentTarget.value);
+				params.set('quality', 'high');
+				view = 'full';
+				goto(`?${params}`, { replace: true });
+			}}
+		>
+			<option data-testid="plans-model-placeholder" value="" disabled>Furniture collection</option>
+			{#each MODEL_PLANS as p (p.id)}
+				<option data-testid="plans-model-{p.id}" value={p.id}>{p.label}</option>
+			{/each}
+		</select>
 		<div data-testid="plans-views" class="flex gap-1" role="group" aria-label="View">
 			{#each VIEWS as v (v.id)}
 				<button

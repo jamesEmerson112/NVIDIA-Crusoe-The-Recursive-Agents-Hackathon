@@ -1,0 +1,423 @@
+{
+  "id": "models-living",
+  "name": "Original Japandi collection: living",
+  "synthetic": true,
+  "origin": [
+    0,
+    0
+  ],
+  "stories": [
+    {
+      "level": 0,
+      "elevation": 0,
+      "height": 2.7,
+      "walls": [
+        {
+          "id": "wall-art-display-wall",
+          "a": [
+            4.2,
+            13.099999999999998
+          ],
+          "b": [
+            6.6,
+            13.099999999999998
+          ],
+          "t": 0.1,
+          "exterior": false,
+          "party": false
+        }
+      ],
+      "openings": [],
+      "rooms": [
+        {
+          "id": "armchair",
+          "name": "Armchair",
+          "type": "living",
+          "polygon": [
+            [
+              0.0,
+              0.0
+            ],
+            [
+              3.6,
+              0.0
+            ],
+            [
+              3.6,
+              3.3
+            ],
+            [
+              0.0,
+              3.3
+            ]
+          ]
+        },
+        {
+          "id": "tv-console",
+          "name": "Tv Console",
+          "type": "living",
+          "polygon": [
+            [
+              3.6,
+              0.0
+            ],
+            [
+              7.2,
+              0.0
+            ],
+            [
+              7.2,
+              3.3
+            ],
+            [
+              3.6,
+              3.3
+            ]
+          ]
+        },
+        {
+          "id": "tv",
+          "name": "Tv",
+          "type": "living",
+          "polygon": [
+            [
+              7.2,
+              0.0
+            ],
+            [
+              10.8,
+              0.0
+            ],
+            [
+              10.8,
+              3.3
+            ],
+            [
+              7.2,
+              3.3
+            ]
+          ]
+        },
+        {
+          "id": "rug",
+          "name": "Rug",
+          "type": "living",
+          "polygon": [
+            [
+              0.0,
+              3.3
+            ],
+            [
+              3.6,
+              3.3
+            ],
+            [
+              3.6,
+              6.6
+            ],
+            [
+              0.0,
+              6.6
+            ]
+          ]
+        },
+        {
+          "id": "floor-lamp",
+          "name": "Floor Lamp",
+          "type": "living",
+          "polygon": [
+            [
+              3.6,
+              3.3
+            ],
+            [
+              7.2,
+              3.3
+            ],
+            [
+              7.2,
+              6.6
+            ],
+            [
+              3.6,
+              6.6
+            ]
+          ]
+        },
+        {
+          "id": "side-table",
+          "name": "Side Table",
+          "type": "living",
+          "polygon": [
+            [
+              7.2,
+              3.3
+            ],
+            [
+              10.8,
+              3.3
+            ],
+            [
+              10.8,
+              6.6
+            ],
+            [
+              7.2,
+              6.6
+            ]
+          ]
+        },
+        {
+          "id": "bookshelf",
+          "name": "Bookshelf",
+          "type": "living",
+          "polygon": [
+            [
+              0.0,
+              6.6
+            ],
+            [
+              3.6,
+              6.6
+            ],
+            [
+              3.6,
+              9.899999999999999
+            ],
+            [
+              0.0,
+              9.899999999999999
+            ]
+          ]
+        },
+        {
+          "id": "pouf",
+          "name": "Pouf",
+          "type": "living",
+          "polygon": [
+            [
+              3.6,
+              6.6
+            ],
+            [
+              7.2,
+              6.6
+            ],
+            [
+              7.2,
+              9.899999999999999
+            ],
+            [
+              3.6,
+              9.899999999999999
+            ]
+          ]
+        },
+        {
+          "id": "plant-large",
+          "name": "Plant Large",
+          "type": "living",
+          "polygon": [
+            [
+              7.2,
+              6.6
+            ],
+            [
+              10.8,
+              6.6
+            ],
+            [
+              10.8,
+              9.899999999999999
+            ],
+            [
+              7.2,
+              9.899999999999999
+            ]
+          ]
+        },
+        {
+          "id": "plant-small",
+          "name": "Plant Small",
+          "type": "living",
+          "polygon": [
+            [
+              0.0,
+              9.899999999999999
+            ],
+            [
+              3.6,
+              9.899999999999999
+            ],
+            [
+              3.6,
+              13.2
+            ],
+            [
+              0.0,
+              13.2
+            ]
+          ]
+        },
+        {
+          "id": "wall-art",
+          "name": "Wall Art",
+          "type": "living",
+          "polygon": [
+            [
+              3.6,
+              9.899999999999999
+            ],
+            [
+              7.2,
+              9.899999999999999
+            ],
+            [
+              7.2,
+              13.2
+            ],
+            [
+              3.6,
+              13.2
+            ]
+          ]
+        }
+      ],
+      "furniture": [
+        {
+          "id": "armchair",
+          "type": "armchair",
+          "room": "armchair",
+          "x": 1.8,
+          "y": 1.65,
+          "w": 0.85,
+          "d": 0.85,
+          "h": 0.8,
+          "rot": 0
+        },
+        {
+          "id": "tv-console",
+          "type": "tv-console",
+          "room": "tv-console",
+          "x": 5.4,
+          "y": 1.65,
+          "w": 1.8,
+          "d": 0.4,
+          "h": 0.5,
+          "rot": 0
+        },
+        {
+          "id": "tv",
+          "type": "tv",
+          "room": "tv",
+          "x": 9.0,
+          "y": 1.65,
+          "w": 1.25,
+          "d": 0.08,
+          "h": 0.72,
+          "rot": 0,
+          "base": 0.5
+        },
+        {
+          "id": "tv-support",
+          "type": "tv-console",
+          "room": "tv",
+          "x": 9.0,
+          "y": 1.65,
+          "w": 1.8,
+          "d": 0.4,
+          "h": 0.5,
+          "rot": 0
+        },
+        {
+          "id": "rug",
+          "type": "rug",
+          "room": "rug",
+          "x": 1.8,
+          "y": 4.949999999999999,
+          "w": 2.4,
+          "d": 1.7,
+          "h": 0.01,
+          "rot": 0
+        },
+        {
+          "id": "floor-lamp",
+          "type": "floor-lamp",
+          "room": "floor-lamp",
+          "x": 5.4,
+          "y": 4.949999999999999,
+          "w": 0.45,
+          "d": 0.45,
+          "h": 1.6,
+          "rot": 0
+        },
+        {
+          "id": "side-table",
+          "type": "side-table",
+          "room": "side-table",
+          "x": 9.0,
+          "y": 4.949999999999999,
+          "w": 0.45,
+          "d": 0.45,
+          "h": 0.55,
+          "rot": 0
+        },
+        {
+          "id": "bookshelf",
+          "type": "bookshelf",
+          "room": "bookshelf",
+          "x": 1.8,
+          "y": 8.25,
+          "w": 0.9,
+          "d": 0.35,
+          "h": 1.8,
+          "rot": 0
+        },
+        {
+          "id": "pouf",
+          "type": "pouf",
+          "room": "pouf",
+          "x": 5.4,
+          "y": 8.25,
+          "w": 0.55,
+          "d": 0.55,
+          "h": 0.4,
+          "rot": 0
+        },
+        {
+          "id": "plant-large",
+          "type": "plant-large",
+          "room": "plant-large",
+          "x": 9.0,
+          "y": 8.25,
+          "w": 0.6,
+          "d": 0.6,
+          "h": 1.7,
+          "rot": 0
+        },
+        {
+          "id": "plant-small",
+          "type": "plant-small",
+          "room": "plant-small",
+          "x": 1.8,
+          "y": 11.549999999999999,
+          "w": 0.3,
+          "d": 0.3,
+          "h": 0.5,
+          "rot": 0
+        },
+        {
+          "id": "wall-art",
+          "type": "wall-art",
+          "room": "wall-art",
+          "x": 5.4,
+          "y": 13.03,
+          "w": 0.9,
+          "d": 0.04,
+          "h": 1.2,
+          "rot": 0
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,323 @@
+{
+  "id": "models-kitchen",
+  "name": "Original Japandi collection: kitchen",
+  "synthetic": true,
+  "origin": [
+    0,
+    0
+  ],
+  "stories": [
+    {
+      "level": 0,
+      "elevation": 0,
+      "height": 2.7,
+      "walls": [
+        {
+          "id": "range-hood-display-wall",
+          "a": [
+            0.6,
+            6.5
+          ],
+          "b": [
+            3.0,
+            6.5
+          ],
+          "t": 0.1,
+          "exterior": false,
+          "party": false
+        },
+        {
+          "id": "wall-cabinet-display-wall",
+          "a": [
+            7.8,
+            6.5
+          ],
+          "b": [
+            10.2,
+            6.5
+          ],
+          "t": 0.1,
+          "exterior": false,
+          "party": false
+        }
+      ],
+      "openings": [],
+      "rooms": [
+        {
+          "id": "dining-chair",
+          "name": "Dining Chair",
+          "type": "living",
+          "polygon": [
+            [
+              0.0,
+              0.0
+            ],
+            [
+              3.6,
+              0.0
+            ],
+            [
+              3.6,
+              3.3
+            ],
+            [
+              0.0,
+              3.3
+            ]
+          ]
+        },
+        {
+          "id": "pendant-lamp",
+          "name": "Pendant Lamp",
+          "type": "living",
+          "polygon": [
+            [
+              3.6,
+              0.0
+            ],
+            [
+              7.2,
+              0.0
+            ],
+            [
+              7.2,
+              3.3
+            ],
+            [
+              3.6,
+              3.3
+            ]
+          ]
+        },
+        {
+          "id": "range",
+          "name": "Range",
+          "type": "living",
+          "polygon": [
+            [
+              7.2,
+              0.0
+            ],
+            [
+              10.8,
+              0.0
+            ],
+            [
+              10.8,
+              3.3
+            ],
+            [
+              7.2,
+              3.3
+            ]
+          ]
+        },
+        {
+          "id": "range-hood",
+          "name": "Range Hood",
+          "type": "living",
+          "polygon": [
+            [
+              0.0,
+              3.3
+            ],
+            [
+              3.6,
+              3.3
+            ],
+            [
+              3.6,
+              6.6
+            ],
+            [
+              0.0,
+              6.6
+            ]
+          ]
+        },
+        {
+          "id": "dishwasher",
+          "name": "Dishwasher",
+          "type": "living",
+          "polygon": [
+            [
+              3.6,
+              3.3
+            ],
+            [
+              7.2,
+              3.3
+            ],
+            [
+              7.2,
+              6.6
+            ],
+            [
+              3.6,
+              6.6
+            ]
+          ]
+        },
+        {
+          "id": "wall-cabinet",
+          "name": "Wall Cabinet",
+          "type": "living",
+          "polygon": [
+            [
+              7.2,
+              3.3
+            ],
+            [
+              10.8,
+              3.3
+            ],
+            [
+              10.8,
+              6.6
+            ],
+            [
+              7.2,
+              6.6
+            ]
+          ]
+        },
+        {
+          "id": "bar-stool",
+          "name": "Bar Stool",
+          "type": "living",
+          "polygon": [
+            [
+              0.0,
+              6.6
+            ],
+            [
+              3.6,
+              6.6
+            ],
+            [
+              3.6,
+              9.899999999999999
+            ],
+            [
+              0.0,
+              9.899999999999999
+            ]
+          ]
+        },
+        {
+          "id": "island",
+          "name": "Island",
+          "type": "living",
+          "polygon": [
+            [
+              3.6,
+              6.6
+            ],
+            [
+              7.2,
+              6.6
+            ],
+            [
+              7.2,
+              9.899999999999999
+            ],
+            [
+              3.6,
+              9.899999999999999
+            ]
+          ]
+        }
+      ],
+      "furniture": [
+        {
+          "id": "dining-chair",
+          "type": "dining-chair",
+          "room": "dining-chair",
+          "x": 1.8,
+          "y": 1.65,
+          "w": 0.45,
+          "d": 0.52,
+          "h": 0.8,
+          "rot": 0
+        },
+        {
+          "id": "pendant-lamp",
+          "type": "pendant-lamp",
+          "room": "pendant-lamp",
+          "x": 5.4,
+          "y": 1.65,
+          "w": 0.45,
+          "d": 0.45,
+          "h": 2.35,
+          "rot": 0
+        },
+        {
+          "id": "range",
+          "type": "range",
+          "room": "range",
+          "x": 9.0,
+          "y": 1.65,
+          "w": 0.76,
+          "d": 0.65,
+          "h": 0.92,
+          "rot": 0
+        },
+        {
+          "id": "range-hood",
+          "type": "range-hood",
+          "room": "range-hood",
+          "x": 1.8,
+          "y": 6.199999999999999,
+          "w": 0.76,
+          "d": 0.5,
+          "h": 1.6,
+          "rot": 0
+        },
+        {
+          "id": "dishwasher",
+          "type": "dishwasher",
+          "room": "dishwasher",
+          "x": 5.4,
+          "y": 4.949999999999999,
+          "w": 0.6,
+          "d": 0.6,
+          "h": 0.86,
+          "rot": 0
+        },
+        {
+          "id": "wall-cabinet",
+          "type": "wall-cabinet",
+          "room": "wall-cabinet",
+          "x": 9.0,
+          "y": 6.2749999999999995,
+          "w": 0.6,
+          "d": 0.35,
+          "h": 1.5,
+          "rot": 0
+        },
+        {
+          "id": "bar-stool",
+          "type": "bar-stool",
+          "room": "bar-stool",
+          "x": 1.8,
+          "y": 8.25,
+          "w": 0.4,
+          "d": 0.4,
+          "h": 0.75,
+          "rot": 0
+        },
+        {
+          "id": "island",
+          "type": "island",
+          "room": "island",
+          "x": 5.4,
+          "y": 8.25,
+          "w": 1.6,
+          "d": 0.8,
+          "h": 0.92,
+          "rot": 0
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,402 @@
+{
+  "armchair": {
+    "bytes": 955828,
+    "dimensions": [
+      0.85,
+      0.85,
+      0.8
+    ],
+    "file": "armchair.glb",
+    "triangles": 11596
+  },
+  "bar-stool": {
+    "bytes": 576024,
+    "dimensions": [
+      0.4,
+      0.4,
+      0.75
+    ],
+    "file": "bar-stool.glb",
+    "triangles": 3332
+  },
+  "bed": {
+    "bytes": 1480452,
+    "dimensions": [
+      1.6,
+      2.1,
+      1
+    ],
+    "file": "bed.glb",
+    "triangles": 18428
+  },
+  "bed-single": {
+    "bytes": 1443912,
+    "dimensions": [
+      0.95,
+      2,
+      0.9
+    ],
+    "file": "bed-single.glb",
+    "triangles": 16908
+  },
+  "bookshelf": {
+    "bytes": 596636,
+    "dimensions": [
+      0.9,
+      0.35,
+      1.8
+    ],
+    "file": "bookshelf.glb",
+    "triangles": 4324
+  },
+  "counter": {
+    "bytes": 767876,
+    "dimensions": [
+      0.6,
+      0.62,
+      0.92
+    ],
+    "file": "counter.glb",
+    "triangles": 3560
+  },
+  "desk": {
+    "bytes": 576504,
+    "dimensions": [
+      1.2,
+      0.6,
+      0.75
+    ],
+    "file": "desk.glb",
+    "triangles": 3372
+  },
+  "desk-chair": {
+    "bytes": 349812,
+    "dimensions": [
+      0.6,
+      0.6,
+      1
+    ],
+    "file": "desk-chair.glb",
+    "triangles": 6212
+  },
+  "dining-chair": {
+    "bytes": 633960,
+    "dimensions": [
+      0.45,
+      0.52,
+      0.8
+    ],
+    "file": "dining-chair.glb",
+    "triangles": 5648
+  },
+  "dishwasher": {
+    "bytes": 518908,
+    "dimensions": [
+      0.6,
+      0.6,
+      0.86
+    ],
+    "file": "dishwasher.glb",
+    "triangles": 1272
+  },
+  "dresser": {
+    "bytes": 631952,
+    "dimensions": [
+      1.2,
+      0.5,
+      0.8
+    ],
+    "file": "dresser.glb",
+    "triangles": 5352
+  },
+  "dryer": {
+    "bytes": 103592,
+    "dimensions": [
+      0.6,
+      0.6,
+      0.85
+    ],
+    "file": "dryer.glb",
+    "triangles": 3616
+  },
+  "floor-lamp": {
+    "bytes": 263960,
+    "dimensions": [
+      0.45,
+      0.45,
+      1.6
+    ],
+    "file": "floor-lamp.glb",
+    "triangles": 2984
+  },
+  "fridge": {
+    "bytes": 35792,
+    "dimensions": [
+      0.7,
+      0.72,
+      1.85
+    ],
+    "file": "fridge.glb",
+    "triangles": 1224
+  },
+  "island": {
+    "bytes": 817536,
+    "dimensions": [
+      1.6,
+      0.8,
+      0.92
+    ],
+    "file": "island.glb",
+    "triangles": 5352
+  },
+  "mirror": {
+    "bytes": 493080,
+    "dimensions": [
+      0.6,
+      0.03,
+      0.8
+    ],
+    "file": "mirror.glb",
+    "triangles": 376
+  },
+  "nightstand": {
+    "bytes": 607124,
+    "dimensions": [
+      0.5,
+      0.4,
+      0.55
+    ],
+    "file": "nightstand.glb",
+    "triangles": 4456
+  },
+  "pendant-lamp": {
+    "bytes": 240532,
+    "dimensions": [
+      0.45,
+      0.45,
+      0.35
+    ],
+    "file": "pendant-lamp.glb",
+    "triangles": 2176
+  },
+  "plant-large": {
+    "bytes": 262468,
+    "dimensions": [
+      0.6,
+      0.6,
+      1.7
+    ],
+    "file": "plant-large.glb",
+    "triangles": 9472
+  },
+  "plant-small": {
+    "bytes": 90088,
+    "dimensions": [
+      0.3,
+      0.3,
+      0.5
+    ],
+    "file": "plant-small.glb",
+    "triangles": 3304
+  },
+  "pouf": {
+    "bytes": 578736,
+    "dimensions": [
+      0.55,
+      0.55,
+      0.4
+    ],
+    "file": "pouf.glb",
+    "triangles": 8432
+  },
+  "range": {
+    "bytes": 232784,
+    "dimensions": [
+      0.76,
+      0.65,
+      0.92
+    ],
+    "file": "range.glb",
+    "triangles": 8324
+  },
+  "range-hood": {
+    "bytes": 97756,
+    "dimensions": [
+      0.76,
+      0.5,
+      0.4
+    ],
+    "file": "range-hood.glb",
+    "triangles": 3588
+  },
+  "rug": {
+    "bytes": 381072,
+    "dimensions": [
+      2.4,
+      1.7,
+      0.01
+    ],
+    "file": "rug.glb",
+    "triangles": 308
+  },
+  "shower": {
+    "bytes": 263284,
+    "dimensions": [
+      0.9,
+      0.9,
+      2
+    ],
+    "file": "shower.glb",
+    "triangles": 2692
+  },
+  "side-table": {
+    "bytes": 648424,
+    "dimensions": [
+      0.45,
+      0.45,
+      0.55
+    ],
+    "file": "side-table.glb",
+    "triangles": 5864
+  },
+  "sink": {
+    "bytes": 645156,
+    "dimensions": [
+      0.8,
+      0.5,
+      0.86
+    ],
+    "file": "sink.glb",
+    "triangles": 5884
+  },
+  "sofa-fabric": {
+    "bytes": 1324204,
+    "dimensions": [
+      2.2,
+      0.95,
+      0.8
+    ],
+    "file": "sofa-fabric.glb",
+    "triangles": 19196
+  },
+  "table": {
+    "bytes": 570032,
+    "dimensions": [
+      1.6,
+      0.9,
+      0.75
+    ],
+    "file": "table.glb",
+    "triangles": 3228
+  },
+  "table-coffee": {
+    "bytes": 555540,
+    "dimensions": [
+      1.1,
+      0.6,
+      0.4
+    ],
+    "file": "table-coffee.glb",
+    "triangles": 2664
+  },
+  "table-lamp": {
+    "bytes": 263964,
+    "dimensions": [
+      0.3,
+      0.3,
+      0.45
+    ],
+    "file": "table-lamp.glb",
+    "triangles": 2984
+  },
+  "toilet": {
+    "bytes": 104272,
+    "dimensions": [
+      0.4,
+      0.7,
+      0.78
+    ],
+    "file": "toilet.glb",
+    "triangles": 4072
+  },
+  "towel-rail": {
+    "bytes": 244976,
+    "dimensions": [
+      0.6,
+      0.1,
+      0.8
+    ],
+    "file": "towel-rail.glb",
+    "triangles": 2076
+  },
+  "tub": {
+    "bytes": 40484,
+    "dimensions": [
+      1.7,
+      0.75,
+      0.56
+    ],
+    "file": "tub.glb",
+    "triangles": 1520
+  },
+  "tv": {
+    "bytes": 25236,
+    "dimensions": [
+      1.25,
+      0.08,
+      0.72
+    ],
+    "file": "tv.glb",
+    "triangles": 848
+  },
+  "tv-console": {
+    "bytes": 631972,
+    "dimensions": [
+      1.8,
+      0.4,
+      0.5
+    ],
+    "file": "tv-console.glb",
+    "triangles": 5352
+  },
+  "wall-art": {
+    "bytes": 518640,
+    "dimensions": [
+      0.9,
+      0.04,
+      1.2
+    ],
+    "file": "wall-art.glb",
+    "triangles": 1184
+  },
+  "wall-cabinet": {
+    "bytes": 582328,
+    "dimensions": [
+      0.6,
+      0.35,
+      0.72
+    ],
+    "file": "wall-cabinet.glb",
+    "triangles": 3560
+  },
+  "wardrobe": {
+    "bytes": 607148,
+    "dimensions": [
+      1.2,
+      0.6,
+      2.1
+    ],
+    "file": "wardrobe.glb",
+    "triangles": 4456
+  },
+  "washer": {
+    "bytes": 98744,
+    "dimensions": [
+      0.6,
+      0.6,
+      0.85
+    ],
+    "file": "washer.glb",
+    "triangles": 3428
+  }
+}

@@ -1,5 +1,5 @@
 // Real furniture models for the blueprint viewer. Each plan `Furniture` entry is a box (centre x/y,
-// size w/d/h, ccw rot in degrees); we load a CC0 glTF per type (static/models, see CREDITS.md),
+// size w/d/h, ccw rot in degrees); we load an original or CC0 glTF per type (see CREDITS.md),
 // clone it per item and fit it into that box. Types without a model are reported in `missing`
 // so the caller keeps its coloured box for them.
 //
@@ -31,12 +31,17 @@ interface ModelSpec {
 	ignoreHeight?: boolean;
 	/** Repeat the model along the box's long side (kitchen cabinet runs). */
 	tile?: boolean;
+	/** h is the bottom/top mounting elevation, not the object's physical height. */
+	mount?: 'bottom' | 'top';
 }
 
 const SPECS: Record<string, ModelSpec> = {
 	bed: { url: '/models/bed.glb', ignoreHeight: true },
-	// Sofa 02's seat cushion sits at +Z with the backrest behind it at -Z, so no correction.
-	sofa: { url: '/models/sofa.glb' },
+	'bed-single': { url: '/models/bed-single.glb', ignoreHeight: true },
+	// Keep the CC0 leather original available explicitly; generic sofas use Japandi linen.
+	sofa: { url: '/models/sofa-fabric.glb' },
+	'sofa-leather': { url: '/models/sofa.glb' },
+	'sofa-fabric': { url: '/models/sofa-fabric.glb' },
 	table: { url: '/models/table.glb' },
 	'table-coffee': { url: '/models/table-coffee.glb' },
 	counter: { url: '/models/counter.glb', tile: true, stretch: Infinity },
@@ -45,7 +50,35 @@ const SPECS: Record<string, ModelSpec> = {
 	toilet: { url: '/models/toilet.glb' },
 	sink: { url: '/models/sink.glb' },
 	washer: { url: '/models/washer.glb' },
-	wardrobe: { url: '/models/wardrobe.glb', stretch: 2 }
+	wardrobe: { url: '/models/wardrobe.glb' },
+	armchair: { url: '/models/armchair.glb' },
+	'tv-console': { url: '/models/tv-console.glb' },
+	tv: { url: '/models/tv.glb' },
+	rug: { url: '/models/rug.glb' },
+	'floor-lamp': { url: '/models/floor-lamp.glb' },
+	'side-table': { url: '/models/side-table.glb' },
+	bookshelf: { url: '/models/bookshelf.glb' },
+	pouf: { url: '/models/pouf.glb' },
+	'plant-large': { url: '/models/plant-large.glb' },
+	'plant-small': { url: '/models/plant-small.glb' },
+	'wall-art': { url: '/models/wall-art.glb', mount: 'bottom' },
+	'dining-chair': { url: '/models/dining-chair.glb' },
+	'pendant-lamp': { url: '/models/pendant-lamp.glb', mount: 'top' },
+	range: { url: '/models/range.glb' },
+	'range-hood': { url: '/models/range-hood.glb', mount: 'bottom' },
+	dishwasher: { url: '/models/dishwasher.glb' },
+	'wall-cabinet': { url: '/models/wall-cabinet.glb', mount: 'bottom' },
+	'bar-stool': { url: '/models/bar-stool.glb' },
+	island: { url: '/models/island.glb' },
+	nightstand: { url: '/models/nightstand.glb' },
+	dresser: { url: '/models/dresser.glb' },
+	desk: { url: '/models/desk.glb' },
+	'desk-chair': { url: '/models/desk-chair.glb' },
+	'table-lamp': { url: '/models/table-lamp.glb' },
+	shower: { url: '/models/shower.glb' },
+	mirror: { url: '/models/mirror.glb', mount: 'bottom' },
+	'towel-rail': { url: '/models/towel-rail.glb', mount: 'bottom' },
+	dryer: { url: '/models/dryer.glb' }
 };
 
 const DEFAULT_STRETCH = 1.5;
@@ -56,8 +89,13 @@ export const FURNITURE_MODELS: Partial<Record<string, string>> = Object.fromEntr
 );
 
 /** Which model key an item uses (tables split into dining and coffee by height). */
-export function modelKey(item: Pick<Furniture, 'type' | 'h'>): string {
+export function modelKey(
+	item: Pick<Furniture, 'type' | 'h'> & Partial<Pick<Furniture, 'w' | 'd'>>
+): string {
 	if (item.type === 'table' && item.h < 0.6) return 'table-coffee';
+	if (item.type === 'sofa') return 'sofa-fabric';
+	if (item.type === 'bed' && Math.min(item.w ?? Infinity, item.d ?? Infinity) < 1.2)
+		return 'bed-single';
 	return item.type;
 }
 
@@ -76,6 +114,8 @@ export interface FitOptions {
 	elevation?: number;
 	/** Item-local axis of the run this piece was tiled from ('x' = along w, 'z' = along d). */
 	runAxis?: 'x' | 'z';
+	/** Treat h as a mounting elevation, retaining height from footprint scale. */
+	mount?: 'bottom' | 'top';
 }
 
 export interface FitResult {
@@ -98,7 +138,7 @@ const ELONGATED = 1.2;
  */
 export function fitTransform(
 	box: BoxLike,
-	item: Pick<Furniture, 'x' | 'y' | 'w' | 'd' | 'h' | 'rot'>,
+	item: Pick<Furniture, 'x' | 'y' | 'w' | 'd' | 'h' | 'rot'> & Pick<Furniture, 'base'>,
 	opts: FitOptions = {}
 ): FitResult {
 	const frontYaw = opts.frontYaw ?? 0;
@@ -144,18 +184,24 @@ export function fitTransform(
 	const fz = odd ? mx : mz;
 	const tx = item.w / fx;
 	const tz = item.d / fz;
-	const ty = item.h / sizeY;
+	const ty = opts.mount ? Infinity : item.h / sizeY;
 	const s = Math.min(tx, tz, opts.ignoreHeight ? Infinity : ty);
 	const lx = Math.min(tx, s * stretch);
 	const lz = Math.min(tz, s * stretch);
 	// ignoreHeight keeps proportions but still caps the model at twice the box height.
-	const ly = opts.ignoreHeight ? Math.min(s, ty * 2) : Math.min(ty, s * stretch);
+	const ly = opts.mount ? s : opts.ignoreHeight ? Math.min(s, ty * 2) : Math.min(ty, s * stretch);
 	// Back into the model's own axes: odd total quarter turns swap x and z.
 	const swap = odd !== swapFront;
 	const scale: [number, number, number] = swap ? [lz, ly, lx] : [lx, ly, lz];
 
 	return {
-		position: [item.x, opts.elevation ?? 0, -item.y],
+		position: [
+			item.x,
+			(opts.elevation ?? 0) +
+				(opts.mount ? item.h : (item.base ?? 0)) -
+				(opts.mount === 'top' ? sizeY * ly : 0),
+			-item.y
+		],
 		rotationY: rot + (best * Math.PI) / 2 + frontYaw,
 		scale,
 		offset: [-(box.min.x + box.max.x) / 2, -box.min.y, -(box.min.z + box.max.z) / 2]
@@ -332,6 +378,7 @@ export async function loadFurniture(
 				frontYaw: spec.frontYaw,
 				stretch: spec.stretch,
 				ignoreHeight: spec.ignoreHeight,
+				mount: spec.mount,
 				facing,
 				elevation: opts.elevation,
 				runAxis: pieces.length > 1 ? (item.w >= item.d ? 'x' : 'z') : undefined

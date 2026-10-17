@@ -170,6 +170,14 @@ Works on its own; Workbench (frontend/) can't use it yet.
 
 ==================== DONE ====================
 
+- 40 original Japandi GLBs generated and wired     <-- James
+  - 30 new files; 10 replacements; CC0 leather sofa retained
+  - Queen bed verified first at /plans?quality=high&debug=1
+  - Four Furniture collection previews; missingModels=0
+  - Wall/pendant mounting and tabletop base placement
+  - Rebuild script, manifest, provenance and asset-budget tests
+  - See docs/glb-models.txt and docs/model-validation/README.md
+
 - Agent plans and updates its own steps            <-- Gaelan
 - quick_edit sub-agents patch stale artifacts      <-- Gaelan
   - Run in parallel on fast model

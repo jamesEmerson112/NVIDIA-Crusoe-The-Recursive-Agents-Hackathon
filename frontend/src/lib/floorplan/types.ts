@@ -42,10 +42,13 @@ export interface Furniture {
 	/** Centre in plan coordinates. */
 	x: number;
 	y: number;
-	/** Size along plan x, plan y, and height, before rotation. */
+	/** Size along plan x/y. For wall-mounted models h is bottom mounting height;
+	 * for pendants h is top mounting height; otherwise h is physical object height. */
 	w: number;
 	d: number;
 	h: number;
+	/** Optional support-surface height above the story floor (e.g. TV on a console). */
+	base?: number;
 	/** Counter-clockwise rotation in degrees. */
 	rot: number;
 }

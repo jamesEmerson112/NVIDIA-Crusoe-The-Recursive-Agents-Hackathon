@@ -44,7 +44,7 @@ Repeated items (messages, steps, list rows, chips) share one id; pick one by tex
 
 **`routes/library/+page.svelte`**: `library-root`, `library-heading`, `library-search`, `library-kinds`, `library-kind`, `library-results`, `library-result`, `library-empty`
 
-**`routes/plans/+page.svelte`**: `plans-root`, `plans-heading`, `plans-select`, `plans-option`, `plans-views`, `plans-view-{v.id}`, `plans-summary`, `plans-quality`, `plans-quality-{q ?? 'auto'}`, `plans-debug-toggle`, `plans-problems`
+**`routes/plans/+page.svelte`**: `plans-root`, `plans-heading`, `plans-select`, `plans-option`, `plans-model-collection`, `plans-model-placeholder`, `plans-model-{p.id}`, `plans-views`, `plans-view-{v.id}`, `plans-summary`, `plans-quality`, `plans-quality-{q ?? 'auto'}`, `plans-debug-toggle`, `plans-problems`
 
 **`lib/floorplan/three/viewer.ts`**: `plan-viewer-canvas`, `plan-viewer-labels`, `plan-viewer-fps`, `plan-viewer-debug`, `plan-viewer-room-label`, `plan-viewer-wall-label`
 

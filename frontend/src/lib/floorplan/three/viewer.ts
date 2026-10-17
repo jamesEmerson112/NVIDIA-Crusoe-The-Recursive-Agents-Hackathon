@@ -152,7 +152,7 @@ export async function mount(
 		missingModels: 0
 	};
 
-	// High swaps the merged box furniture for CC0 models (furniture.ts). Furniture does not depend
+	// High swaps the merged box furniture for original/CC0 models (furniture.ts). Furniture does not depend
 	// on the cut height or view, so one load is kept per plan; the token discards stale loads.
 	let furnToken = 0;
 	let furnPlan: Plan | null = null;
@@ -192,7 +192,7 @@ export async function mount(
 					if (!missing.has(f.type)) continue;
 					const geo = new BoxGeometry(f.w, f.h, f.d);
 					const m = new Mesh(geo, fallbackMaterial);
-					m.position.set(f.x, story.elevation + f.h / 2, -f.y);
+					m.position.set(f.x, story.elevation + (f.base ?? 0) + f.h / 2, -f.y);
 					m.rotation.y = (f.rot * Math.PI) / 180;
 					m.castShadow = m.receiveShadow = true;
 					fallbackBoxes.push(m);

@@ -5,6 +5,34 @@ GLB MODELS: WHAT WE HAVE AND WHAT TO BUILD
 - The model is scaled to fit the item's box (w x d x h)
 - Visual target: docs/research/photoreal-rendering-plan.md (Japandi photoreal)
 
+DELIVERY UPDATE (2026-10-17, Codex)
+- All 40 P1/P2/P3 models below now generated and registered
+- Original Blender geometry/materials; repository MIT licence
+- 19.9 MB total for the new catalog; individual budgets checked
+- Rebuild: frontend/scripts/generate-furniture.py -- <keys or all>
+  - Run through local Blender --background --factory-startup --python
+- Manifest and per-file provenance: frontend/static/models/catalog.json
+  and frontend/static/models/CREDITS.md
+- First gate: queen bed checked in /plans?quality=high&debug=1
+  before the rest were generated; WebGPU, missingModels=0, no errors
+- New types are in four bundled preview plans (Furniture collection):
+  models-p1, models-living, models-kitchen, models-bedroom-bath
+- All four collections checked on High/WebGPU: missingModels=0,
+  no browser console errors. Screenshots: docs/model-validation/
+- Generic bed selects bed-single when min(w,d) < 1.2 m
+- Generic sofa selects sofa-fabric; sofa-leather keeps old CC0 asset
+- Wall art, mirror, upper cabinets, range hood, towel rail:
+  h = bottom mounting height above the story floor
+  Model height comes from its footprint scale; h does not stretch it
+- Pendant: h = TOP mounting height; the shade hangs below it
+- Optional base adds support height to regular furniture; h stays its
+  physical height (TV on console: h=0.72, base=0.50)
+- Laurie/formloop handoff: current listing types work unchanged.
+  New decorative types are registered and demonstrated in the bundled
+  collections; add those types/placement values to listingPlan as needed.
+  No changes made to formloop/src/plan3d.ts by this delivery.
+- Architectural pieces in Later remain out of scope for this GLB batch
+
 
 ================ MODEL SPEC (every new file must follow) ================
 
@@ -52,7 +80,7 @@ Licence and provenance
 5. Check: /plans?quality=high&debug=1, "missingModels" should drop
 
 
-================ HAVE (11 files, 5.8 MB) ================
+================ PREVIOUS INVENTORY (replaced by delivery above) ================
 
 Photoreal (Poly Haven, CC0)
 - sofa.glb             416 KB   sofa              tufted leather, Sofa 02
@@ -73,7 +101,7 @@ Plan types in use today: bed, counter, fridge, sink, sofa, table,
 toilet, tub, wardrobe, washer (bundled plans and formloop listings)
 
 
-================ BUILD LIST (priority order; size = w x d x h metres) ================
+================ DELIVERED BUILD LIST (size = w x d x h metres) ================
 
 P1: replace placeholders used by every listing today
 - bed.glb              1.60 x 2.10 x 1.00  queen, oak frame, linen bedding, headboard
@@ -133,8 +161,8 @@ Later: architectural pieces (need viewer changes, not just a GLB)
 
 ================ NOTES FOR WHOEVER BUILDS THEM ================
 
-- Wall-mounted pieces (art, mirror, cabinets): plan item h is the
-  mounting height today; tell James so the loader can lift them
+- Wall-mounted pieces now use the loader's bottom-mount option;
+  pendants use top-mount. See delivery update for the plan contract.
 - Check proportions against the sizes above; the loader scales to fit
 - Keep one consistent palette across pieces so rooms read as one style
 - Test one model end to end before batch-producing the rest

@@ -85,7 +85,7 @@ function paint(geo: BufferGeometry, hex: string): BufferGeometry {
 function furnitureBox(f: Furniture): BufferGeometry {
 	const geo = new BoxGeometry(f.w, f.h, f.d);
 	geo.rotateY((f.rot * Math.PI) / 180);
-	geo.translate(f.x, f.h / 2, -f.y);
+	geo.translate(f.x, (f.base ?? 0) + f.h / 2, -f.y);
 	return paint(geo, FURNITURE_COLORS[f.type] ?? '#b0a99f');
 }
 
