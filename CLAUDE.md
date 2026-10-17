@@ -8,9 +8,9 @@ Entry for the Crusoe × Cerebral Valley **Recursive Agents Hackathon** (Sat Oct 
 
 ## Frontend (`frontend/`)
 
-Angular 22 (standalone components, zoneless, Vitest), chosen by the user: stick with Angular until told otherwise. 3D rendering uses plain `three` + `@types/three` (keep both on the same 0.x minor). `angular-three` was ruled out on 2026-10-17 because it only supports Angular <22 and three <0.183.
+SvelteKit 3 + Svelte 5 (runes mode forced in `vite.config.ts`), TypeScript, Tailwind 4 with `@tailwindcss/typography`, Vitest, Prettier. Switched from Angular on 2026-10-17 at the user's request. `@sveltejs/adapter-node` because agents run as long-lived server work: all Crusoe calls go through server code (`src/lib/server/`, `+server.ts`, `+page.server.ts`), never the browser, so `CRUSOE_API_KEY` stays out of the bundle.
 
-`src/app/three-scene/` is the three.js component. Its patterns: initialize in `afterNextRender`, check `WebGL.isWebGL2Available()` first (jsdom in unit tests has no WebGL), size the renderer from a `ResizeObserver`, and dispose everything in `DestroyRef.onDestroy`. `app.html` wraps it in `@defer` so three.js loads as a lazy chunk; without that, the initial bundle exceeds the 500 kB budget.
+Persistence is SQLite through Node's built-in `node:sqlite` with Drizzle ORM (schema in `src/lib/server/db/schema.ts`, database path from `DATABASE_URL` in `frontend/.env`, default `local.db`). `drizzle-orm` and `drizzle-kit` are pinned to `1.0.0-rc.4`: the `node-sqlite` driver doesn't exist in stable 0.45, and 1.0 takes `drizzle({ client })`, not `drizzle(client, { schema })`. Using `node:sqlite` avoids native builds, so install scripts can stay blocked.
 
 ## Environment and commands
 
@@ -25,10 +25,12 @@ This is a team repo, and collaborators work through their own Claude agents, so 
 Commands, from `frontend/`:
 
 - `npm ci`: install the exact locked dependencies
-- `npm start`: dev server at http://localhost:4200
-- `npm run build`: production build to `dist/frontend`
-- `npm test -- --watch=false`: all unit tests; add `--include src/app/app.spec.ts` for a single spec file
-- `npm run ng -- generate component <name>`: Angular CLI generators
+- `npm start` (alias of `npm run dev`): dev server at http://localhost:5173
+- `npm run build`: production build to `build/`; run it with `node build`
+- `npm run check`: svelte-check type checking
+- `npm test`: all unit tests once; `npm test -- src/lib/foo.spec.ts` for one file
+- `npm run lint` / `npm run format`: Prettier check / write
+- `npm run db:push`: apply `schema.ts` to the local database (`db:generate` / `db:migrate` for migrations, `db:studio` to browse)
 
 ## Source of truth: the `crusoe-recursive-agents-hackathon` skill
 

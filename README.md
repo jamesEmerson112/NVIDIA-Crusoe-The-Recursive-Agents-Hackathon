@@ -6,7 +6,7 @@ Our entry for the Crusoe × Cerebral Valley Recursive Agents Hackathon (Oct 17, 
 
 | Path | What |
 |---|---|
-| `frontend/` | Angular 22 app with three.js |
+| `frontend/` | SvelteKit app (UI and server-side agent code) |
 | `.claude/skills/` | Claude Code skills, including the Crusoe inference reference |
 | `CLAUDE.md` | Instructions for Claude Code agents working in this repo |
 
@@ -21,7 +21,8 @@ nvm install          # reads .nvmrc at the repo root
 nvm use
 cd frontend
 npm ci
-npm start            # http://localhost:4200
+npm run db:push      # create the local SQLite database
+npm start            # http://localhost:5173
 ```
 
 Windows, with [nvm-windows](https://github.com/coreybutler/nvm-windows), which does not read `.nvmrc`:
@@ -31,6 +32,7 @@ nvm install 24.22.0
 nvm use 24.22.0
 cd frontend
 npm ci
+npm run db:push
 npm start
 ```
 
@@ -39,12 +41,14 @@ npm start
 ## Commands (from `frontend/`)
 
 - `npm ci`: install the exact locked dependencies
-- `npm start`: dev server at http://localhost:4200
-- `npm run build`: production build to `dist/frontend`
-- `npm test -- --watch=false`: unit tests (Vitest); add `--include src/app/app.spec.ts` for one spec file
-- `npm run ng -- generate component <name>`: Angular CLI generators
+- `npm start`: dev server at http://localhost:5173
+- `npm run build`: production build to `build/` (run with `node build`)
+- `npm run check`: type checking
+- `npm test`: unit tests (Vitest)
+- `npm run lint` / `npm run format`: Prettier
+- `npm run db:push`: apply the Drizzle schema to the local SQLite database
 
-Use these npm scripts rather than a global `ng` or `npx ng`. Only npm commands check the Node version.
+Use these npm scripts rather than `npx`. Only npm commands check the Node version.
 
 ## Dependencies
 
@@ -65,5 +69,5 @@ You can also put it in a `.env` file, which is gitignored. Never commit the key 
 
 ## Working with Claude Code
 
-- `CLAUDE.md`, `.claude/skills/` and `.claude/settings.json` are committed, so every collaborator's agent gets the same instructions, skills and permission allowlist. The allowlist covers only safe commands: install from the lockfile, build, test, Angular generators and read-only git.
+- `CLAUDE.md`, `.claude/skills/` and `.claude/settings.json` are committed, so every collaborator's agent gets the same instructions, skills and permission allowlist. The allowlist covers only safe commands: install from the lockfile, build, type-check, test, lint and read-only git.
 - Put personal settings in `.claude/settings.local.json`, which is gitignored.
