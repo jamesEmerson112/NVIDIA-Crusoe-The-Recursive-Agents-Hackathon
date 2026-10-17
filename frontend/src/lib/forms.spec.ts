@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { answerText, diffSpecs, fieldName, normalizeFormSpec } from './forms';
+import { answerText, diffSpecs, fieldName, normalizeFormSpec, typeable } from './forms';
 
 describe('normalizeFormSpec', () => {
 	it('derives a missing label from the field name', () => {
@@ -96,5 +96,32 @@ describe('answerText', () => {
 			answerText(null),
 			answerText(3)
 		]).toEqual(['a, b', 'Yes', 'No', '', '3']);
+	});
+});
+
+describe('typeable', () => {
+	it('replaces characters people cannot easily type', () => {
+		expect(typeable('Aug 1, flexible ±3 weeks')).toBe('Aug 1, flexible +/- 3 weeks');
+		expect(typeable('$2,500–3,000')).toBe('$2,500-3,000');
+		expect(typeable('1–3 months out')).toBe('1-3 months out');
+		expect(typeable('Quiet — no roommates')).toBe('Quiet - no roommates');
+		expect(typeable('≤ $3,000 → ideally less')).toBe('<= $3,000 to ideally less');
+		expect(typeable('“Anywhere” isn’t fine…')).toBe('"Anywhere" isn\'t fine...');
+	});
+
+	it('is applied to suggestions and placeholders', () => {
+		const spec = normalizeFormSpec({
+			fields: [
+				{
+					name: 'move',
+					label: 'Move in',
+					type: 'text',
+					placeholder: 'e.g. Aug 1 ± 2 weeks',
+					options: ['1–2 months']
+				}
+			]
+		});
+		expect(spec.fields[0].placeholder).toBe('e.g. Aug 1 +/- 2 weeks');
+		expect(spec.fields[0].options).toEqual(['1-2 months']);
 	});
 });

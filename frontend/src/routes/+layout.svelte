@@ -13,9 +13,19 @@
 		return days === 0 ? 'Today' : days === 1 ? 'Yesterday' : `${days} days ago`;
 	};
 
+	// Deleting asks for a second click inline. Native confirm() is suppressed in embedded browser
+	// panes (it returns false without showing anything), which made the button do nothing.
+	let confirming = $state<string | null>(null);
+	let deleteError = $state('');
+
 	async function remove(id: string) {
-		if (!confirm('Delete this conversation and its artifacts?')) return;
-		await fetch(`/api/conversations/${id}`, { method: 'DELETE' });
+		confirming = null;
+		deleteError = '';
+		const res = await fetch(`/api/conversations/${id}`, { method: 'DELETE' });
+		if (!res.ok) {
+			deleteError = `Couldn't delete (${res.status})`;
+			return;
+		}
 		await invalidate('app:conversations');
 		if (page.params.id === id) goto('/');
 	}
@@ -174,7 +184,13 @@
 				class="min-h-0 flex-1 space-y-0.5 overflow-y-auto px-2 pb-3"
 			>
 				{#each data.conversations as c (c.id)}
-					<li data-testid="sidebar-item" class="group relative">
+					<li
+						data-testid="sidebar-item"
+						class="group relative"
+						onmouseleave={() => {
+							if (confirming === c.id) confirming = null;
+						}}
+					>
 						<a
 							data-testid="sidebar-conversation"
 							href="/c/{c.id}"
@@ -191,15 +207,32 @@
 								{when(c.updatedAt)}
 							</span>
 						</a>
-						<button
-							data-testid="sidebar-delete"
-							class="absolute top-2 right-2 hidden rounded px-1 text-zinc-400 group-hover:block hover:text-rose-600"
-							aria-label="Delete conversation"
-							onclick={() => remove(c.id)}>✕</button
-						>
+						{#if confirming === c.id}
+							<button
+								data-testid="sidebar-delete-confirm"
+								class="absolute top-1.5 right-1.5 rounded-md bg-rose-600 px-2 py-0.5 text-xs font-medium text-white hover:bg-rose-700"
+								onclick={() => remove(c.id)}
+								onkeydown={(e) => {
+									if (e.key === 'Escape') confirming = null;
+								}}>Delete</button
+							>
+						{:else}
+							<button
+								data-testid="sidebar-delete"
+								class="absolute top-2 right-2 rounded px-1 text-zinc-400 opacity-0 group-hover:opacity-100 hover:text-rose-600 focus-visible:opacity-100"
+								aria-label="Delete conversation"
+								onclick={() => (confirming = c.id)}>✕</button
+							>
+						{/if}
 					</li>
 				{/each}
 			</ul>
+			{#if deleteError}<p
+					data-testid="sidebar-delete-error"
+					class="px-4 pb-2 text-xs text-rose-600"
+				>
+					{deleteError}
+				</p>{/if}
 		{/if}
 		{#if data.mock && !collapsed}
 			<p
