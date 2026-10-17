@@ -154,6 +154,32 @@
 	@keyframes ring { from { transform: scale(1); opacity: .9; } to { transform: scale(2.6); opacity: 0; } }
 	.leaflet-tooltip { font: 12px var(--sans); }
 	.card.flash { box-shadow: 0 0 0 3px var(--clay); }
+	/* Views */
+	.tabs { display: flex; gap: 4px; background: var(--bg); border: 1px solid var(--line); border-radius: 999px; padding: 3px; }
+	.tabs button { font-size: 13px; padding: 4px 12px; border-radius: 999px; color: var(--muted); }
+	.tabs button.on { background: var(--ink); color: #fff; }
+	body.evo main { display: none; }
+	#evolution { display: none; flex: 1; overflow: auto; padding: 26px 28px 40px; }
+	body.evo #evolution { display: block; }
+	.evo-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 28px; }
+	@media (max-width: 920px) { .evo-grid { grid-template-columns: 1fr; } }
+	.evo-col h3 { font: 500 22px/1.2 var(--serif); margin: 4px 0 14px; }
+	.evo-q { display: flex; gap: 10px; padding: 11px 0; border-top: 1px solid var(--line); font-size: 15px; }
+	.evo-q .n { font: 500 13px/1.6 var(--serif); color: var(--faint); min-width: 18px; }
+	.evo-q.dropped .t { text-decoration: line-through; color: var(--faint); }
+	.evo-q .old { display: block; font-size: 12.5px; color: var(--faint); text-decoration: line-through; margin-bottom: 2px; }
+	.tagx { display: inline-block; font-size: 11px; border-radius: 999px; padding: 1px 8px; margin: 4px 6px 0 0; background: var(--bg); color: var(--muted); }
+	.tagx.renter { background: var(--clay-soft); color: var(--clay); font-weight: 600; }
+	.tagx.drop { background: #f3e4e0; color: var(--bad); }
+	.tagx.new { background: var(--green-soft); color: var(--green); }
+	.history { margin-top: 26px; font: 13px/1.8 ui-monospace, SFMono-Regular, Menlo, monospace; color: var(--ink); white-space: pre-wrap; }
+	.history .rej { color: var(--muted); }
+	.results { margin-top: 26px; }
+	.results table { border-collapse: collapse; font-size: 13.5px; margin-top: 10px; }
+	.results th, .results td { padding: 6px 12px; border-bottom: 1px solid var(--line); text-align: right; font-variant-numeric: tabular-nums; }
+	.results th:first-child, .results td:first-child { text-align: left; }
+	.results th { font-weight: 600; color: var(--muted); font-size: 12px; }
+	.results.hidden { display: none; }
 	.toast { position: fixed; bottom: 22px; left: 50%; transform: translate(-50%, 10px); background: var(--green); color: #fff; padding: 10px 16px; border-radius: 999px; font-size: 13.5px; opacity: 0; transition: all .3s; pointer-events: none; }
 	.toast.show { opacity: 1; transform: translate(-50%, 0); }
 </style>
@@ -163,6 +189,7 @@
 	<div class="brand">formloop<span>.</span></div>
 	<div class="tag">An apartment intake form that rewrites itself from how people answer it.</div>
 	<div class="live" id="mode"><i></i><span>…</span></div>
+	<div class="tabs" id="tabs"><button class="on" data-view="match">Matches</button><button data-view="evo">How the form evolved</button></div>
 	<div class="versions" id="versions"><span>form</span></div>
 </header>
 <main>
@@ -196,6 +223,15 @@
 		</div>
 	</section>
 </main>
+<section id="evolution">
+	<div class="eyebrow">The outer loop</div>
+	<h2 style="font:500 26px/1.15 var(--serif);margin:6px 0 4px">How the form evolved</h2>
+	<p class="hint" id="evoNote"></p>
+	<div class="evo-grid"><div class="evo-col" id="evoV1"></div><div class="evo-col" id="evoLatest"></div></div>
+	<div class="eyebrow" style="margin-top:28px">Every generation (from the generation log and git)</div>
+	<div class="history" id="evoHistory"></div>
+	<div class="results hidden" id="results"><div class="eyebrow">Held-out renters: v1 vs latest</div><div id="resultsBody"></div></div>
+</section>
 <div id="toast" class="toast"></div>
 <script>
 const QUICK = ['too expensive', 'commute is too long', 'street is too loud', 'I need in-unit laundry', "don't like the layout", 'floor is too low', 'not this neighborhood'];
@@ -375,7 +411,7 @@ async function initMap() {
 	$('#fitTotal').textContent = listings.length;
 	const bounds = L.latLngBounds([...mapState.dots.values()].map((d) => [d.lat, d.lng]));
 	// The map is laid out after fonts and the form render; re-measure before fitting, and on resize.
-	const fit = () => { map.invalidateSize(); map.fitBounds(bounds, { padding: [14, 14] }); };
+	const fit = () => { map.invalidateSize(); map.setView(bounds.getCenter(), 12); };
 	setTimeout(fit, 50);
 	setTimeout(fit, 600);
 	addEventListener('resize', fit);
@@ -513,6 +549,43 @@ $('#submit').addEventListener('click', async () => {
 	$('#submitNote').textContent = `${p.filter((a) => a.action === 'skip').length} skipped, ${p.filter((a) => a.action === 'rewrite').length} reworded: logged for the reviewer.`;
 	toast('Thanks. Your answers go into the next review.');
 });
+
+async function showEvolution() {
+	const d = await (await fetch('/api/evolution')).json();
+	const v1 = d.v1, lt = d.latest;
+	$('#evoNote').textContent = `Reviewer's note on v${lt.version}: ${lt.note || ''}`;
+	$('#evoV1').replaceChildren(el('div', { class: 'eyebrow' }, 'Where it started'), el('h3', {}, `v1 · ${v1.questions.length} questions`),
+		...v1.questions.map((q) => el('div', { class: 'evo-q' + (q.status === 'dropped' ? ' dropped' : '') }, el('span', { class: 'n' }, q.from),
+			el('div', {}, el('span', { class: 't' }, q.text), el('div', {}, q.status === 'dropped' ? el('span', { class: 'tagx drop' }, 'dropped') : q.to !== q.from ? el('span', { class: 'tagx' }, `moved to #${q.to}`) : null)))));
+	$('#evoLatest').replaceChildren(el('div', { class: 'eyebrow' }, 'Latest accepted'), el('h3', {}, `v${lt.version} · ${lt.questions.length} questions`),
+		...lt.questions.map((q) => el('div', { class: 'evo-q' }, el('span', { class: 'n' }, q.to),
+			el('div', {}, q.old_text ? el('span', { class: 'old' }, q.old_text) : null, el('span', { class: 't' }, q.text),
+				el('div', {}, q.status === 'new' ? el('span', { class: 'tagx new' }, 'new') : null, q.status === 'reworded' ? el('span', { class: 'tagx' }, 'reworded') : null,
+					q.moved ? el('span', { class: 'tagx' }, `moved from #${q.from}`) : null, q.by_renter ? el('span', { class: 'tagx renter' }, 'suggested by a renter') : null,
+					q.grounded ? el('span', { class: 'tagx' }, `grounded: ${q.grounded}`) : null)))));
+	$('#evoHistory').replaceChildren(...d.history.map((h) => el('div', { class: h.accepted ? '' : 'rej' },
+		`generation ${h.generation}  v${h.from} → v${h.candidate}  ${h.accepted ? 'ACCEPTED' : 'rejected'}  objective ${h.before.toFixed(3)} → ${h.after.toFixed(3)} (${h.delta >= 0 ? '+' : ''}${h.delta.toFixed(3)})${h.commit ? `  commit ${h.commit}` : ''}`)));
+}
+
+async function showResults() {
+	const r = await (await fetch('/api/results')).json();
+	if (r.error) { $('#resultsBody').textContent = r.error; }
+	else {
+		const pct = (x) => `${Math.round(100 * x)}%`;
+		const cols = [['form', (x) => x.form], ['match quality', (x) => x.match_quality.toFixed(3)], ['dealbreaker misses', (x) => x.dealbreaker_misses], ['questions asked', (x) => x.questions_asked], ['skip rate', (x) => pct(x.skip_rate)], ['rewrite rate', (x) => pct(x.rewrite_rate)], ['friction', (x) => x.friction.toFixed(2)], ['objective', (x) => x.objective.toFixed(3)]];
+		$('#resultsBody').replaceChildren(el('table', {}, el('tr', {}, cols.map(([h]) => el('th', {}, h))), ...r.rows.map((x) => el('tr', {}, cols.map(([, f]) => el('td', {}, f(x)))))), el('div', { class: 'count', style: 'margin-top:8px' }, `${r.perRenter?.length ?? ''} held-out renters · ${r.file}`));
+	}
+	$('#results').classList.remove('hidden');
+	$('#results').scrollIntoView({ behavior: 'smooth' });
+}
+
+function setView(v) {
+	document.body.classList.toggle('evo', v === 'evo');
+	document.querySelectorAll('#tabs button').forEach((b) => b.classList.toggle('on', b.dataset.view === v));
+	if (v === 'evo') showEvolution();
+	else if (mapState.map) setTimeout(() => mapState.map.invalidateSize(), 50);
+}
+document.querySelectorAll('#tabs button').forEach((b) => b.addEventListener('click', () => setView(b.dataset.view)));
 
 initMap();
 load();
