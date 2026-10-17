@@ -20,13 +20,14 @@
 		if (page.params.id === id) goto('/');
 	}
 
-	// Collapsed shows a narrow icon rail to free width for the chat; remembered per browser.
+	// Collapsed (the default) shows a narrow icon rail to free width for the chat; an expanded
+	// sidebar is remembered per browser.
 	const COLLAPSED_KEY = 'sidebar-collapsed';
-	let collapsed = $state(false);
+	let collapsed = $state(true);
 
 	$effect(() => {
 		try {
-			collapsed = localStorage.getItem(COLLAPSED_KEY) === '1';
+			collapsed = localStorage.getItem(COLLAPSED_KEY) !== '0';
 		} catch {
 			// Storage blocked (private mode): keep the default.
 		}
