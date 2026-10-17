@@ -492,10 +492,10 @@ function snippet(
 	query: string
 ) {
 	const text =
-		kind === 'form'
+		kind === 'form' || kind === 'widget'
 			? Object.entries(data ?? {})
 					.filter(([, v]) => v !== '' && v !== null && v !== undefined)
-					.map(([k, v]) => `${k}: ${Array.isArray(v) ? v.join(', ') : v}`)
+					.map(([k, v]) => `${k}: ${typeof v === 'object' ? JSON.stringify(v) : v}`)
 					.join(' · ')
 			: kind === 'html'
 				? content.replace(/<(script|style)[\s\S]*?<\/\1>/gi, ' ').replace(/<[^>]+>/g, ' ')

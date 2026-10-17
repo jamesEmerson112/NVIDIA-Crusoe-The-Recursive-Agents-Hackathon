@@ -1,8 +1,9 @@
 import type { ToolSchema, Usage } from '../crusoe';
-import type { MessageMeta, StepStatus } from '#lib/types.ts';
+import type { MessageMeta, StepStatus, WidgetSpec } from '#lib/types.ts';
 import * as store from '../store';
 import { runQuickEdit } from './subagent';
 import { normalizeFormSpec } from '#lib/forms.ts';
+import { normalizeWidget } from '#lib/widgets.ts';
 
 export interface ToolContext {
 	conversationId: string;
@@ -116,6 +117,36 @@ export const TOOL_SCHEMAS: ToolSchema[] = [
 					depends_on: dependsOn
 				},
 				required: ['title', 'fields']
+			}
+		}
+	},
+	{
+		type: 'function',
+		function: {
+			name: 'create_widget',
+			description: `Show the user an interactive widget inline in the chat, for input a plain form can't capture well: sliders with live totals, ranking, picking on a grid or calendar, splitting a budget, choosing between visual options. Use create_form for ordinary questions.
+The html is a fragment (no <html>/<head>) using petite-vue (Vue-like syntax: v-scope, v-model, v-model.number, v-for, v-if, @click, :class, {{ }}). It runs in a sandboxed iframe with no network, so inline any CSS; plain elements are already styled to match the app.
+Available in every expression: $submit(obj) sends obj (a JSON object) back to you as a [Widget submitted] message, and $initial is the last submitted object or null. Seed state from it so the widget reopens with the user's answer, e.g. <div v-scope="{ guests: $initial?.guests ?? 8 }">. Exactly one button should call $submit; give it class="primary". Helper classes: row, grid, card, muted, selected.
+Computed values: put getters in v-scope, e.g. v-scope="{ items: [...], get total() { return this.items.reduce((s, i) => s + i.amount, 0) } }", then use {{ total }}. Bare names that are not in a v-scope are undefined.
+To fix a widget before the user answers it, call update_artifact with its id and the full new html as content; never create a second copy.`,
+			parameters: {
+				type: 'object',
+				properties: {
+					title: { type: 'string' },
+					step: { type: 'integer', description: 'Step number this widget belongs to.' },
+					html: {
+						type: 'string',
+						description: 'petite-vue HTML fragment that calls $submit(obj).'
+					},
+					description: { type: 'string', description: 'One line shown above the widget.' },
+					data_schema: {
+						type: 'object',
+						description:
+							'Optional JSON Schema subset for the submitted object (type, properties, required, enum, items, minimum, maximum). Submissions that fail it are rejected.'
+					},
+					depends_on: dependsOn
+				},
+				required: ['title', 'html']
 			}
 		}
 	},
@@ -340,6 +371,37 @@ async function execute(
 				awaitUser: true
 			};
 		}
+		case 'create_widget': {
+			let spec;
+			try {
+				spec = normalizeWidget({
+					html: args.html,
+					description: args.description,
+					schema: args.data_schema
+				});
+			} catch (err) {
+				return { content: fail(`Widget rejected: ${(err as Error).message}`) };
+			}
+			const { id } = await store.createArtifact({
+				conversationId: cid,
+				kind: 'widget',
+				title: String(args.title),
+				content: JSON.stringify(spec),
+				step: args.step,
+				dependsOn: args.depends_on,
+				status: 'awaiting_input',
+				provenance
+			});
+			ctx.emit({ type: 'tool', name, summary: `Widget: ${args.title}` });
+			return {
+				content: ok({
+					artifact_id: id,
+					note: 'Widget is shown to the user. Wait for their submission.'
+				}),
+				meta: { kind: 'artifact', artifactId: id },
+				awaitUser: true
+			};
+		}
 		case 'create_artifact': {
 			if (!['document', 'html'].includes(args.kind))
 				return { content: fail('kind must be document or html') };
@@ -371,8 +433,43 @@ async function execute(
 		case 'update_artifact': {
 			const a = await store.getArtifact(cid, args.artifact_id);
 			if (!a) return { content: fail(`No artifact ${args.artifact_id}`) };
-			if (a.kind === 'form')
-				return { content: fail('Forms are edited by the user, not the agent') };
+			// A widget the user hasn't answered yet can be fixed in place (content = new html).
+			if (a.kind === 'widget' && a.status === 'awaiting_input') {
+				const old = JSON.parse(a.content) as WidgetSpec;
+				let spec;
+				try {
+					spec = normalizeWidget({
+						html: args.content,
+						description: old.description,
+						schema: old.schema
+					});
+				} catch (err) {
+					return { content: fail(`Widget rejected: ${(err as Error).message}`) };
+				}
+				const title =
+					typeof args.title === 'string' && args.title.trim() ? args.title.trim() : undefined;
+				if (title && title !== a.title) await store.renameArtifact(a.id, title);
+				const { version } = await store.addVersion(
+					cid,
+					a.id,
+					{
+						content: JSON.stringify(spec),
+						note: String(args.note ?? 'Fixed widget'),
+						status: 'awaiting_input'
+					},
+					provenance
+				);
+				ctx.emit({ type: 'tool', name, summary: `Fixed widget ${title ?? a.title}` });
+				return {
+					content: ok({ artifact_id: a.id, version, note: 'The user now sees the fixed widget.' })
+				};
+			}
+			if (a.kind === 'form' || a.kind === 'widget')
+				return {
+					content: fail(
+						`${a.kind === 'form' ? 'Forms' : 'Widgets'} are answered by the user; create a new one to ask again`
+					)
+				};
 			const title =
 				typeof args.title === 'string' && args.title.trim() ? args.title.trim() : undefined;
 			if (title && title !== a.title) await store.renameArtifact(a.id, title);
@@ -412,8 +509,12 @@ async function execute(
 		case 'quick_edit': {
 			const a = await store.getArtifact(cid, args.artifact_id);
 			if (!a) return { content: fail(`No artifact ${args.artifact_id}`) };
-			if (a.kind === 'form')
-				return { content: fail('Forms are edited by the user, not the agent') };
+			if (a.kind === 'form' || a.kind === 'widget')
+				return {
+					content: fail(
+						`${a.kind === 'form' ? 'Forms' : 'Widgets'} are answered by the user; create a new one to ask again`
+					)
+				};
 			ctx.emit({ type: 'tool', name, summary: `Sub-agent revising ${a.title}` });
 			await store.setArtifactStatus([a.id], 'updating');
 			ctx.emit({ type: 'changed' });

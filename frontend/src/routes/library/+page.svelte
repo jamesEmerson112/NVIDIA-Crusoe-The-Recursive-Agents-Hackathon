@@ -22,9 +22,10 @@
 		{ value: null, label: 'All' },
 		{ value: 'form', label: 'Forms' },
 		{ value: 'document', label: 'Documents' },
+		{ value: 'widget', label: 'Widgets' },
 		{ value: 'html', label: 'Interactive' }
 	];
-	const kindLabel = { form: 'Form', document: 'Document', html: 'Interactive' };
+	const kindLabel = { form: 'Form', widget: 'Widget', document: 'Document', html: 'Interactive' };
 	const when = (d: Date) =>
 		new Date(d).toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
 </script>
@@ -75,9 +76,8 @@
 							<span class="text-xs text-zinc-400">{when(r.updatedAt)}</span>
 						</div>
 						<p class="mt-0.5 truncate text-xs text-zinc-500">
-							{kindLabel[r.kind]} v{r.version} · {r.conversationTitle}{r.stepTitle
-								? ` · Step ${r.stepPosition}: ${r.stepTitle}`
-								: ''}
+							{kindLabel[r.kind]}{r.kind === 'form' || r.kind === 'widget' ? '' : ` v${r.version}`} ·
+							{r.conversationTitle}{r.stepTitle ? ` · Step ${r.stepPosition}: ${r.stepTitle}` : ''}
 						</p>
 						{#if r.snippet}<p class="mt-1.5 line-clamp-2 text-sm text-zinc-600 dark:text-zinc-400">
 								{r.snippet}

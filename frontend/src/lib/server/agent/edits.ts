@@ -1,6 +1,7 @@
 import * as store from '../store';
 import { diffSpecs, normalizeFormSpec } from '#lib/forms.ts';
-import type { FormSpec, MessageMeta } from '#lib/types.ts';
+import { checkSubmission, diffData } from '#lib/widgets.ts';
+import type { FormSpec, MessageMeta, WidgetSpec } from '#lib/types.ts';
 
 type Input = { content: string; meta: MessageMeta };
 
@@ -29,8 +30,22 @@ export async function submitForm(
 	values: Record<string, unknown>
 ): Promise<Input> {
 	const form = await store.getArtifact(cid, artifactId);
-	if (!form || form.kind !== 'form') throw new Error('Unknown form');
+	if (!form || (form.kind !== 'form' && form.kind !== 'widget')) throw new Error('Unknown form');
+	if (form.kind === 'widget') checkWidgetData(form.content, values);
 	if (form.status !== 'awaiting_input') return editArtifact(cid, artifactId, { values });
+	if (form.kind === 'widget') {
+		const { version } = await store.addVersion(
+			cid,
+			artifactId,
+			{ data: values, note: 'Submitted' },
+			{ author: 'user' }
+		);
+		await store.completeStepIfAnswered(form.stepId);
+		return {
+			content: `[Widget submitted] "${form.title}" (${artifactId}):\n\`\`\`json\n${JSON.stringify(values, null, 2)}\n\`\`\``,
+			meta: { kind: 'form_submit', artifactId, version }
+		};
+	}
 
 	const spec = parseSpec(form.content);
 	const answers = keepAnswers(spec, values);
@@ -111,6 +126,14 @@ export async function editArtifact(
 			.map((k) => `- ${label.get(k) ?? k} (${k}): ${fmt(oldAnswers[k])} → ${fmt(data![k])}`);
 		if (answerChanges.length) changes.push('Answers:', ...answerChanges);
 		if (questionChanges.length) changes.push('Current answers:', ...answerLines(spec, data));
+	} else if (before.kind === 'widget') {
+		if (!edit.values) throw new Error('Nothing changed');
+		checkWidgetData(before.content, edit.values);
+		content = undefined;
+		data = edit.values;
+		changes.push(...diffData(before.data ?? {}, data));
+		if (changes.length)
+			changes.push('Submitted data now:', '```json', JSON.stringify(data, null, 2), '```');
 	} else if (edit.content !== undefined && edit.content !== before.content) {
 		changes.push(
 			`- content edited directly (${before.content.length} → ${edit.content.length} characters); read_artifact to see it`
@@ -122,7 +145,7 @@ export async function editArtifact(
 		cid,
 		artifactId,
 		{
-			data: before.kind === 'form' ? data : undefined,
+			data: before.kind === 'form' || before.kind === 'widget' ? data : undefined,
 			content,
 			note: changes[0] === 'Questions:' ? 'Questions and answers edited by user' : 'Edited by user',
 			status: 'ready'
@@ -180,4 +203,9 @@ export async function replyToProposal(
 			: `[Declined] Keep the current versions of ${titles.join(', ')}; don't redo them.`,
 		meta: { kind: 'proposal_reply', callId, approved }
 	};
+}
+
+function checkWidgetData(content: string, values: unknown) {
+	const problems = checkSubmission(JSON.parse(content) as WidgetSpec, values);
+	if (problems.length) throw new Error(`The widget sent invalid data: ${problems.join('; ')}`);
 }

@@ -13,11 +13,10 @@
 	import ArtifactCard from './ArtifactCard.svelte';
 	import ArtifactView from './ArtifactView.svelte';
 	import Composer from './Composer.svelte';
-	import FormView from './FormView.svelte';
 	import Markdown from './Markdown.svelte';
 	import ProcessPanel from './ProcessPanel.svelte';
 	import ProposalCard from './ProposalCard.svelte';
-	import QuestionEditor from './QuestionEditor.svelte';
+	import InlineInput from './InlineInput.svelte';
 
 	let { conversation: cs }: { conversation: ConversationState } = $props();
 
@@ -36,9 +35,6 @@
 	);
 	const byId = $derived(new Map(cs.artifacts.map((a) => [a.id, a])));
 	let panelOpen = $state(true);
-	/** Id of the pending form whose questions are being edited inline, if any. */
-	let editingForm = $state<string | null>(null);
-	let formError = $state('');
 	// Below xl the panel overlays the chat, so start with it closed there.
 	$effect(() => {
 		if (window.innerWidth < 1280) panelOpen = false;
@@ -58,14 +54,16 @@
 	};
 
 	// Show each pending form inline once, at the point the agent asked for it.
-	const inlineForms = $derived.by(() => {
+	// Forms and widgets stay embedded where the agent first asked for them, answered or not.
+	const inlineInputs = $derived.by(() => {
 		const seen = new Set<string>();
 		const out = new Set<string>();
 		for (const m of cs.messages) {
 			const meta = m.meta as MessageMeta | null;
 			if (m.role === 'tool' && meta?.kind === 'artifact' && !seen.has(meta.artifactId)) {
 				seen.add(meta.artifactId);
-				if (byId.get(meta.artifactId)?.status === 'awaiting_input') out.add(m.id);
+				const kind = byId.get(meta.artifactId)?.kind;
+				if (kind === 'form' || kind === 'widget') out.add(m.id);
 			}
 		}
 		return out;
@@ -117,7 +115,7 @@
 								class="rounded-full bg-zinc-100 px-3 py-1 text-xs text-zinc-600 hover:bg-zinc-200 dark:bg-zinc-800 dark:text-zinc-300"
 								onclick={() => open(meta.artifactId)}
 							>
-								✓ Submitted {a?.title ?? 'form'} (v{meta.version})
+								✓ Answered {a?.title ?? 'form'}
 							</button>
 						</div>
 					{:else if m.role === 'user' && meta?.kind === 'artifact_edit'}
@@ -128,7 +126,11 @@
 								class="rounded-full bg-amber-500/10 px-3 py-1 text-xs text-amber-900 hover:bg-amber-500/20 dark:text-amber-200"
 								onclick={() => open(meta.artifactId)}
 							>
-								✎ You edited {a?.title ?? 'an artifact'} (v{meta.version}){meta.staleIds.length
+								✎ You edited {a?.title ?? 'an artifact'}{a &&
+								a.kind !== 'form' &&
+								a.kind !== 'widget'
+									? ` (v${meta.version})`
+									: ''}{meta.staleIds.length
 									? ` · ${meta.staleIds.length} dependent artifact${meta.staleIds.length > 1 ? 's' : ''} out of date`
 									: ''}
 							</button>
@@ -187,59 +189,8 @@
 						<Markdown source={m.content} />
 					{:else if m.role === 'tool' && meta?.kind === 'artifact'}
 						{@const a = byId.get(meta.artifactId)}
-						{#if a && inlineForms.has(m.id)}
-							{@const v = a.versions.find((x) => x.version === a.currentVersion) ?? a.versions[0]}
-							{@const spec = JSON.parse(v.content) as FormSpec}
-							<div
-								data-testid="workspace-inline-form"
-								class="max-w-xl rounded-2xl border border-sky-200 bg-white p-5 shadow-sm dark:border-sky-900 dark:bg-zinc-900"
-							>
-								<div class="mb-3 flex items-start gap-2">
-									<h3 class="min-w-0 flex-1 font-semibold">{a.title}</h3>
-									{#if editingForm !== a.id}
-										<button
-											data-testid="workspace-inline-form-edit-questions"
-											class="shrink-0 rounded-md px-2 py-0.5 text-xs text-zinc-500 hover:bg-zinc-100 hover:text-zinc-800 disabled:opacity-50 dark:hover:bg-zinc-800 dark:hover:text-zinc-200"
-											disabled={busy}
-											onclick={() => {
-												formError = '';
-												editingForm = a.id;
-											}}>Edit questions</button
-										>
-									{/if}
-								</div>
-								{#key v.id}
-									{#if editingForm === a.id}
-										<QuestionEditor
-											{spec}
-											saveLabel="Save questions"
-											disabled={busy}
-											onsave={async (next) => {
-												try {
-													await saveQuestions(cid, a.id, next);
-													editingForm = null;
-												} catch (err) {
-													formError = (err as Error).message;
-												}
-											}}
-											oncancel={() => (editingForm = null)}
-										/>
-										{#if formError}<p
-												data-testid="workspace-inline-form-error"
-												class="mt-2 text-sm text-rose-600"
-											>
-												{formError}
-											</p>{/if}
-									{:else}
-										<FormView
-											{spec}
-											submitLabel={spec.submitLabel ?? 'Submit'}
-											disabled={busy}
-											onsubmit={(values) => run({ type: 'form_submit', artifactId: a.id, values })}
-										/>
-									{/if}
-								{/key}
-							</div>
+						{#if a && inlineInputs.has(m.id)}
+							<InlineInput artifact={a} {cid} {busy} {run} onopen={() => open(a.id)} />
 						{:else if a}
 							<ArtifactCard
 								artifact={a}

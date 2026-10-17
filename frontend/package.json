@@ -67,6 +67,7 @@
 		"dompurify": "^3.4.17",
 		"lil-gui": "^0.21.0",
 		"marked": "^18.1.1",
+		"petite-vue": "^0.4.1",
 		"stats-gl": "^4.2.3",
 		"three": "^0.186.1"
 	}

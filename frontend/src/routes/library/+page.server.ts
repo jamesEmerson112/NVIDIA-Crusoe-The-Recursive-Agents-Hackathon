@@ -1,7 +1,7 @@
 import { searchArtifacts } from '#lib/server/store.ts';
 import type { ArtifactKind } from '#lib/types.ts';
 
-const KINDS = ['form', 'document', 'html'] as const;
+const KINDS = ['form', 'widget', 'document', 'html'] as const;
 
 export async function load({ url }) {
 	const q = url.searchParams.get('q')?.trim() ?? '';

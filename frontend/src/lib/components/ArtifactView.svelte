@@ -1,10 +1,11 @@
 <script lang="ts">
 	import type { ConversationState } from '#lib/server/store.ts';
 	import { lineDiff, withContext } from '#lib/diff.ts';
-	import type { FormSpec } from '#lib/types.ts';
+	import type { FormSpec, WidgetSpec } from '#lib/types.ts';
 	import { saveQuestions } from '#lib/client/run.svelte.ts';
 	import FormView from './FormView.svelte';
 	import QuestionEditor from './QuestionEditor.svelte';
+	import Widget from './Widget.svelte';
 	import Markdown from './Markdown.svelte';
 	import StatusBadge from './StatusBadge.svelte';
 
@@ -65,6 +66,11 @@
 			? withContext(lineDiff(previous.content, version.content))
 			: []
 	);
+	// Forms and widgets keep their history internally (diffs, estimates) but don't show versions.
+	const isInput = $derived(artifact.kind === 'form' || artifact.kind === 'widget');
+	const widgetSpec = $derived(
+		artifact.kind === 'widget' ? (JSON.parse(version.content) as WidgetSpec) : null
+	);
 	const isCurrent = $derived(version.version === artifact.currentVersion);
 	const upstream = $derived(all.filter((a) => artifact.upstream.includes(a.id)));
 	const downstream = $derived(all.filter((a) => a.upstream.includes(artifact.id)));
@@ -93,7 +99,7 @@
 						? '—'
 						: String(v);
 	const authorLabel = { agent: 'Agent', user: 'You', subagent: 'Sub-agent' };
-	const kindLabel = { form: 'Form', document: 'Document', html: 'Interactive' };
+	const kindLabel = { form: 'Form', widget: 'Widget', document: 'Document', html: 'Interactive' };
 </script>
 
 <div data-testid="artifact-view" class="flex h-full flex-col">
@@ -115,36 +121,37 @@
 		>
 	</header>
 
-	<div
-		data-testid="artifact-view-versions"
-		class="flex items-center gap-2 overflow-x-auto border-b border-zinc-200 px-5 py-2 dark:border-zinc-800"
-	>
-		<span class="text-xs text-zinc-500">Versions</span>
-		{#each [...artifact.versions].reverse() as v (v.id)}
-			<button
-				class="rounded-md px-2 py-0.5 text-xs whitespace-nowrap {v.version === version.version
-					? 'bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-900'
-					: 'text-zinc-600 hover:bg-zinc-100 dark:text-zinc-400 dark:hover:bg-zinc-800'}"
-				data-testid="artifact-view-version"
-				title="{v.note ?? ''} · {authorLabel[v.author]} · {when(v.createdAt)}"
-				onclick={() => {
-					selected = v.version;
-					editing = false;
-					editingQuestions = false;
-				}}
-			>
-				v{v.version}
-			</button>
-		{/each}
-	</div>
+	{#if !isInput}<div
+			data-testid="artifact-view-versions"
+			class="flex items-center gap-2 overflow-x-auto border-b border-zinc-200 px-5 py-2 dark:border-zinc-800"
+		>
+			<span class="text-xs text-zinc-500">Versions</span>
+			{#each [...artifact.versions].reverse() as v (v.id)}
+				<button
+					class="rounded-md px-2 py-0.5 text-xs whitespace-nowrap {v.version === version.version
+						? 'bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-900'
+						: 'text-zinc-600 hover:bg-zinc-100 dark:text-zinc-400 dark:hover:bg-zinc-800'}"
+					data-testid="artifact-view-version"
+					title="{v.note ?? ''} · {authorLabel[v.author]} · {when(v.createdAt)}"
+					onclick={() => {
+						selected = v.version;
+						editing = false;
+						editingQuestions = false;
+					}}
+				>
+					v{v.version}
+				</button>
+			{/each}
+		</div>{/if}
 
 	<div class="min-h-0 flex-1 overflow-y-auto px-5 py-4">
 		<p data-testid="artifact-view-meta" class="mb-4 text-xs text-zinc-500">
-			v{version.version} · {version.note} · {authorLabel[version.author]}{version.model
-				? ` (${version.model})`
-				: ''} · {when(version.createdAt)}
+			{#if !isInput}v{version.version} ·{/if}
+			{version.note} · {authorLabel[version.author]}{version.model ? ` (${version.model})` : ''} · {when(
+				version.createdAt
+			)}
 			{#if version.costUsd > 0}· ${version.costUsd.toFixed(5)}{/if}
-			{#if previous && artifact.kind !== 'form' && !editing}
+			{#if previous && !isInput && !editing}
 				·
 				<button
 					class="font-medium text-zinc-700 underline-offset-2 hover:underline dark:text-zinc-300"
@@ -236,7 +243,7 @@
 											data-testid="artifact-view-answer-changed"
 											class="text-amber-700 dark:text-amber-400"
 										>
-											· changed in v{version.version}</span
+											· changed</span
 										>{/if}
 								</dt>
 								<dd data-testid="artifact-view-answer-value" class="text-sm whitespace-pre-wrap">
@@ -255,6 +262,40 @@
 					</dl>
 				{/if}
 			{/key}
+		{:else if widgetSpec}
+			{#key `${version.id}-${editing}`}
+				<Widget
+					spec={widgetSpec}
+					title={artifact.title}
+					initial={version.data}
+					live={editing && !busy}
+					onsubmit={(values) => {
+						editing = false;
+						onedit({ values });
+					}}
+				/>
+			{/key}
+			{#if artifact.status === 'awaiting_input'}
+				<p data-testid="artifact-view-awaiting-input" class="mt-2 text-sm text-zinc-500">
+					Waiting for your answer in the chat.
+				</p>
+			{:else if editing}
+				<button
+					data-testid="artifact-view-cancel"
+					class="mt-2 text-xs text-zinc-500 hover:text-zinc-800 dark:hover:text-zinc-200"
+					onclick={() => (editing = false)}>Cancel</button
+				>
+			{:else}
+				<details data-testid="artifact-view-widget-data" class="mt-3 text-xs">
+					<summary class="cursor-pointer text-zinc-500">Data sent to the agent</summary>
+					<pre
+						class="mt-1 overflow-x-auto rounded-lg bg-zinc-100 p-2 dark:bg-zinc-800">{JSON.stringify(
+							version.data,
+							null,
+							2
+						)}</pre>
+				</details>
+			{/if}
 		{:else if editing}
 			<textarea
 				data-testid="artifact-view-editor"
@@ -343,9 +384,11 @@
 						editing = true;
 					}}
 				>
-					{artifact.kind === 'form' ? 'Edit answers' : 'Edit'}{isCurrent
-						? ''
-						: ` from v${version.version}`}
+					{artifact.kind === 'form'
+						? 'Edit answers'
+						: artifact.kind === 'widget'
+							? 'Change'
+							: 'Edit'}{isCurrent || isInput ? '' : ` from v${version.version}`}
 				</button>
 				{#if artifact.kind === 'form'}
 					<button

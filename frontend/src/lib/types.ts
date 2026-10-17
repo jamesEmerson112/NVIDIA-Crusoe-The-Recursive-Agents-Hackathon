@@ -1,6 +1,6 @@
 // Types shared by server and browser code.
 
-export type ArtifactKind = 'form' | 'document' | 'html';
+export type ArtifactKind = 'form' | 'widget' | 'document' | 'html';
 export type ArtifactStatus = 'ready' | 'awaiting_input' | 'stale' | 'updating';
 export type StepStatus = 'pending' | 'active' | 'done' | 'stale';
 
@@ -64,3 +64,25 @@ export type RunEvent =
 	| { type: 'changed' }
 	| { type: 'error'; message: string }
 	| { type: 'done' };
+
+/** The subset of JSON Schema that widget data is checked against (see `#lib/widgets.ts`). */
+export interface DataSchema {
+	type?: 'object' | 'array' | 'string' | 'number' | 'integer' | 'boolean';
+	properties?: Record<string, DataSchema>;
+	required?: string[];
+	items?: DataSchema;
+	enum?: unknown[];
+	minimum?: number;
+	maximum?: number;
+	description?: string;
+}
+
+/**
+ * An agent-written interactive widget: petite-vue HTML run in a sandboxed iframe. It returns
+ * data by calling `$submit(obj)`; `$initial` holds the last submitted data.
+ */
+export interface WidgetSpec {
+	html: string;
+	description?: string;
+	schema?: DataSchema;
+}

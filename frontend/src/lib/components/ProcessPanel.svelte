@@ -21,7 +21,7 @@
 		done: 'text-emerald-600',
 		stale: 'text-amber-500'
 	};
-	const kindIcon = { form: '☰', document: '¶', html: '◇' };
+	const kindIcon = { form: '☰', widget: '◈', document: '¶', html: '◇' };
 </script>
 
 <div data-testid="process-panel" class="flex h-full flex-col">
@@ -74,7 +74,9 @@
 										>
 											<span class="text-zinc-400">{kindIcon[a.kind]}</span>
 											<span class="min-w-0 flex-1 truncate">{a.title}</span>
-											<span class="text-[11px] text-zinc-400">v{a.currentVersion}</span>
+											{#if a.kind !== 'form' && a.kind !== 'widget'}<span
+													class="text-[11px] text-zinc-400">v{a.currentVersion}</span
+												>{/if}
 											{#if a.status !== 'ready'}<StatusBadge status={a.status} />{/if}
 										</button>
 									</li>

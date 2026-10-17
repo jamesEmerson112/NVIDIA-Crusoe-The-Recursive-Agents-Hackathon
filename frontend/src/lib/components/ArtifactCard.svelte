@@ -8,7 +8,7 @@
 		onopen
 	}: { artifact: ConversationState['artifacts'][number]; label: string; onopen: () => void } =
 		$props();
-	const kind = { form: 'Form', document: 'Document', html: 'Interactive' };
+	const kind = { form: 'Form', widget: 'Widget', document: 'Document', html: 'Interactive' };
 </script>
 
 <button
@@ -24,7 +24,9 @@
 	<span class="min-w-0 flex-1">
 		<span class="block truncate text-sm font-medium">{artifact.title}</span>
 		<span class="block text-xs text-zinc-500"
-			>{label} · {kind[artifact.kind]} · v{artifact.currentVersion}</span
+			>{label} · {kind[artifact.kind]}{artifact.kind === 'form' || artifact.kind === 'widget'
+				? ''
+				: ` · v${artifact.currentVersion}`}</span
 		>
 	</span>
 	{#if artifact.status !== 'ready'}<StatusBadge status={artifact.status} />{/if}
