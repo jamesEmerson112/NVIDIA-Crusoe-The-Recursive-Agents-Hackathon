@@ -4,6 +4,7 @@ import type { Answer, Destination, Listing, Pref, Question } from './types.ts';
 import { DESTINATIONS, LAYOUTS, LAUNDRY, NEIGHBORHOODS, NOISE, PETS, PREF_FIELDS, PREF_OPS } from './types.ts';
 import { chatJSON } from './crusoe.ts';
 import { parseField, parsePrefs } from './phrases.ts';
+import { factorPref, findFactorsOffline, resolveFactor, type Resolution } from './factors.ts';
 
 const ENUMS: Partial<Record<Pref['field'], readonly string[]>> = {
 	neighborhood: NEIGHBORHOODS,
@@ -86,10 +87,53 @@ function questionText(q: Question, a: Answer) {
 	return a.action === 'rewrite' && a.rewritten_text ? `${a.rewritten_text} (renter's rewrite of: ${q.text})` : q.text;
 }
 
-export async function extractPrefs(
+export type FoundFactor = Resolution & { from: string };
+
+/**
+ * Preferences plus grounded factors. Factors the listing fields can't express are resolved through You.com
+ * (cache first); cacheOnly runs (simulations, generations, evals) never touch the network.
+ */
+export async function extractWithFactors(
 	questions: Question[],
 	answers: Answer[],
-	opts: { offline: boolean }
+	opts: { offline: boolean; cacheOnly?: boolean }
+): Promise<{ prefs: Pref[]; factors: FoundFactor[] }> {
+	const raw: { text: string; from: string }[] = [];
+	const prefs = await extractCore(questions, answers, opts, raw);
+	const byId = new Map(questions.map((q) => [q.id, q]));
+	// Questions promoted from a factor carry their mapping: a non-"no" answer applies it.
+	for (const a of answers) {
+		const q = byId.get(a.question_id);
+		if (!q?.resolved || a.action === 'skip' || a.value === undefined || /^\s*(no|nope|n\/a|none)\b/i.test(String(a.value))) continue;
+		prefs.push({ ...q.resolved.pref, weight: revealedWeight(a), from: q.id, factor: { text: q.resolved.factor, sources: q.resolved.sources, confidence: 1 } });
+	}
+	if (opts.offline) {
+		for (const a of answers) if (a.action !== 'skip' && a.value !== undefined) for (const text of findFactorsOffline(String(a.value))) raw.push({ text, from: a.question_id });
+	}
+	const factors: FoundFactor[] = [];
+	const seen = new Set<string>();
+	for (const f of raw) {
+		const key = f.text.toLowerCase();
+		if (seen.has(key)) continue;
+		seen.add(key);
+		const r = await resolveFactor(f.text, { cacheOnly: opts.cacheOnly });
+		factors.push({ ...r, from: f.from });
+		const a = answers.find((x) => x.question_id === f.from);
+		const p = factorPref(r, a ? revealedWeight(a) : 1, f.from);
+		if (p) prefs.push(p);
+	}
+	return { prefs, factors };
+}
+
+export async function extractPrefs(questions: Question[], answers: Answer[], opts: { offline: boolean; cacheOnly?: boolean }): Promise<Pref[]> {
+	return (await extractWithFactors(questions, answers, opts)).prefs;
+}
+
+async function extractCore(
+	questions: Question[],
+	answers: Answer[],
+	opts: { offline: boolean },
+	factorsOut: { text: string; from: string }[]
 ): Promise<Pref[]> {
 	const byId = new Map(questions.map((q) => [q.id, q]));
 	const given = answers.filter((a) => a.action !== 'skip' && a.value !== undefined);
@@ -103,15 +147,16 @@ export async function extractPrefs(
 		});
 	}
 
-	const system = `Reasoning: low\nYou turn a renter's intake-form answers into structured apartment preferences.\n${SCHEMA}\nOnly state what the answers support; a rewritten question tells you what the renter actually cares about. Nobody rates importance directly: set each weight 0-3 from how much the renter revealed they care. Detail, specifics and conviction ("must", "never", exact numbers) mean high; terse or hedged answers ("fine", "flexible", "whatever") mean low. Reply with JSON only: {"prefs":[Pref,...]}`;
+	const system = `Reasoning: low\nYou turn a renter's intake-form answers into structured apartment preferences.\n${SCHEMA}\nOnly state what the answers support; a rewritten question tells you what the renter actually cares about. Nobody rates importance directly: set each weight 0-3 from how much the renter revealed they care. Detail, specifics and conviction ("must", "never", exact numbers) mean high; terse or hedged answers ("fine", "flexible", "whatever") mean low. Separately list "factors": requirements none of those fields can express, quoted short, e.g. "near the 14 bus", "walking distance to a dog park", "away from freeway noise". Reply with JSON only: {"prefs":[Pref,...],"factors":[{"text":"...","from":"question_id"}]}`;
 	const user = given
 		.map((a) => {
 			const q = byId.get(a.question_id)!;
 			return `[${q.id}] Q: ${questionText(q, a)}\nA: ${Array.isArray(a.value) ? a.value.join(', ') : a.value}`;
 		})
 		.join('\n');
-	const { data } = await chatJSON<{ prefs?: unknown[] }>('extractor', system, user);
 	const ids = new Set(questions.map((q) => q.id));
+	const { data } = await chatJSON<{ prefs?: unknown[]; factors?: { text?: string; from?: string }[] }>('extractor', system, user);
+	for (const f of data.factors ?? []) if (f?.text && f.from && ids.has(f.from)) factorsOut.push({ text: String(f.text).slice(0, 80), from: f.from });
 	const revealed = new Map(given.map((a) => [a.question_id, weightOf(a)]));
 	return (data.prefs ?? [])
 		.map((p) => cleanPref(p, ids))

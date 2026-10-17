@@ -1,7 +1,7 @@
 // The inner loop for one renter: fill the form, extract preferences, recommend, react, re-rank, score.
 import type { Answer, EvalConfig, Form, Listing, Persona, Pref } from './types.ts';
 import { answerOffline, answerOnline, quality, react, type Reaction } from './simulator.ts';
-import { extractPrefs, prefFromReaction } from './agent.ts';
+import { extractWithFactors, prefFromReaction, type FoundFactor } from './agent.ts';
 import { rank } from './utility.ts';
 
 export type QuestionStat = {
@@ -22,6 +22,8 @@ export type RenterResult = {
 	form: number;
 	answers: Answer[];
 	prefs: Pref[];
+	/** Renter-introduced factors, grounded from the You.com cache only (never live in simulations). */
+	factors: FoundFactor[];
 	firstPick: Listing;
 	rounds: { shown: Listing[]; reactions: Reaction[]; added: Pref[] }[];
 	final: Listing;
@@ -55,7 +57,8 @@ export async function runRenter(
 		log(`  ${a.action.padEnd(7)} ${shown}${a.value !== undefined ? `  =>  ${a.value}` : ''}${a.importance !== undefined ? `  [importance ${a.importance}]` : ''}`);
 	}
 
-	const prefs = await extractPrefs(questions, answers, opts);
+	const { prefs, factors } = await extractWithFactors(questions, answers, { offline: opts.offline, cacheOnly: true });
+	for (const f of factors) log(`  factor "${f.factor}" -> ${f.status}${f.neighborhoods ? ` (${f.neighborhoods.join(', ')})` : ''}${f.reason ? ` [${f.reason}]` : ''}`);
 	log(`  agent extracted ${prefs.length} preferences: ${prefs.map((p) => `${p.field}${p.dest ? `:${p.dest}` : ''} ${p.op} ${JSON.stringify(p.value)} w${p.weight}${p.hard ? ' hard' : ''}`).join('; ')}`);
 
 	const firstPick = rank(listings, prefs)[0];
@@ -112,6 +115,7 @@ export async function runRenter(
 		form: form.version,
 		answers,
 		prefs,
+		factors,
 		firstPick,
 		rounds,
 		final,

@@ -95,6 +95,8 @@ export type Pref = {
 	hard?: boolean;
 	/** Question id the preference came from; ablation drops these to measure a question's value. */
 	from?: string;
+	/** Set when the preference grounds a renter's own factor ("near the 14 bus") via web search. */
+	factor?: { text: string; sources: string[]; confidence: number };
 };
 
 export const QUESTION_TYPES = ['number', 'select', 'multiselect', 'text', 'yesno'] as const;
@@ -111,6 +113,8 @@ export type Question = {
 	maps_to: PrefField[];
 	/** Optional hint for answering offline or explaining the question. */
 	help?: string;
+	/** A promoted factor: answering yes (or anything but no) applies this web-grounded preference. */
+	resolved?: { factor: string; pref: Pref; sources: string[] };
 };
 
 export type Form = {

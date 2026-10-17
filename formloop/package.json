@@ -24,7 +24,9 @@
 		"listings": "node src/cli/listings.ts",
 		"serve": "node src/server.ts",
 		"check": "tsc --noEmit -p .",
-		"validate": "node src/cli/validate.ts"
+		"validate": "node src/cli/validate.ts",
+		"factor": "node src/cli/factor.ts",
+		"plan3d-check": "node src/cli/plan3d-check.ts"
 	},
 	"allowScripts": {},
 	"dependencies": {

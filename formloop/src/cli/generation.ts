@@ -15,7 +15,7 @@ import { loadEvalConfig, loadNotes, loadPersonas, loadQuestionBank } from '../re
 import { ensureV1, latestForm, saveForm } from '../forms.ts';
 import { loadListings } from '../listings.ts';
 import { hasCrusoeKey, usageSummary } from '../crusoe.ts';
-import { batchesFor, generationLog, logGeneration, logReactions, mean, reactionLog, runBatch, summarizeQuestions } from '../outer.ts';
+import { batchesFor, generationLog, logGeneration, logReactions, mean, reactionLog, runBatch, summarizeFactors, summarizeQuestions } from '../outer.ts';
 import { proposeOffline, proposeOnline } from '../reviewer.ts';
 import { formloopDir } from '../config.ts';
 import type { Form } from '../types.ts';
@@ -49,13 +49,15 @@ for (const s of stats)
 	);
 
 // 2. Reviewer proposes the next version.
-const proposal = offline ? proposeOffline(current, stats, bank, cfg) : await proposeOnline(current, stats, bank, notes, cfg);
+const factorStats = summarizeFactors(trainResults);
+if (factorStats.length) console.log(`\nNew factors renters introduced: ${factorStats.map((f) => `"${f.text}" x${f.renters} (${f.resolution.status})`).join(', ')}`);
+const proposal = offline ? proposeOffline(current, stats, bank, cfg) : await proposeOnline(current, stats, bank, notes, cfg, factorStats);
 const candidate: Form = { version: current.version + 1, parent: current.version, questions: proposal.questions, note: proposal.note };
 console.log(`\nReviewer (${proposal.by}) proposes v${candidate.version}: ${proposal.note}`);
 for (const q of candidate.questions) {
 	const old = current.questions.find((x) => x.id === q.id);
 	const tag = !old ? 'NEW ' : old.text !== q.text ? 'EDIT' : '    ';
-	console.log(`  ${tag} ${q.id}: ${q.text}`);
+	console.log(`  ${tag} ${q.id}: ${q.text}${q.resolved ? `  [grounded: ${q.resolved.factor}]` : ''}`);
 }
 for (const q of current.questions) if (!candidate.questions.some((x) => x.id === q.id)) console.log(`  DROP ${q.id}: ${q.text}`);
 

@@ -112,6 +112,10 @@
 	.why .no { background: var(--clay-soft); color: var(--bad); }
 	.why .mid { background: #f3ecd8; color: #8a6a12; }
 	.why .unk { background: var(--bg); color: var(--muted); }
+	.why .src { margin-left: 4px; font-size: 10.5px; }
+	.why .src a { color: inherit; opacity: .7; text-decoration: none; border-bottom: 1px dotted currentColor; margin-left: 3px; }
+	.why .grounded { outline: 1px dashed currentColor; outline-offset: -1px; }
+	.heard .chip.unverified { color: var(--faint); border-style: dashed; }
 	.actions { display: flex; gap: 8px; margin-top: auto; padding-top: 4px; }
 	.like, .pass { padding: 8px 16px; border-radius: 999px; font-size: 14px; font-weight: 500; }
 	.like { background: var(--green); color: #fff; }
@@ -300,7 +304,8 @@ function card(c, i) {
 	reasonInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') pass(reasonInput.value.trim()); if (e.key === 'Escape') node.classList.remove('asking'); });
 	const checks = c.checks.map((k) => {
 		const cls = k.sat === null ? 'unk' : k.sat >= 1 ? 'ok' : k.sat <= 0 ? 'no' : 'mid';
-		return el('span', { class: cls, title: k.from ? `from: ${k.from}` : '' }, `${{ ok: '✓', no: '✗', mid: '~', unk: '?' }[cls]} ${k.label}`);
+		const src = k.sources?.length ? el('span', { class: 'src' }, 'sources', k.sources.slice(0, 3).map((u, n) => el('a', { href: u, target: '_blank', rel: 'noopener', title: u }, String(n + 1)))) : null;
+		return el('span', { class: cls + (k.sources ? ' grounded' : ''), title: k.from ? `from: ${k.from}${k.sources ? ' · grounded with You.com search' : ''}` : '' }, `${{ ok: '✓', no: '✗', mid: '~', unk: '?' }[cls]} ${k.label}`, src);
 	});
 	node.append(
 		plan,
@@ -342,7 +347,8 @@ async function recommend() {
 		$('#count').innerHTML = `<strong>${d.remaining}</strong> of ${d.total} homes fit your dealbreakers${d.calls ? ` · ${d.calls} model calls · $${d.cost.toFixed(4)}` : ''}`;
 		$('#cards').replaceChildren(...(d.top.length ? d.top.map(card) : [el('div', { class: 'empty' }, 'Nothing fits every dealbreaker. Loosen one on the left.')]));
 		$('#saved').replaceChildren(...d.liked.map((c) => el('span', {}, `♥ ${c.listing.neighborhood} · ${money(c.listing.price)}`)));
-		$('#prefs').replaceChildren(...(d.prefs.length ? d.prefs.map((p) => el('span', { class: 'chip' + (p.hard ? ' hard' : '') }, p.label, el('em', {}, p.hard ? 'dealbreaker' : p.from || ''))) : [el('span', { class: 'count' }, 'Nothing yet.')]));
+		const unverified = (d.factors || []).filter((f) => f.status !== 'resolved').map((f) => el('span', { class: 'chip unverified', title: f.reason || '' }, f.text, el('em', {}, 'couldn’t verify, ignored')));
+		$('#prefs').replaceChildren(...(d.prefs.length || unverified.length ? [...d.prefs.map((p) => el('span', { class: 'chip' + (p.hard ? ' hard' : '') }, p.label, el('em', {}, p.hard ? 'dealbreaker' : p.factor ? 'web-grounded' : p.from || ''))), ...unverified] : [el('span', { class: 'count' }, 'Nothing yet.')]));
 	} catch (e) {
 		toast('Agent error: ' + e.message);
 	} finally {

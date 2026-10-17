@@ -4,7 +4,8 @@ import type { EvalConfig, Form, Question } from './types.ts';
 import { PREF_FIELDS, QUESTION_TYPES } from './types.ts';
 import { chatJSON } from './crusoe.ts';
 import { checkQuestions } from './research.ts';
-import type { QuestionSummary } from './outer.ts';
+import type { FactorSummary, QuestionSummary } from './outer.ts';
+import { factorPref } from './factors.ts';
 
 export type Proposal = { questions: Question[]; note: string; by: 'reviewer' | 'rules' };
 
@@ -26,8 +27,10 @@ export async function proposeOnline(
 	stats: QuestionSummary[],
 	bank: Question[],
 	notes: string,
-	cfg: EvalConfig
+	cfg: EvalConfig,
+	factors: FactorSummary[] = []
 ): Promise<Proposal> {
+	const resolved = factors.filter((f) => f.resolution.status === 'resolved');
 	const unused = bank.filter((q) => !form.questions.some((x) => x.id === q.id));
 	const system = [
 		`You redesign an apartment-search intake form so it finds renters a better apartment with less effort.`,
@@ -39,13 +42,21 @@ export async function proposeOnline(
 	].join('\n\n');
 	const user = [
 		`Current form v${form.version} and how renters reacted:\n${statsTable(stats)}`,
-		`Unused questions in the bank:\n${unused.map((q) => `- ${q.id} (${q.type}, ${q.maps_to.join('/')}): ${q.text}`).join('\n') || '(none)'}`
+		`Unused questions in the bank:\n${unused.map((q) => `- ${q.id} (${q.type}, ${q.maps_to.join('/')}): ${q.text}`).join('\n') || '(none)'}`,
+		factors.length
+			? `New factors renters brought up that the form doesn't ask (web-grounded):\n${factors.map((f) => `- "${f.text}" (${f.renters} renters): ${f.resolution.status === 'resolved' ? `checkable as ${f.resolution.neighborhoods ? `neighborhood in ${f.resolution.neighborhoods.join(', ')}` : JSON.stringify(f.resolution.rule)}` : 'unresolved'}`).join('\n')}\nIf one came up for several renters and is resolved, you may promote it into a yesno question with "promote_factor": "<factor text>" on that question; its checkable mapping is attached automatically.`
+			: ''
 	].join('\n\n');
 	let feedback = '';
 	for (let attempt = 0; attempt < 2; attempt++) {
 		const { data } = await chatJSON<{ note?: string; questions?: Question[] }>('reviewer', system, user + feedback);
-		const questions = (data.questions ?? []).slice(0, cfg.questions_shown);
-		const problems = checkQuestions(questions, `forms/v${form.version + 1}.yaml`, 'questions');
+		const questions = (data.questions ?? []).slice(0, cfg.questions_shown).map((q) => {
+			const { promote_factor, ...rest } = q as Question & { promote_factor?: string };
+			const f = promote_factor ? resolved.find((x) => x.text.toLowerCase() === String(promote_factor).toLowerCase()) : undefined;
+			const pref = f ? factorPref(f.resolution, 1) : null;
+			return f && pref ? { ...rest, resolved: { factor: f.text, pref: { ...pref, factor: undefined }, sources: f.resolution.sources } } : rest;
+		});
+		const problems = checkQuestions(questions.map(({ resolved: _r, ...q }) => q), `forms/v${form.version + 1}.yaml`, 'questions');
 		if (!problems.length && questions.length) return { questions, note: String(data.note ?? '').slice(0, 400), by: 'reviewer' };
 		feedback = `\n\nYour last proposal had problems; fix them:\n${problems.join('\n') || 'no questions'}`;
 	}

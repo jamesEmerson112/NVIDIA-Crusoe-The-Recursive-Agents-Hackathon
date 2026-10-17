@@ -92,11 +92,28 @@ export function logReactions(generation: number, form: Form, results: RenterResu
 				importance: a?.importance,
 				seconds: q.seconds,
 				delta: Number(q.delta.toFixed(4)),
-				value: Number(q.value.toFixed(4))
+				value: Number(q.value.toFixed(4)),
+				factors: r.factors.filter((f) => f.from === q.id).map((f) => ({ text: f.factor, status: f.status, neighborhoods: f.neighborhoods, rule: f.rule, sources: f.sources, reason: f.reason }))
 			});
 		})
 	);
 	appendFileSync(reactionLog, lines.join('\n') + '\n');
+}
+
+export type FactorSummary = { text: string; renters: number; resolution: RenterResult['factors'][number] };
+
+/** Factors renters introduced that the form doesn't ask about, most common first. */
+export function summarizeFactors(results: RenterResult[]): FactorSummary[] {
+	const by = new Map<string, FactorSummary>();
+	for (const r of results)
+		for (const f of r.factors) {
+			const k = f.factor.toLowerCase();
+			const s = by.get(k) ?? { text: f.factor, renters: 0, resolution: f };
+			s.renters++;
+			if (f.status === 'resolved') s.resolution = f;
+			by.set(k, s);
+		}
+	return [...by.values()].sort((a, b) => b.renters - a.renters);
 }
 
 export function logGeneration(row: Record<string, unknown>) {

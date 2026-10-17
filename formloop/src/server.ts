@@ -8,7 +8,8 @@ import { loadEvalConfig, loadQuestionBank } from './research.ts';
 import { ensureV1, latestForm, loadForm } from './forms.ts';
 import { loadListings } from './listings.ts';
 import { hasCrusoeKey, usageLog } from './crusoe.ts';
-import { extractPrefs, prefFromReaction } from './agent.ts';
+import { extractWithFactors, prefFromReaction, type FoundFactor } from './agent.ts';
+import { ydcCacheOnly } from './ydc.ts';
 import { rank, satisfaction, utility, violates } from './utility.ts';
 import { DEST_LABEL } from './phrases.ts';
 import { proposeFollowups } from './followups.ts';
@@ -29,6 +30,7 @@ const list = (v: Pref['value']) => (Array.isArray(v) ? v.map(String) : [String(v
 
 function prefLabel(p: Pref): string {
 	const v = p.value;
+	if (p.factor) return `${p.factor.text}${p.field === 'neighborhood' && Array.isArray(v) ? ` → ${v.join(', ')}` : ''}`;
 	switch (p.field) {
 		case 'price': return p.op === 'max' ? `rent ≤ ${money(Number(v))}` : `rent ≥ ${money(Number(v))}`;
 		case 'commute': return `≤ ${v} min to ${DEST_LABEL[p.dest ?? 'fidi']}`;
@@ -46,12 +48,12 @@ function prefLabel(p: Pref): string {
 }
 
 function card(l: Listing, prefs: Pref[]) {
-	const checks = prefs.map((p) => ({ label: prefLabel(p), sat: satisfaction(l, p), hard: Boolean(p.hard), from: p.from }));
+	const checks = prefs.map((p) => ({ label: prefLabel(p), sat: satisfaction(l, p), hard: Boolean(p.hard), from: p.from, sources: p.factor?.sources }));
 	return { listing: l, utility: Number(utility(l, prefs).toFixed(3)), checks };
 }
 
 // Model calls are slow and cost credits, so the page reuses results for identical inputs.
-const prefCache = new Map<string, Pref[]>();
+const prefCache = new Map<string, { prefs: Pref[]; factors: FoundFactor[] }>();
 const reactionCache = new Map<string, Pref | null>();
 
 function formFor(version?: number) {
@@ -79,17 +81,19 @@ async function recommend(body: Body) {
 	const answers = (body.answers ?? []).filter((a) => questions.some((q) => q.id === a.question_id));
 	const key = JSON.stringify(answers.map((a) => [a.question_id, a.action, a.value, a.rewritten_text, a.importance]));
 	let mode: 'live' | 'offline' = live ? 'live' : 'offline';
-	let prefs = prefCache.get(key);
-	if (!prefs) {
+	let extracted = prefCache.get(key);
+	if (!extracted) {
+		// The page may ground new factors live (cache first); YDC_CACHE_ONLY=1 keeps it offline for the demo.
 		try {
-			prefs = await extractPrefs(questions, answers, { offline: !live });
+			extracted = await extractWithFactors(questions, answers, { offline: !live, cacheOnly: ydcCacheOnly() });
 		} catch (e) {
 			console.warn(`extractor failed, using rules: ${(e as Error).message}`);
-			prefs = await extractPrefs(questions, answers, { offline: true });
+			extracted = await extractWithFactors(questions, answers, { offline: true, cacheOnly: true });
 			mode = 'offline';
 		}
-		prefCache.set(key, prefs);
+		prefCache.set(key, extracted);
 	}
+	const { prefs, factors } = extracted;
 	const passed = new Set<string>();
 	const liked: Listing[] = [];
 	const fromReactions: Pref[] = [];
@@ -123,6 +127,7 @@ async function recommend(body: Body) {
 		form: form.version,
 		prefs: all.map((p) => ({ ...p, label: prefLabel(p) })),
 		// How much each answered question revealed the renter cares (max weight of its preferences).
+		factors: factors.map((f) => ({ text: f.factor, status: f.status, from: f.from, neighborhoods: f.neighborhoods, rule: f.rule && prefLabel(f.rule), sources: f.sources, reason: f.reason })),
 		weights: Object.fromEntries([...new Set(prefs.map((p) => p.from).filter(Boolean) as string[])].map((id) => [id, Math.max(...prefs.filter((p) => p.from === id).map((p) => p.weight))])),
 		top: ranked.slice(0, cfg.top_k).map((l) => card(l, all)),
 		liked: liked.map((l) => card(l, all)),

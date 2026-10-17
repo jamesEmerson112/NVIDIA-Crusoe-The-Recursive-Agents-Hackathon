@@ -33,7 +33,7 @@ npm run loop                # one renter end to end, verbose
 npm run generation          # one outer-loop generation (commits an accepted form)
 npm run eval                # held-out renters: form v1 vs the latest, table saved to ../results/
 npm run serve               # two-pane demo at http://localhost:5190
-npm run listings -- --source youcom   # fetch and cache public listings via You.com
+npm run factor -- "near the 14 bus"   # ground a renter's own factor via You.com (cache first)
 ```
 
 Add `-- --offline` to `loop`, `generation` or `eval` to use rule-based renters and agents with no API
@@ -47,10 +47,32 @@ calls. Without a Crusoe key, they run that way automatically.
 Models are set per role in `config.yaml`: simulator, extractor, normalizer and reviewer. You can also
 override one with `CRUSOE_<ROLE>_MODEL`.
 
-**Listings.** By default they're synthetic, seeded and reproducible: 300 units across 20 neighborhoods, with
+**Listings.** These are synthetic, seeded and reproducible: 300 units across 20 neighborhoods, with
 price, bedrooms, floor, layout, laundry, parking, pets, street noise and commute minutes to four
-destinations. Set `listings.source: both` in `research/eval_config.yaml` to add real public listings cached
-from You.com. The cache is gitignored because it holds third-party listing content.
+destinations. We never query listing sites.
+
+## Grounding new factors (You.com)
+
+Sometimes an answer or a reworded question names something no listing field covers: "near the 14 bus",
+"walking distance to a dog park", "away from freeway noise". `resolveFactor` (src/factors.ts) then:
+
+1. Searches You.com. Results come from `POST ydc-index.io/v1/search`, with listing sites excluded and dropped, at most 5 results, cached by query in `cache/ydc/`.
+2. Has a cheap model map the cited results to something the matcher can check: a set of our SF neighborhoods, or a rule on an existing field. It returns the mapping, its source URLs and a confidence.
+3. Treats low confidence, no citations or no support as **unresolved**, and the matcher ignores it. The model is told never to invent a mapping.
+
+Resolved factors count with the renter's revealed weight. Cards show them with numbered source links.
+Every factor is logged in `logs/reactions.jsonl` with its sources. The reviewer sees which factors came up
+across renters and can promote one into a yes/no question that carries its mapping.
+
+**Guardrail:** the renter simulator, training generations and the held-out eval are always cache-only, so
+before/after comparisons stay deterministic and free. A factor that isn't cached stays unresolved. The demo
+page searches live unless you set `YDC_CACHE_ONLY=1`.
+
+Pre-warm the demo renter's factors before the demo:
+
+```
+npm run factor -- "near the 14 bus" "walking distance to a dog park" "away from freeway noise"
+```
 
 ## For researchers
 

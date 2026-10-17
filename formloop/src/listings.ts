@@ -111,16 +111,9 @@ export function generateListings(count: number, seed: number): Listing[] {
 
 export async function loadListings(cfg: EvalConfig): Promise<Listing[]> {
 	const { source, count } = cfg.listings;
-	const synthetic = source === 'youcom' ? [] : generateListings(count, cfg.seed);
-	if (source === 'synthetic') return synthetic;
-	const { readYoucomCache } = await import('./sources/youcom.ts');
-	const real = readYoucomCache();
-	if (!real?.length) {
-		if (source === 'youcom') throw new Error('No You.com listings cached; run `npm run listings -- --source youcom` first');
-		console.warn('No You.com cache yet; using synthetic listings only');
-		return synthetic;
-	}
-	return [...synthetic, ...real];
+	// We don't query listing sites; You.com is used only to ground renters' own factors (src/factors.ts).
+	if (source !== 'synthetic') console.warn(`listings.source "${source}" is no longer supported; using synthetic listings`);
+	return generateListings(count, cfg.seed);
 }
 
 export function describeListing(l: Listing): string {
