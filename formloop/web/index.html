@@ -42,29 +42,30 @@
 	.q { position: relative; padding: 16px 0 18px; border-top: 1px solid var(--line); }
 	.q:last-child { border-bottom: 1px solid var(--line); }
 	.q-row { display: flex; align-items: flex-start; gap: 10px; }
-	.q-num { font: 500 13px/1.6 var(--serif); color: var(--faint); min-width: 20px; text-align: right; }
+	.q-num { font: 500 13px/1.6 var(--serif); color: var(--faint); min-width: 18px; }
 	.q-text { flex: 1; font-weight: 600; font-size: 15.5px; line-height: 1.4; padding: 1px 4px; margin: -1px -4px; border-radius: 5px; outline: none; cursor: text; transition: background .15s; }
 	.q-text:hover { background: #efe9dc; }
+	.q-text:hover::after { content: " ✎"; color: var(--clay); font-weight: 400; }
+	.q-text:focus::after { content: ""; }
 	.q-text:focus { background: #fff; box-shadow: 0 0 0 2px var(--clay); }
-	.yours { display: inline-block; margin: 6px 0 0 46px; font-size: 11.5px; color: var(--clay); background: var(--clay-soft); border-radius: 999px; padding: 2px 9px; }
+	.yours { display: inline-block; margin: 6px 0 0 28px; font-size: 11.5px; color: var(--clay); background: var(--clay-soft); border-radius: 999px; padding: 2px 9px; }
 	.yours s { color: var(--muted); }
-	.handle { cursor: grab; color: var(--faint); font-size: 15px; line-height: 1.5; padding: 0 2px; user-select: none; letter-spacing: -2px; }
-	.handle:hover { color: var(--green); }
-	.q.dragging { opacity: .35; }
-	.q.drop-before { box-shadow: inset 0 3px 0 var(--clay); }
-	.q.drop-after { box-shadow: inset 0 -3px 0 var(--clay); }
+	.own { margin-top: 18px; padding: 14px 16px; border: 1.5px dashed var(--line); border-radius: 12px; }
+	.own input { width: 100%; font: inherit; border: 0; border-bottom: 1.5px solid var(--line); background: transparent; padding: 6px 0; outline: none; color: var(--ink); }
+	.own input + input { margin-top: 8px; font-size: 14px; }
+	.own input:focus { border-color: var(--clay); }
 	.weight { font-size: 11px; color: var(--faint); white-space: nowrap; padding-top: 3px; }
 	.q.answered .weight { color: var(--green); }
 	.q.fresh { animation: glow 2.4s ease; }
 	@keyframes glow { 0% { background: var(--clay-soft); } 100% { background: transparent; } }
-	.badge { display: inline-block; margin: 6px 0 0 46px; font-size: 11.5px; color: var(--clay); background: var(--clay-soft); border-radius: 999px; padding: 2px 9px; }
+	.badge { display: inline-block; margin: 6px 0 0 28px; font-size: 11.5px; color: var(--clay); background: var(--clay-soft); border-radius: 999px; padding: 2px 9px; }
 	.divider { margin: 22px 0 4px; display: flex; align-items: center; gap: 10px; }
 	.divider::after { content: ""; flex: 1; height: 1px; background: var(--line); }
 	.ask { display: flex; align-items: center; gap: 12px; margin: 0 0 18px; }
 	.btn.ghost { background: transparent; color: var(--green); border: 1.5px solid var(--green); }
 	.btn.ghost:hover { background: var(--green-soft); }
 	.btn[disabled] { opacity: .5; cursor: wait; }
-	.q-body { margin: 10px 0 0 46px; }
+	.q-body { margin: 10px 0 0 28px; }
 	.q-body input { width: 100%; font: inherit; font-size: 15px; padding: 6px 0 7px; border: 0; border-bottom: 1.5px solid var(--line); background: transparent; color: var(--ink); outline: none; transition: border-color .15s; }
 	.q-body input::placeholder { color: var(--faint); }
 	.q-body input:focus { border-color: var(--green); }
@@ -147,9 +148,14 @@
 	<section class="pane form">
 		<div class="eyebrow" id="formEyebrow">Form</div>
 		<h2>What matters to you?</h2>
-		<p class="hint">Drag <span style="color:var(--green)">⋮⋮</span> to rank what matters most: the top counts most. Answer anything, leave the rest blank, and click any question to put it in your own words.</p>
+		<p class="hint">Answer in your own words and skip anything. The more you say about something, the more it counts. Don't like a question? Click it and rewrite it, or add the one we should have asked.</p>
 		<div class="ask"><button class="btn ghost" id="ask">Ask me better questions</button><span class="count" id="askNote">The agent writes new questions from how you ranked, answered and passed.</span></div>
 		<div id="questions"></div>
+		<div class="own">
+			<div class="eyebrow">Add a question we should have asked</div>
+			<input id="ownQ" type="text" placeholder="e.g. How close is the nearest dog park?">
+			<input id="ownA" type="text" placeholder="Your answer, then Enter">
+		</div>
 		<div class="submit"><button class="btn" id="submit">Done, improve the form</button><span id="submitNote"></span></div>
 	</section>
 	<section class="pane" id="right">
@@ -168,7 +174,7 @@
 <div id="toast" class="toast"></div>
 <script>
 const QUICK = ['too expensive', 'commute is too long', 'street is too loud', 'I need in-unit laundry', "don't like the layout", 'floor is too low', 'not this neighborhood'];
-const state = { form: null, latest: 1, answers: {}, reactions: [], followups: [], order: [], fresh: new Set(), seq: 0 };
+const state = { form: null, latest: 1, answers: {}, reactions: [], followups: [], order: [], fresh: new Set(), weights: {}, seq: 0 };
 const $ = (s) => document.querySelector(s);
 const el = (tag, attrs = {}, ...kids) => {
 	const n = document.createElement(tag);
@@ -187,23 +193,20 @@ const ans = (id) => (state.answers[id] ??= { started: Date.now() });
 const allQs = () => [...state.followups, ...state.form.questions, ...state.form.extra];
 const qById = (id) => allQs().find((q) => q.id === id);
 const isAnswered = (a) => a && !(a.value == null || a.value === '' || (Array.isArray(a.value) && !a.value.length));
-/** Weight from rank among answered questions: top third 3, middle 2, bottom 1. */
-function weights() {
-	const answered = state.order.filter((id) => isAnswered(state.answers[id]));
-	return new Map(answered.map((id, i) => [id, 3 - Math.floor((3 * i) / Math.max(1, answered.length))]));
-}
+
 
 function payload() {
-	const w = weights();
 	return state.order.map((id) => {
 		const q = qById(id);
 		const a = state.answers[id];
 		if (!q || !isAnswered(a)) return { question_id: id, action: 'skip', seconds: Math.round(a?.seconds ?? 0) };
 		const edited = a.rewritten_text && a.rewritten_text !== q.text;
-		return { question_id: id, action: edited ? 'rewrite' : 'answer', value: a.value, ...(edited ? { rewritten_text: a.rewritten_text } : {}), importance: w.get(id), seconds: Math.round(a.seconds ?? 0) };
+		return { question_id: id, action: edited ? 'rewrite' : 'answer', value: a.value, ...(edited ? { rewritten_text: a.rewritten_text } : {}), seconds: Math.round(a.seconds ?? 0) };
 	});
 }
-const requestBody = () => ({ version: state.form.version, answers: payload(), ranking: state.order, followups: state.followups, reactions: state.reactions });
+// Questions ordered by how much the renter revealed they care (inferred server-side from their answers).
+const ranking = () => [...state.order].sort((a, b) => (state.weights[b] ?? 0) - (state.weights[a] ?? 0));
+const requestBody = () => ({ version: state.form.version, answers: payload(), ranking: ranking(), followups: state.followups, reactions: state.reactions });
 function touch(id) { const a = ans(id); a.seconds = Math.min(120, (Date.now() - a.started) / 1000); schedule(); }
 
 function chips(q, a, multi) {
@@ -239,31 +242,13 @@ function questionRow(q, i) {
 		body = el('input', { type: q.type === 'number' ? 'number' : 'text', placeholder: (q.help || '').replace(/^e\.g\.\s*/i, '').replace(/^['"]|['"]$/g, ''), value: a.value ?? '' });
 		body.addEventListener('input', (e) => { a.value = e.target.value; touch(q.id); row.classList.toggle('answered', isAnswered(a)); });
 	}
-	const w = weights().get(q.id);
-	const handle = el('span', { class: 'handle', draggable: 'true', title: 'Drag to rank' }, '⋮⋮');
+	const w = state.weights[q.id];
 	const row = el('div', { class: 'q' + (isAnswered(a) ? ' answered' : '') + (state.fresh.has(q.id) ? ' fresh' : ''), 'data-id': q.id },
-		el('div', { class: 'q-row' }, handle, el('span', { class: 'q-num' }, String(i + 1)), text, el('span', { class: 'weight' }, w ? ['', 'low', 'medium', 'high'][w] + ' weight' : '')),
-		q.why ? el('span', { class: 'badge' }, `new · ${q.why}`) : null,
+		el('div', { class: 'q-row' }, el('span', { class: 'q-num' }, String(i + 1)), text, el('span', { class: 'weight', title: 'Inferred from how much you said' }, w ? `${w >= 2.5 ? 'cares a lot' : w >= 1.5 ? 'cares' : 'mild'}` : '')),
+		q.why ? el('span', { class: 'badge' }, q.id.startsWith('own_') ? 'your question' : `new · ${q.why}`) : null,
 		a.rewritten_text ? el('span', { class: 'yours' }, 'your wording · was ', el('s', {}, q.text)) : null,
 		el('div', { class: 'q-body' }, body)
 	);
-	handle.addEventListener('dragstart', (e) => { e.dataTransfer.setData('text/plain', q.id); e.dataTransfer.effectAllowed = 'move'; e.dataTransfer.setDragImage(row, 30, 20); row.classList.add('dragging'); });
-	handle.addEventListener('dragend', () => row.classList.remove('dragging'));
-	row.addEventListener('dragover', (e) => { e.preventDefault(); const r = row.getBoundingClientRect(); const after = e.clientY > r.top + r.height / 2; row.classList.toggle('drop-after', after); row.classList.toggle('drop-before', !after); });
-	row.addEventListener('dragleave', () => row.classList.remove('drop-before', 'drop-after'));
-	row.addEventListener('drop', (e) => {
-		e.preventDefault();
-		const from = e.dataTransfer.getData('text/plain');
-		const after = row.classList.contains('drop-after');
-		row.classList.remove('drop-before', 'drop-after');
-		if (!from || from === q.id) return;
-		const order = state.order.filter((id) => id !== from);
-		order.splice(order.indexOf(q.id) + (after ? 1 : 0), 0, from);
-		state.order = order;
-		renderQuestions();
-		schedule(0);
-		toast(`Ranked "${(qById(from)?.text || '').slice(0, 38)}…" #${order.indexOf(from) + 1}. Weights updated.`);
-	});
 	return row;
 }
 
@@ -352,6 +337,8 @@ async function recommend() {
 		if (seq !== state.seq) return;
 		if (d.error) throw new Error(d.error);
 		setMode(d.mode);
+		state.weights = d.weights || {};
+		document.querySelectorAll('.q').forEach((r) => { const w = state.weights[r.dataset.id]; const lab = r.querySelector('.weight'); if (lab) lab.textContent = w ? (w >= 2.5 ? 'cares a lot' : w >= 1.5 ? 'cares' : 'mild') : ''; });
 		$('#count').innerHTML = `<strong>${d.remaining}</strong> of ${d.total} homes fit your dealbreakers${d.calls ? ` · ${d.calls} model calls · $${d.cost.toFixed(4)}` : ''}`;
 		$('#cards').replaceChildren(...(d.top.length ? d.top.map(card) : [el('div', { class: 'empty' }, 'Nothing fits every dealbreaker. Loosen one on the left.')]));
 		$('#saved').replaceChildren(...d.liked.map((c) => el('span', {}, `♥ ${c.listing.neighborhood} · ${money(c.listing.price)}`)));
@@ -382,6 +369,24 @@ async function load(version) {
 	renderQuestions();
 	recommend();
 }
+
+$('#ownA').addEventListener('keydown', (e) => {
+	if (e.key !== 'Enter') return;
+	const text = $('#ownQ').value.trim();
+	const value = $('#ownA').value.trim();
+	if (!text) { $('#ownQ').focus(); return; }
+	const id = `own_${state.followups.filter((q) => q.id.startsWith('own_')).length + 1}`;
+	// maps_to lists every field: the agent reads the wording, and new factors get grounded with web search.
+	const q = { id, text, type: 'text', maps_to: ['price', 'neighborhood', 'commute', 'street_noise', 'laundry', 'layout', 'floor', 'parking', 'pets'], why: 'your question' };
+	state.followups = [...state.followups, q];
+	state.order = [...state.order, id];
+	state.answers[id] = { started: Date.now(), value };
+	state.fresh = new Set([id]);
+	$('#ownQ').value = ''; $('#ownA').value = '';
+	renderQuestions();
+	schedule(0);
+	toast('Added. Your question goes to the reviewer as a candidate for the next form.');
+});
 
 $('#ask').addEventListener('click', async () => {
 	const btn = $('#ask');

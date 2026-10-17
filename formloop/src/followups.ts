@@ -30,7 +30,7 @@ function describe({ questions, answers, ranking, passes }: Input): string {
 		})
 		.filter(Boolean);
 	return [
-		`Their priorities, ranked by dragging (1 = matters most):\n${lines.join('\n')}`,
+		`What they answered, ordered by how much they revealed they care (detail and conviction; 1 = most):\n${lines.join('\n')}`,
 		passes.length ? `They passed on listings because: ${passes.map((p) => `"${p}"`).join('; ')}` : 'No listings passed yet.'
 	].join('\n\n');
 }
@@ -40,8 +40,8 @@ export async function proposeFollowups(input: Input, opts: { offline: boolean })
 	if (!opts.offline) {
 		const system = [
 			'Reasoning: low',
-			'You write the next 2 or 3 questions for one apartment hunter in San Francisco (every listing is in SF), from what they revealed about themselves.',
-			'Go deeper on what they ranked highest (how firm, what trade-offs they would make), follow up on why they passed on listings, and resolve contradictions between ranking and answers. Never repeat or rephrase a question they have seen, including ones they left blank (blank means it does not matter to them). Keep each question short and friendly; every question is optional.',
+			'You write the next 2 or 3 questions for one apartment hunter in San Francisco (every listing is in SF), from what they revealed about themselves. If they reworded a question or wrote their own, that is what they care about: follow it.',
+			'Go deeper on what they clearly care most about (how firm, what trade-offs they would make), follow up on why they passed on listings, and resolve contradictions between ranking and answers. Never repeat or rephrase a question they have seen, including ones they left blank (blank means it does not matter to them). Keep each question short and friendly; every question is optional.',
 			`Each question: {"id": new snake_case id, "text", "type": one of ${QUESTION_TYPES.join('|')}, "options": [..] for select/multiselect, "maps_to": listing fields from ${PREF_FIELDS.join(', ')}, "why": under 8 words, e.g. "you ranked commute first"}.`,
 			'Reply with JSON only: {"questions":[...]}'
 		].join('\n');

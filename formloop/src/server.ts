@@ -67,7 +67,8 @@ type Body = { version?: number; answers?: Answer[]; followups?: Question[]; rank
 /** Every question the page may show: the form version, extra bank fields and this visitor's follow-ups. */
 function allQuestions(body: Body): Question[] {
 	const form = formFor(body.version);
-	const followups = (body.followups ?? []).filter((q) => q && typeof q.id === 'string' && q.id.startsWith('fu_') && Array.isArray(q.maps_to));
+	// fu_ = agent-written follow-ups, own_ = questions the renter wrote themselves.
+	const followups = (body.followups ?? []).filter((q) => q && typeof q.id === 'string' && /^(fu|own)_/.test(q.id) && Array.isArray(q.maps_to));
 	return [...form.questions, ...form.extra, ...followups];
 }
 
@@ -121,6 +122,8 @@ async function recommend(body: Body) {
 		mode,
 		form: form.version,
 		prefs: all.map((p) => ({ ...p, label: prefLabel(p) })),
+		// How much each answered question revealed the renter cares (max weight of its preferences).
+		weights: Object.fromEntries([...new Set(prefs.map((p) => p.from).filter(Boolean) as string[])].map((id) => [id, Math.max(...prefs.filter((p) => p.from === id).map((p) => p.weight))])),
 		top: ranked.slice(0, cfg.top_k).map((l) => card(l, all)),
 		liked: liked.map((l) => card(l, all)),
 		remaining,

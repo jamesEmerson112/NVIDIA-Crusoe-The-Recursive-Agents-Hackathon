@@ -63,6 +63,25 @@ export function cleanPref(raw: unknown, questionIds: Set<string>): Pref | null {
 const SCHEMA = `Pref = {"field": one of ${PREF_FIELDS.join('|')}, "op": max|min|in|not_in|eq, "value": number | ISO date | list | boolean, "dest": ${DESTINATIONS.join('|')} (commute only), "weight": 0-3, "hard": true only for dealbreakers, "from": the question_id it came from}
 Rules: price max in USD/month; commute max minutes with dest (if no time is given, use 35); bedrooms min; floor min/max; available max = move-in-by date; pets in = pets the renter HAS (dogs, cats); laundry in [in_unit] or [in_unit,in_building]; parking eq true/false; street_noise in subset of [quiet,moderate,lively]; layout in/not_in subset of [${LAYOUTS.join(',')}]; neighborhood in/not_in subset of [${NEIGHBORHOODS.join(', ')}].`;
 
+/**
+ * How much a renter cares, revealed by how they answered rather than asked of them:
+ * detail, specifics and conviction raise it; hedges lower it; rewording a question shows it mattered.
+ */
+export function revealedWeight(a: Answer): number {
+	const text = Array.isArray(a.value) ? a.value.join(', ') : String(a.value ?? '');
+	const t = text.toLowerCase();
+	const words = t.split(/\s+/).filter(Boolean).length;
+	let w = 1;
+	if (words >= 12) w += 1;
+	else if (words >= 5) w += 0.5;
+	if (/\d/.test(t)) w += 0.5;
+	if (/\b(must|need|needs|absolutely|non-?negotiable|firm|deal ?breaker|hate|hated|never|only|can'?t|won'?t|essential|really)\b/.test(t)) w += 1;
+	if (/\b(flexible|whatever|don'?t care|doesn'?t matter|fine|maybe|-?ish|not sure|no preference|either|any)\b/.test(t)) w -= 1;
+	if (a.action === 'rewrite') w += 0.5;
+	if (Array.isArray(a.value) && a.value.length >= 2) w += 0.5;
+	return Math.max(0.5, Math.min(3, Math.round(w * 2) / 2));
+}
+
 function questionText(q: Question, a: Answer) {
 	return a.action === 'rewrite' && a.rewritten_text ? `${a.rewritten_text} (renter's rewrite of: ${q.text})` : q.text;
 }
@@ -75,7 +94,7 @@ export async function extractPrefs(
 	const byId = new Map(questions.map((q) => [q.id, q]));
 	const given = answers.filter((a) => a.action !== 'skip' && a.value !== undefined);
 	if (!given.length) return [];
-	const weightOf = (a: Answer) => a.importance ?? 1;
+	const weightOf = (a: Answer) => revealedWeight(a);
 
 	if (opts.offline) {
 		return given.flatMap((a) => {
@@ -84,21 +103,21 @@ export async function extractPrefs(
 		});
 	}
 
-	const system = `Reasoning: low\nYou turn a renter's intake-form answers into structured apartment preferences.\n${SCHEMA}\nOnly state what the answers support; a rewritten question tells you what the renter actually cares about. Reply with JSON only: {"prefs":[Pref,...]}`;
+	const system = `Reasoning: low\nYou turn a renter's intake-form answers into structured apartment preferences.\n${SCHEMA}\nOnly state what the answers support; a rewritten question tells you what the renter actually cares about. Nobody rates importance directly: set each weight 0-3 from how much the renter revealed they care. Detail, specifics and conviction ("must", "never", exact numbers) mean high; terse or hedged answers ("fine", "flexible", "whatever") mean low. Reply with JSON only: {"prefs":[Pref,...]}`;
 	const user = given
 		.map((a) => {
 			const q = byId.get(a.question_id)!;
-			return `[${q.id}] Q: ${questionText(q, a)}\nA: ${Array.isArray(a.value) ? a.value.join(', ') : a.value} (importance ${weightOf(a)}/3)`;
+			return `[${q.id}] Q: ${questionText(q, a)}\nA: ${Array.isArray(a.value) ? a.value.join(', ') : a.value}`;
 		})
 		.join('\n');
 	const { data } = await chatJSON<{ prefs?: unknown[] }>('extractor', system, user);
 	const ids = new Set(questions.map((q) => q.id));
-	const importance = new Map(given.map((a) => [a.question_id, weightOf(a)]));
+	const revealed = new Map(given.map((a) => [a.question_id, weightOf(a)]));
 	return (data.prefs ?? [])
 		.map((p) => cleanPref(p, ids))
 		.filter((p): p is Pref => p !== null)
-		// The slider is the renter's explicit weight; it beats the model's guess.
-		.map((p) => (p.from && importance.has(p.from) ? { ...p, weight: importance.get(p.from)! } : p));
+		// Blend the model's read with the measured detail so one terse answer can't be inflated.
+		.map((p) => (p.from && revealed.has(p.from) ? { ...p, weight: Math.round(((p.weight + revealed.get(p.from)!) / 2) * 2) / 2 } : p));
 }
 
 /** "Pass: too expensive" -> a preference that would have ruled this listing down. */
