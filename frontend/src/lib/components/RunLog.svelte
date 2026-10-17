@@ -51,7 +51,7 @@
 						<th class="px-2 py-1.5 text-right font-medium">Out</th>
 						<th class="px-2 py-1.5 text-right font-medium">Cache</th>
 						<th class="px-2 py-1.5 text-right font-medium">Cost</th>
-						<th class="px-2 py-1.5 text-right font-medium">Time</th>
+						<th class="px-2 py-1.5 text-right font-medium">Took</th>
 						<th class="px-2 py-1.5 font-medium">Did</th>
 					</tr>
 				</thead>
