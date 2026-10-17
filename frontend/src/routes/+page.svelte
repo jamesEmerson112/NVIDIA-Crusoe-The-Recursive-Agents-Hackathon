@@ -13,8 +13,8 @@
 	const examples = [
 		'Find me a 1-bedroom in SF under $3,500 near Caltrain',
 		'Plan a team offsite for 8 people in SF next month',
-		'Compare Mission vs Sunset for a renter with a dog',
-		'Write a detailed moving checklist for a cross-country move'
+		'Split a $480 dinner bill fairly among 8 friends',
+		'Plan a 5-day trip to Tokyo on a mid-range budget'
 	];
 
 	async function send(content: string) {
