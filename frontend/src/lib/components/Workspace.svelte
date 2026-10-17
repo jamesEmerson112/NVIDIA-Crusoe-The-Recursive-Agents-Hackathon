@@ -29,6 +29,10 @@
 	);
 	const byId = $derived(new Map(cs.artifacts.map((a) => [a.id, a])));
 	let panelOpen = $state(true);
+	// Below xl the panel overlays the chat, so start with it closed there.
+	$effect(() => {
+		if (window.innerWidth < 1280) panelOpen = false;
+	});
 
 	// Tool results only carry the call id; recover which tool produced them.
 	const toolNames = $derived(
@@ -77,7 +81,7 @@
 	});
 </script>
 
-<div class="flex h-full min-w-0 flex-1">
+<div class="relative flex h-full min-w-0 flex-1">
 	<section class="flex min-w-0 flex-1 flex-col">
 		<header class="flex items-center gap-3 border-b border-zinc-200 px-5 py-3 dark:border-zinc-800">
 			<h1 class="min-w-0 flex-1 truncate text-sm font-semibold">{cs.conversation.title}</h1>
@@ -114,6 +118,17 @@
 									: ''}
 							</button>
 						</div>
+					{:else if m.role === 'user' && meta?.kind === 'check'}
+						<details class="text-xs text-violet-800 dark:text-violet-300">
+							<summary class="cursor-pointer select-none">
+								↻ Self-check caught {meta.problems.length} problem{meta.problems.length > 1
+									? 's'
+									: ''} and sent the agent back to fix {meta.problems.length > 1 ? 'them' : 'it'}
+							</summary>
+							<ul class="mt-1 list-disc space-y-0.5 pl-5 text-zinc-600 dark:text-zinc-400">
+								{#each meta.problems as p, i (i)}<li>{p}</li>{/each}
+							</ul>
+						</details>
 					{:else if m.role === 'user' && meta?.kind === 'proposal_reply'}
 						<div class="flex justify-end">
 							<span
@@ -207,7 +222,7 @@
 
 	{#if panelOpen || opened}
 		<aside
-			class="w-[420px] shrink-0 border-l border-zinc-200 bg-zinc-50 dark:border-zinc-800 dark:bg-zinc-950"
+			class="w-[420px] shrink-0 border-l border-zinc-200 bg-zinc-50 max-xl:absolute max-xl:inset-y-0 max-xl:right-0 max-xl:z-10 max-xl:w-[min(420px,100%)] max-xl:shadow-2xl dark:border-zinc-800 dark:bg-zinc-950"
 		>
 			{#if opened}
 				<ArtifactView

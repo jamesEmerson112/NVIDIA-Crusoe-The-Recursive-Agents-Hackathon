@@ -32,18 +32,20 @@ if (!res.ok) {
 }
 
 const { data } = await res.json();
-const per1M = (p) => (p === undefined || p === null ? '—' : `$${(Number(p) * 1e6).toFixed(2)}`);
+// /v1/models reports pricing in USD per 1M tokens, as strings.
+const per1M = (p) =>
+	p === undefined || p === null || p === '' ? '—' : `$${Number(p).toFixed(3).replace(/0$/, '')}`;
 console.log(`Key OK. ${data.length} models available:\n`);
-console.log(['id', 'context', 'tools', 'reasoning', 'in/out per 1M'].join('\t'));
+console.log(['id', 'context', 'modality', 'tools', 'in / cached / out per 1M'].join('\t'));
 for (const m of [...data].sort((a, b) => a.id.localeCompare(b.id))) {
 	const params = m.supported_parameters ?? [];
 	console.log(
 		[
 			m.id,
 			m.context_length ?? '—',
+			m.architecture?.modality ?? '—',
 			params.includes('tools') ? 'yes' : 'no',
-			(m.features ?? []).includes('reasoning') ? 'yes' : 'no',
-			`${per1M(m.pricing?.prompt)}/${per1M(m.pricing?.completion)}`
+			`${per1M(m.pricing?.prompt)} / ${per1M(m.pricing?.input_cache_reads)} / ${per1M(m.pricing?.completion)}`
 		].join('\t')
 	);
 }

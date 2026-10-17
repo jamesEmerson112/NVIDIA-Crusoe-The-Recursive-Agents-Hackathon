@@ -3,17 +3,55 @@ import type { ToolCall } from '#lib/types.ts';
 
 const BASE_URL = 'https://api.inference.crusoecloud.com/v1';
 
-/** USD per 1M tokens, from the Crusoe pricing table (skill §4.1). Unknown models cost 0 in estimates. */
-const PRICES: Record<string, { input: number; output: number; cached: number }> = {
-	'openai/gpt-oss-120b': { input: 0.05, output: 0.2, cached: 0.05 },
-	'deepseek-ai/Deepseek-V4-Flash': { input: 0.14, output: 0.28, cached: 0.03 },
-	'deepseek-ai/DeepSeek-V4.1-Flash': { input: 0.29, output: 0.2, cached: 0.007 },
-	'deepseek-ai/DeepSeek-V4-Pro': { input: 1.74, output: 3.48, cached: 0.15 },
-	'nvidia/Nemotron-3-Super-120B-A12B': { input: 0.3, output: 2.4, cached: 0.15 },
-	'nvidia/nemotron-3.5-lightning-30b-a3b': { input: 0.05, output: 0.2, cached: 0.03 },
-	'nvidia/Nemotron-3-Nano-30B-A3B': { input: 0.05, output: 0.2, cached: 0.03 },
-	'zai-org/GLM-5.3-Flash': { input: 0.15, output: 0.5, cached: 0.03 }
-};
+type Price = { input: number; output: number; cached: number };
+
+/**
+ * USD per 1M tokens. Replaced at runtime by live prices from GET /v1/models (`refreshPrices`);
+ * these are the values that endpoint returned on 2026-10-17, used until the first refresh succeeds.
+ * Unknown models cost 0 in estimates.
+ */
+const prices = new Map<string, Price>(
+	Object.entries({
+		'openai/gpt-oss-120b': { input: 0.05, output: 0.25, cached: 0.05 },
+		'deepseek-ai/Deepseek-V4-Flash': { input: 0.14, output: 0.28, cached: 0.03 },
+		'deepseek-ai/DeepSeek-V4.1-Flash': { input: 0.29, output: 1.2, cached: 0.007 },
+		'deepseek-ai/DeepSeek-V4-Pro': { input: 1.74, output: 3.48, cached: 0.15 },
+		'nvidia/NVIDIA-Nemotron-3-Super-120B-A12B': { input: 0.3, output: 2.4, cached: 0.15 },
+		'nvidia/Nemotron-3.5-Lightning-30B-A3B': { input: 0.05, output: 0.2, cached: 0.03 },
+		'nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B': { input: 0.05, output: 0.2, cached: 0.03 },
+		'zai-org/GLM-5.3-Flash': { input: 0.15, output: 0.5, cached: 0.03 }
+	})
+);
+
+let pricesFetchedAt = 0;
+const PRICE_TTL_MS = 60 * 60 * 1000;
+
+/** Pull current prices from /v1/models at most once an hour. Failures keep the last known prices. */
+export async function refreshPrices() {
+	if (!CRUSOE_API_KEY || Date.now() - pricesFetchedAt < PRICE_TTL_MS) return;
+	pricesFetchedAt = Date.now();
+	try {
+		const res = await fetch(`${BASE_URL}/models`, {
+			headers: { Authorization: `Bearer ${CRUSOE_API_KEY}` }
+		});
+		if (!res.ok) return;
+		const { data } = (await res.json()) as {
+			data: {
+				id: string;
+				pricing?: { prompt?: string; completion?: string; input_cache_reads?: string };
+			}[];
+		};
+		for (const m of data) {
+			const input = Number(m.pricing?.prompt);
+			const output = Number(m.pricing?.completion);
+			if (!Number.isFinite(input) || !Number.isFinite(output)) continue;
+			const cached = Number(m.pricing?.input_cache_reads);
+			prices.set(m.id, { input, output, cached: Number.isFinite(cached) ? cached : input });
+		}
+	} catch {
+		// Offline or transient: keep the fallback table.
+	}
+}
 
 export type ChatMessage =
 	| { role: 'system' | 'user'; content: string }
@@ -56,7 +94,7 @@ export interface ChatRequest {
 export const hasApiKey = () => Boolean(CRUSOE_API_KEY);
 
 export function costOf(model: string, prompt: number, completion: number, cached: number) {
-	const p = PRICES[model];
+	const p = prices.get(model);
 	if (!p) return 0;
 	return ((prompt - cached) * p.input + cached * p.cached + completion * p.output) / 1e6;
 }
@@ -95,6 +133,7 @@ export class CrusoeError extends Error {
  */
 export async function chat(req: ChatRequest): Promise<ChatResult> {
 	if (!CRUSOE_API_KEY) throw new Error('CRUSOE_API_KEY is not set');
+	void refreshPrices();
 	const body = JSON.stringify({
 		model: req.model,
 		messages: req.messages,

@@ -28,7 +28,7 @@
 
 <div class="flex h-dvh bg-white text-zinc-900 dark:bg-zinc-950 dark:text-zinc-100">
 	<nav
-		class="flex w-64 shrink-0 flex-col border-r border-zinc-200 bg-zinc-50 dark:border-zinc-800 dark:bg-zinc-900/50"
+		class="flex w-64 shrink-0 flex-col border-r border-zinc-200 bg-zinc-50 max-md:hidden dark:border-zinc-800 dark:bg-zinc-900/50"
 	>
 		<div class="p-3">
 			<a

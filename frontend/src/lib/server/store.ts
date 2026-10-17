@@ -273,6 +273,10 @@ export async function addVersion(
 	return { previous: current, version };
 }
 
+export async function renameArtifact(id: string, title: string) {
+	await db.update(artifacts).set({ title, updatedAt: new Date() }).where(eq(artifacts.id, id));
+}
+
 export async function setArtifactStatus(ids: string[], status: ArtifactStatus) {
 	if (!ids.length) return;
 	await db
@@ -498,4 +502,20 @@ function snippet(
 	return (
 		(start > 0 ? '…' : '') + flat.slice(start, start + 180) + (flat.length > start + 180 ? '…' : '')
 	);
+}
+
+/** Answering the last open form in an active step completes that step (forms are how steps gather input). */
+export async function completeStepIfAnswered(stepId: string | null) {
+	if (!stepId) return;
+	const [step] = await db.select().from(steps).where(eq(steps.id, stepId));
+	if (step?.status !== 'active') return;
+	const open = await db
+		.select({ id: artifacts.id })
+		.from(artifacts)
+		.where(and(eq(artifacts.stepId, stepId), eq(artifacts.status, 'awaiting_input')));
+	if (!open.length)
+		await db
+			.update(steps)
+			.set({ status: 'done', summary: step.summary ?? 'Input collected' })
+			.where(eq(steps.id, stepId));
 }

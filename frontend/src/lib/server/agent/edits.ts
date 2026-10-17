@@ -24,6 +24,7 @@ export async function submitForm(
 		{ data: values, note: 'Submitted' },
 		{ author: 'user' }
 	);
+	await store.completeStepIfAnswered(form.stepId);
 	return {
 		content: `[Form submitted] "${form.title}" (${artifactId}) v${version}:\n\`\`\`json\n${JSON.stringify(values, null, 2)}\n\`\`\``,
 		meta: { kind: 'form_submit', artifactId, version }
@@ -107,7 +108,7 @@ export async function replyToProposal(
 	}
 	return {
 		content: approved
-			? `[Approved] Go ahead and redo ${titles.join(', ')}.`
+			? `[Approved] Go ahead and redo ${titles.join(', ')}. Redo each one in place with update_artifact on that id (pass a new title if the old one no longer fits); don't create replacement artifacts.`
 			: `[Declined] Keep the current versions of ${titles.join(', ')}; don't redo them.`,
 		meta: { kind: 'proposal_reply', callId, approved }
 	};

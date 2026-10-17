@@ -25,6 +25,7 @@ export type MessageMeta =
 			durationMs: number;
 	  }
 	| { kind: 'proposal_reply'; callId: string; approved: boolean }
+	| { kind: 'check'; problems: string[] }
 	| { kind: 'error' };
 
 export type FieldType =

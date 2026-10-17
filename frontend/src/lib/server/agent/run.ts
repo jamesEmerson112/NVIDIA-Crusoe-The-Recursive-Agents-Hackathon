@@ -7,6 +7,8 @@ import { SYSTEM_PROMPT } from './prompt';
 import { TOOL_SCHEMAS, runTool, type ToolOutput } from './tools';
 
 const MAX_TURNS = 12;
+/** How many times one run may send the agent back to fix its own final answer. */
+const MAX_CHECKS = 2;
 const running = new Map<string, AbortController>();
 
 export const isRunning = (conversationId: string) => running.has(conversationId);
@@ -32,6 +34,7 @@ export async function runAgent(
 	const model = CRUSOE_AGENT_MODEL;
 	const llm = hasApiKey() ? chat : mockChat;
 	let pendingCalls: string[] = [];
+	let checks = 0;
 
 	try {
 		const conversation = await store.getConversation(conversationId);
@@ -76,7 +79,26 @@ export async function runAgent(
 				if (!result.content && result.finishReason === 'length') {
 					throw new Error('The model ran out of tokens while reasoning (finish_reason=length).');
 				}
-				break;
+				// Self-check before handing back to the user; a failed check sends the agent back to work.
+				const problems =
+					checks < MAX_CHECKS ? await checkFinalAnswer(conversationId, result.content) : [];
+				if (!problems.length) break;
+				checks++;
+				emit({
+					type: 'tool',
+					name: 'self_check',
+					summary: `Self-check found ${problems.length} problem(s)`
+				});
+				await store.appendMessage(
+					conversationId,
+					{
+						role: 'user',
+						content: `[Check] Before this goes to the user:\n${problems.map((p) => `- ${p}`).join('\n')}\nFix this now with tool calls, then reply again.`
+					},
+					{ kind: 'check', problems }
+				);
+				emit({ type: 'changed' });
+				continue;
 			}
 
 			pendingCalls = result.toolCalls.map((c) => c.id);
@@ -137,4 +159,21 @@ export async function runAgent(
 		await store.touchConversation(conversationId);
 		emit({ type: 'done' });
 	}
+}
+
+/**
+ * Cheap, deterministic checks on the agent's final reply. Models sometimes announce artifacts
+ * they never created; every artifact id they mention must exist in this conversation.
+ */
+async function checkFinalAnswer(conversationId: string, content: string) {
+	const problems: string[] = [];
+	const mentioned = [...new Set(content.match(/\bart_[0-9a-f]{8}\b/g) ?? [])];
+	for (const id of mentioned) {
+		if (!(await store.getArtifact(conversationId, id))) {
+			problems.push(
+				`Your reply mentions ${id}, but no artifact with that id exists: no tool call created it. Create it with create_artifact (ids come only from tool results), or remove the reference.`
+			);
+		}
+	}
+	return problems;
 }

@@ -139,13 +139,15 @@ export const TOOL_SCHEMAS: ToolSchema[] = [
 		type: 'function',
 		function: {
 			name: 'update_artifact',
-			description: 'Replace the content of an artifact with a new version you wrote.',
+			description:
+				'Replace the content of an artifact with a new version you wrote. Use this (not create_artifact) to redo an existing artifact, so its history and lineage are kept.',
 			parameters: {
 				type: 'object',
 				properties: {
 					artifact_id: { type: 'string' },
 					content: { type: 'string' },
-					note: { type: 'string', description: 'What changed, in a few words.' }
+					note: { type: 'string', description: 'What changed, in a few words.' },
+					title: { type: 'string', description: 'New title, only if the old one no longer fits.' }
 				},
 				required: ['artifact_id', 'content', 'note']
 			}
@@ -315,13 +317,21 @@ export async function runTool(
 			if (!a) return { content: fail(`No artifact ${args.artifact_id}`) };
 			if (a.kind === 'form')
 				return { content: fail('Forms are edited by the user, not the agent') };
+			const title =
+				typeof args.title === 'string' && args.title.trim() ? args.title.trim() : undefined;
+			if (title && title !== a.title) await store.renameArtifact(a.id, title);
 			const { version } = await store.addVersion(
 				cid,
 				a.id,
-				{ content: String(args.content), note: String(args.note ?? 'Updated') },
+				{
+					content: String(args.content),
+					note:
+						String(args.note ?? 'Updated') +
+						(title && title !== a.title ? ` (renamed from "${a.title}")` : '')
+				},
 				provenance
 			);
-			ctx.emit({ type: 'tool', name, summary: `Updated ${a.title} to v${version}` });
+			ctx.emit({ type: 'tool', name, summary: `Updated ${title ?? a.title} to v${version}` });
 			return {
 				content: ok({ artifact_id: a.id, version }),
 				meta: { kind: 'artifact', artifactId: a.id }
