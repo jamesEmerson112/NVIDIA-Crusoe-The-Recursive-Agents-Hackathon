@@ -1,41 +1,140 @@
-AVAILABLE GLB MODELS
+GLB MODELS: WHAT WE HAVE AND WHAT TO BUILD
 - Location: frontend/static/models/ (served at /models/<file>)
-- Loaded by frontend/src/lib/floorplan/three/furniture.ts on High
-- All CC0 (public domain); credits in frontend/static/models/CREDITS.md
-- Plan "type" picks the model; each is fitted into its furniture box
-- Total: 11 files, 5.8 MB
+- Loaded on High by frontend/src/lib/floorplan/three/furniture.ts
+- Each plan furniture item {type, w, d, h, rot} gets one model
+- The model is scaled to fit the item's box (w x d x h)
+- Visual target: docs/research/photoreal-rendering-plan.md (Japandi photoreal)
 
 
-PHOTOREAL (Poly Haven, 1k textures)
-- sofa.glb           415.6 KB   type: sofa
-  - "Sofa 02" by Kirill Sannikov, tufted leather
-- table.glb         2228.7 KB   type: table (0.6 m or taller)
-  - "Dining Table" by Aron Lyczek
-- table-coffee.glb  1299.1 KB   type: table (under 0.6 m)
-  - "Modern Coffee Table 01" by Amin
-- wardrobe.glb      1814.1 KB   type: wardrobe
-  - "Painted Wooden Cabinet" by Kirill Sannikov
-  - Stretched to 2 m tall; looks off, replace later
+================ MODEL SPEC (every new file must follow) ================
+
+Format
+- glTF 2.0 binary (.glb), one file per model
+- No Draco, meshopt or KTX2: the loader has no decoders
+  - (adding DRACOLoader/KTX2Loader to furniture.ts would allow them)
+- No cameras, lights or animations; one root node
+- Name materials sensibly (oak, fabric, glass, metal)
+
+Units, axes, origin
+- Metres, real-world size (a sofa is ~2.2 m wide)
+- Y up
+- Front faces +Z (the side a person uses: sofa seat, cabinet doors)
+  - If it can't, set frontYaw in its SPECS entry in furniture.ts
+- Origin at the bottom centre, sitting on y = 0
+
+Budget
+- Hero pieces (sofa, table, bed, lamp): up to ~50k triangles, ~3 MB
+- Small pieces (decor, fixtures): up to ~15k triangles, ~1 MB
+- Textures: PBR, 1k (2k only for hero pieces)
+  - baseColor (sRGB), normal, occlusion/roughness/metalness packed (ORM)
+- Glass: KHR_materials_transmission (or low-opacity material)
+
+Look
+- Photoreal, Japandi / Scandinavian: oak, linen, warm ivory, matte black metal
+- Believable manufactured products: bevels, legs, seams, cushions
+- No cartoon proportions, saturated colours or mirror-gloss surfaces
+
+Licence and provenance
+- Original work made for us, or CC0 (Poly Haven, Kenney, ambientCG)
+- CC-BY only with on-screen credit; no "editorial only" or unknown licences
+- Add a row to frontend/static/models/CREDITS.md for every file
 
 
-LOW-POLY (Kenney Furniture Kit 2.0, placeholders)
-- bed.glb             22.8 KB   type: bed
-- counter.glb         10.2 KB   type: counter
-  - Tiled into ~0.55 m cabinets along the run
-- fridge.glb          29.9 KB   type: fridge
-- tub.glb             34.7 KB   type: tub
-- toilet.glb          17.7 KB   type: toilet
-- sink.glb            22.0 KB   type: sink
-- washer.glb          47.0 KB   type: washer
+================ HOW A NEW MODEL GETS USED ================
+
+1. Save as frontend/static/models/<key>.glb (key = plan type, see below)
+2. Add <key> to SPECS in furniture.ts (url; frontYaw/stretch if needed)
+3. Plans must contain that type, or nothing shows it:
+   - Bundled plans: frontend/static/plans/*.json (furniture[].type)
+   - Laurie's listings: formloop/src/plan3d.ts (listingPlan)
+   - New types need adding there too; tell Laurie for formloop
+4. Variants: <key>-<variant>.glb (e.g. sofa-fabric) + modelKey() rule
+5. Check: /plans?quality=high&debug=1, "missingModels" should drop
 
 
-NO MODEL YET (renders as a box)
-- Any other plan furniture type (e.g. chair, desk, tv, plant, rug, lamp)
-- Wanted next for photoreal: chairs, TV and console, plants, rug, lamps, art
+================ HAVE (11 files, 5.8 MB) ================
+
+Photoreal (Poly Haven, CC0)
+- sofa.glb             416 KB   sofa              tufted leather, Sofa 02
+- table.glb           2229 KB   table, h >= 0.6   Dining Table
+- table-coffee.glb    1299 KB   table, h < 0.6    Modern Coffee Table 01
+- wardrobe.glb        1814 KB   wardrobe          cabinet stretched to 2 m: REPLACE
+
+Low-poly placeholders (Kenney Furniture Kit, CC0): REPLACE ALL
+- bed.glb               23 KB   bed
+- counter.glb           10 KB   counter           tiled into 0.55 m cabinets
+- fridge.glb            30 KB   fridge
+- tub.glb               35 KB   tub
+- toilet.glb            18 KB   toilet
+- sink.glb              22 KB   sink
+- washer.glb            47 KB   washer
+
+Plan types in use today: bed, counter, fridge, sink, sofa, table,
+toilet, tub, wardrobe, washer (bundled plans and formloop listings)
 
 
-ADDING A MODEL
-- Put <type>.glb in frontend/static/models/
-- Add its spec to SPECS in furniture.ts
-- Add source, author and licence to CREDITS.md
-- Prefer CC0 (Poly Haven, Kenney); CC-BY needs on-screen credit
+================ BUILD LIST (priority order; size = w x d x h metres) ================
+
+P1: replace placeholders used by every listing today
+- bed.glb              1.60 x 2.10 x 1.00  queen, oak frame, linen bedding, headboard
+- bed-single.glb       0.95 x 2.00 x 0.90  same style, single
+- counter.glb          0.60 x 0.62 x 0.92  base cabinet module + stone top (tiles)
+- fridge.glb           0.70 x 0.72 x 1.85  stainless or panel-ready
+- sink.glb             0.80 x 0.50 x 0.86  bathroom vanity with basin, wood front
+- toilet.glb           0.40 x 0.70 x 0.78  wall-hung or close-coupled, white
+- tub.glb              1.70 x 0.75 x 0.56  built-in tub with front panel
+- washer.glb           0.60 x 0.60 x 0.85  front-loader, white
+- wardrobe.glb         1.20 x 0.60 x 2.10  two-door wardrobe, oak or white
+
+P1: upgrade what we have
+- sofa-fabric.glb      2.20 x 0.95 x 0.80  cream linen, wood legs (Japandi)
+- table.glb            1.60 x 0.90 x 0.75  oak dining table (lighter than current)
+- table-coffee.glb     1.10 x 0.60 x 0.40  glass top or oak, low
+
+P2: living room (new types)
+- armchair.glb         0.85 x 0.85 x 0.80  lounge chair, leather or fabric
+- tv-console.glb       1.80 x 0.40 x 0.50  low oak media unit
+- tv.glb               1.25 x 0.08 x 0.72  55-inch flat screen (on console)
+- rug.glb              2.40 x 1.70 x 0.01  patterned wool rug
+- floor-lamp.glb       0.45 x 0.45 x 1.60  paper or linen shade
+- side-table.glb       0.45 x 0.45 x 0.55  round, oak or metal
+- bookshelf.glb        0.90 x 0.35 x 1.80  open shelves with a few books
+- pouf.glb             0.55 x 0.55 x 0.40  knit pouf
+- plant-large.glb      0.60 x 0.60 x 1.70  fiddle-leaf fig in pot
+- plant-small.glb      0.30 x 0.30 x 0.50  snake plant in pot
+- wall-art.glb         0.90 x 0.04 x 1.20  framed abstract print (wall-mounted)
+
+P2: dining and kitchen (new types)
+- dining-chair.glb     0.45 x 0.52 x 0.80  spindle-back oak chair
+- pendant-lamp.glb     0.45 x 0.45 x 0.35  hangs over table (origin at top)
+- range.glb            0.76 x 0.65 x 0.92  cooktop + oven
+- range-hood.glb       0.76 x 0.50 x 0.40  wall-mounted (origin at bottom)
+- dishwasher.glb       0.60 x 0.60 x 0.86  panel front
+- wall-cabinet.glb     0.60 x 0.35 x 0.72  upper cabinet (wall-mounted)
+- bar-stool.glb        0.40 x 0.40 x 0.75  for islands
+- island.glb           1.60 x 0.80 x 0.92  kitchen island with stone top
+
+P3: bedroom, bath, laundry (new types)
+- nightstand.glb       0.50 x 0.40 x 0.55
+- dresser.glb          1.20 x 0.50 x 0.80
+- desk.glb             1.20 x 0.60 x 0.75
+- desk-chair.glb       0.60 x 0.60 x 1.00
+- table-lamp.glb       0.30 x 0.30 x 0.45
+- shower.glb           0.90 x 0.90 x 2.00  glass enclosure + tray
+- mirror.glb           0.60 x 0.03 x 0.80  wall-mounted
+- towel-rail.glb       0.60 x 0.10 x 0.80  wall-mounted
+- dryer.glb            0.60 x 0.60 x 0.85  front-loader
+
+Later: architectural pieces (need viewer changes, not just a GLB)
+- door.glb             0.90 x 0.04 x 2.10  slab + frame (fits door openings)
+- window-frame.glb     per opening width   black or white frames, sills
+- baseboard, ceiling lights: generated by the viewer, not separate GLBs
+
+
+================ NOTES FOR WHOEVER BUILDS THEM ================
+
+- Wall-mounted pieces (art, mirror, cabinets): plan item h is the
+  mounting height today; tell James so the loader can lift them
+- Check proportions against the sizes above; the loader scales to fit
+- Keep one consistent palette across pieces so rooms read as one style
+- Test one model end to end before batch-producing the rest

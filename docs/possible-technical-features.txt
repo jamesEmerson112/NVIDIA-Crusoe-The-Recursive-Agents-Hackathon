@@ -154,40 +154,41 @@ Works on its own; Workbench (frontend/) can't use it yet.
 
 ==================== DONE ====================
 
-- Agent plans and updates its own steps             <-- Gaelan
-- quick_edit sub-agents patch stale artifacts       <-- Gaelan
+- Agent plans and updates its own steps            <-- Gaelan
+- quick_edit sub-agents patch stale artifacts      <-- Gaelan
   - Run in parallel on fast model
-- Redo approval shows cost before big changes       <-- Gaelan
-- Agent-built forms embedded in chat                <-- Gaelan
-- Form edits mark downstream artifacts stale        <-- Gaelan
-- Markdown and sandboxed HTML artifacts             <-- Gaelan
+- Redo approval shows cost before big changes      <-- Gaelan
+- Agent-built forms embedded in chat               <-- Gaelan
+- Form edits mark downstream artifacts stale       <-- Gaelan
+- Markdown and sandboxed HTML artifacts            <-- Gaelan
   - Versioned, with lineage between them
-- Artifact library and version diffs                <-- Gaelan
-- Everything persists in SQLite                     <-- Gaelan
-- Retry and throttle on rate limits                 <-- Gaelan
-- Usage table: cost, tokens, cache hits             <-- Gaelan
-- Offline mock mode: unset CRUSOE_API_KEY           <-- Gaelan
-- npm run set-key and npm run models                <-- Gaelan
+- Artifact library and version diffs               <-- Gaelan
+- Everything persists in SQLite                    <-- Gaelan
+- Retry and throttle on rate limits                <-- Gaelan
+- Usage table: cost, tokens, cache hits            <-- Gaelan
+- Offline mock mode: unset CRUSOE_API_KEY          <-- Gaelan
+- npm run set-key and npm run models               <-- Gaelan
   - Save Crusoe key; list live model IDs
-- Self-check: mentioned artifacts must exist        <-- Gaelan
-- Approved redo updates the same artifacts          <-- Gaelan
-- Live model prices from /v1/models, hourly         <-- Gaelan
-- Verified end to end on real Crusoe                <-- James
+- Self-check: mentioned artifacts must exist       <-- Gaelan
+- Approved redo updates the same artifacts         <-- Gaelan
+- Live model prices from /v1/models, hourly        <-- Gaelan
+- Verified end to end on real Crusoe               <-- James
   - 13 calls, $0.0027, 73% cache hits
-- Live agent map, subway-style, ?panel=map          <-- James
+- Live agent map, subway-style, ?panel=map         <-- James
   - Orchestrator, builder, patch, self-check, redo lanes
-- ChatGPT-style start page with example prompts     <-- James
-- Collapsible sidebar, collapsed by default         <-- James
-- data-testid on every element; docs/test-ids.md    <-- James
-- 3D blueprint viewer at /plans, WebGPU             <-- James
+- ChatGPT-style start page with example prompts    <-- James
+- Collapsible sidebar, collapsed by default        <-- James
+- data-testid on every element; docs/test-ids.md   <-- James
+- 3D blueprint viewer at /plans, WebGPU            <-- James
   - Debug mode: stats-gl, lil-gui, ?debug=1
   - Four plans incl. one traced from image
-- Every form question optional and editable         <-- Gaelan
-- Tool errors go back to model; bodies validated    <-- Gaelan
-- Default agent model now GLM-5.3-Flash             <-- Gaelan
-- Petite-vue widgets the agent writes, in chat      <-- Gaelan
+- Every form question optional and editable        <-- Gaelan
+- Tool errors go back to model; bodies validated   <-- Gaelan
+- Default agent model now GLM-5.3-Flash            <-- Gaelan
+- Petite-vue widgets the agent writes, in chat     <-- Gaelan
   - Return JSON; schema enforced; leaf-level diffs
-- Run log of every model call, ?panel=log           <-- James
+- Run log of every model call, ?panel=log          <-- James
   - Tokens, cache hits, cost, tools, slow calls
-- Forms and widgets stay embedded after submit      <-- Gaelan
-- CC0 furniture models on High; textured floors   <-- James
+- Forms and widgets stay embedded after submit     <-- Gaelan
+- CC0 furniture models on High; textured floors    <-- James
+- 3D SF skyline behind the start page              <-- James

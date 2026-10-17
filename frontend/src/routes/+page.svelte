@@ -2,6 +2,7 @@
 	import { goto } from '$app/navigation';
 	import { live, startRun } from '#lib/client/run.svelte.ts';
 	import Composer from '#lib/components/Composer.svelte';
+	import SanFrancisco3D from '#lib/components/SanFrancisco3D.svelte';
 	import type { PageProps } from './$types';
 
 	let { data }: PageProps = $props();
@@ -24,8 +25,12 @@
 	}
 </script>
 
-<div data-testid="start-root" class="flex flex-1 flex-col items-center justify-center px-5">
-	<div class="w-full max-w-3xl space-y-8">
+<div
+	data-testid="start-root"
+	class="relative isolate flex flex-1 flex-col items-center justify-center overflow-hidden px-5"
+>
+	<SanFrancisco3D />
+	<div class="relative w-full max-w-3xl space-y-8">
 		<h1 data-testid="start-heading" class="text-center text-3xl font-normal tracking-tight">
 			What's on your mind today?
 		</h1>
@@ -40,7 +45,7 @@
 			{#each examples as prompt (prompt)}
 				<button
 					data-testid="start-example"
-					class="rounded-full border border-zinc-300 px-3 py-1.5 text-sm text-zinc-600 hover:bg-zinc-100 disabled:opacity-40 dark:border-zinc-700 dark:text-zinc-300 dark:hover:bg-zinc-800"
+					class="rounded-full border border-zinc-300 bg-white/80 px-3 py-1.5 text-sm text-zinc-600 backdrop-blur-sm hover:bg-zinc-100 disabled:opacity-40 dark:border-zinc-700 dark:bg-zinc-900/80 dark:text-zinc-300 dark:hover:bg-zinc-800"
 					disabled={creating || live.running}
 					onclick={() => send(prompt)}>{prompt}</button
 				>
