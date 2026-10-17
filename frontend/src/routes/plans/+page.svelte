@@ -13,6 +13,8 @@
 		{ id: 'sf-2br', label: '2 bedroom' },
 		{ id: 'sample-1br', label: 'Sample 1BR' }
 	];
+	// Laurie's formloop demo serves every listing as a Plan (GET /api/plan/<id>, CORS enabled).
+	const FORMLOOP_URL = 'http://localhost:5190';
 	const VIEWS: { id: View; label: string }[] = [
 		{ id: 'dollhouse', label: 'Dollhouse' },
 		{ id: 'top', label: 'Top-down' },
@@ -22,6 +24,8 @@
 	const planId = $derived(
 		PLANS.find((p) => p.id === page.url.searchParams.get('plan'))?.id ?? PLANS[0].id
 	);
+	/** `?listing=syn_000` loads a formloop listing instead of a bundled plan. */
+	const listing = $derived(page.url.searchParams.get('listing')?.match(/^[\w-]+$/)?.[0] ?? null);
 	const debug = $derived(page.url.searchParams.get('debug') === '1');
 	const forced = $derived(parseQuality(page.url.searchParams.get('quality')));
 	let active = $state<{ quality: Quality; reason: string } | null>(null);
@@ -38,17 +42,23 @@
 	}
 
 	$effect(() => {
-		const id = planId;
+		const url = listing ? `${FORMLOOP_URL}/api/plan/${listing}` : `/plans/${planId}.json`;
 		let stale = false;
 		const t0 = performance.now();
-		fetch(`/plans/${id}.json`)
-			.then((r) => r.json() as Promise<Plan>)
+		fetch(url)
+			.then((r) => {
+				if (!r.ok) throw new Error(`${r.status} loading ${url}`);
+				return r.json() as Promise<Plan>;
+			})
 			.then((next) => {
 				if (stale) return;
 				const t1 = performance.now();
 				problems = validatePlan(next);
 				timings = { fetchMs: t1 - t0, validateMs: performance.now() - t1 };
 				plan = next;
+			})
+			.catch((err: Error) => {
+				if (!stale) problems = [`Couldn't load the blueprint: ${err.message}`];
 			});
 		return () => (stale = true);
 	});
@@ -71,11 +81,16 @@
 			{#each PLANS as p (p.id)}
 				<button
 					data-testid="plans-option"
-					class="rounded-lg px-3 py-1 text-sm {p.id === planId
+					class="rounded-lg px-3 py-1 text-sm {!listing && p.id === planId
 						? 'bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-900'
 						: 'hover:bg-zinc-100 dark:hover:bg-zinc-800'}"
-					aria-pressed={p.id === planId}
-					onclick={() => setParam('plan', p.id)}>{p.label}</button
+					aria-pressed={!listing && p.id === planId}
+					onclick={() => {
+						const params = new URLSearchParams(page.url.search);
+						params.delete('listing');
+						params.set('plan', p.id);
+						goto(`?${params}`, { replace: true });
+					}}>{p.label}</button
 				>
 			{/each}
 		</div>
