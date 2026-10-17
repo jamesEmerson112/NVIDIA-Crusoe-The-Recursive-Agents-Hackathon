@@ -50,7 +50,7 @@
 				timer = setTimeout(() => search({ q }), 200);
 			}}
 		/>
-		<div data-testid="library-kinds" class="mt-3 flex gap-1.5">
+		<div data-testid="library-kinds" class="mt-3 flex flex-wrap gap-1.5">
 			{#each kinds as k (k.label)}
 				<button
 					data-testid="library-kind"

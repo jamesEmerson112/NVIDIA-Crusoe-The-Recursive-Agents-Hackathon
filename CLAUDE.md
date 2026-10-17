@@ -71,7 +71,7 @@ A ChatGPT-desktop-style chat where the agent also builds a **process**: a number
   - `quick_edit` and `update_artifact` both take an optional `title`.
   - The run endpoint validates bodies (400 for invalid JSON, missing `artifactId`/`callId`, unknown `type`).
   - The system prompt's first line `Reasoning: medium` is gpt-oss syntax; other models ignore it.
-- **Layout**: below `xl` the process/artifact panel overlays the chat and starts closed; below `md` the sidebar is hidden.
+- **Layout**: below `xl` the process/artifact panel overlays the chat and starts closed; below `md` the sidebar is hidden. Scroll rule: only the chat column, sidebar list, process/artifact panel bodies and the library list scroll vertically; the page itself never does. The agent map (`AgentMap.svelte`) never scrolls vertically: it scales its SVG down to the panel height (measured outside the scroller, with 32px reserved for padding and a scrollbar so the scale can't oscillate) and scrolls only along its timeline.
 - **Status (2026-10-17)**: verified end to end with the mock agent and the real Crusoe agent: goal → plan + inline form → submit → brief → small edit patched by a sub-agent; large edit → proposal → approve (redo) or decline (stays stale); version diffs; library search. Both default model IDs are confirmed against `/v1/models`.
 
 ## Environment and commands

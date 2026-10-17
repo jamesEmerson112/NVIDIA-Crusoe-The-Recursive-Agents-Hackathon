@@ -36,6 +36,14 @@
 	const height = $derived(ny(maxRow) + 56);
 	const byId = $derived(new Map(map.nodes.map((n) => [n.id, n])));
 
+	// The map scrolls sideways along its timeline but never vertically: it scales down to fit
+	// the panel's height (never up). The box is measured outside the scroller, and room for a
+	// horizontal scrollbar and the bottom padding is reserved, so the scale can't oscillate as
+	// the scrollbar comes and goes.
+	let boxHeight = $state(0);
+	const RESERVED = 32;
+	const scale = $derived(boxHeight > RESERVED ? Math.min(1, (boxHeight - RESERVED) / height) : 1);
+
 	function edgePath(fromId: string, toId: string) {
 		const a = byId.get(fromId);
 		const b = byId.get(toId);
@@ -113,117 +121,123 @@
 			The map grows as the agent plans, delegates and checks its work.
 		</p>
 	{:else}
-		<div data-testid="agent-map-scroll" class="min-h-0 flex-1 overflow-auto px-2 pb-4">
-			<svg
-				data-testid="agent-map-svg"
-				{width}
-				{height}
-				viewBox="0 0 {width} {height}"
-				class="block font-sans"
-				role="img"
-				aria-label="Agent map"
+		<div class="min-h-0 flex-1" bind:clientHeight={boxHeight}>
+			<div
+				data-testid="agent-map-scroll"
+				class="h-full overflow-x-auto overflow-y-hidden px-2 pb-4"
 			>
-				{#each map.columns as c, i (i)}
-					<g data-testid="agent-map-column">
-						<line
-							x1={nx(c.x) - COL_W / 2 + 8}
-							x2={nx(c.x) - COL_W / 2 + 8}
-							y1={HEAD - 8}
-							y2={height - 8}
-							class="am-guide"
-						/>
-						<text x={nx(c.x) - COL_W / 2 + 14} y={HEAD - 14} class="am-col">{c.column}</text>
-					</g>
-				{/each}
-
-				{#each map.edges as e, i (i)}
-					<path
-						data-testid="agent-map-edge"
-						d={edgePath(e.from, e.to)}
-						class="am-edge"
-						style="stroke: var(--am-{e.color})"
-					/>
-				{/each}
-
-				{#each laneStarts as s (s.lane.id)}
-					{@const y = ny(s.lane.row)}
-					{@const x = s.lane.id === 'trunk' ? nx(0) - 14 : nx(s.x) - 14}
-					<g data-testid="agent-map-lane">
-						<text
-							data-testid="agent-map-lane-label"
-							{x}
-							y={y - 30}
-							class="am-lane"
-							style="fill: var(--am-{s.lane.color})">{s.lane.label}</text
-						>
-						<text {x} y={y - 17} class="am-caption">{clip(s.lane.caption, 34)}</text>
-					</g>
-				{/each}
-
-				{#snippet nodeBody(n: MapNode)}
-					{@const x = nx(n.x)}
-					{@const y = ny(nodeRow(n))}
-					{@const c = `var(--am-${colorOf.get(n.lane) ?? 'other'})`}
-					<title>{n.label}{n.caption ? ` · ${n.caption}` : ''}</title>
-					{#if n.shape === 'check'}
-						<circle cx={x} cy={y} r="10" style="fill: {c}" />
-						<path d="M{x - 4.5} {y}l3 3l6 -6.5" class="am-tick" stroke-width="2.4" fill="none" />
-					{:else if n.shape === 'x'}
-						<path
-							d="M{x - 7} {y - 7}l14 14M{x + 7} {y - 7}l-14 14"
-							class="am-x"
-							stroke-width="3.5"
-						/>
-					{:else if n.shape === 'live'}
-						<circle cx={x} cy={y} r="11" style="fill: {c}" opacity="0.25">
-							<animate attributeName="r" values="7;15;7" dur="1.6s" repeatCount="indefinite" />
-							<animate
-								attributeName="opacity"
-								values="0.45;0;0.45"
-								dur="1.6s"
-								repeatCount="indefinite"
+				<svg
+					data-testid="agent-map-svg"
+					width={width * scale}
+					height={height * scale}
+					viewBox="0 0 {width} {height}"
+					class="block font-sans"
+					role="img"
+					aria-label="Agent map"
+				>
+					{#each map.columns as c, i (i)}
+						<g data-testid="agent-map-column">
+							<line
+								x1={nx(c.x) - COL_W / 2 + 8}
+								x2={nx(c.x) - COL_W / 2 + 8}
+								y1={HEAD - 8}
+								y2={height - 8}
+								class="am-guide"
 							/>
-						</circle>
-						<circle cx={x} cy={y} r="6" style="fill: {c}" />
-					{:else if n.shape === 'dot'}
-						<circle cx={x} cy={y} r="5" style="fill: {c}" />
-					{:else}
-						<circle cx={x} cy={y} r="7" class="am-hollow" stroke-width="3" style="stroke: {c}" />
-					{/if}
-					<text
-						data-testid="agent-map-node-label"
-						{x}
-						y={y + 25}
-						text-anchor="middle"
-						class="am-label {n.shape === 'x' ? 'am-fail' : ''}">{clip(n.label, 20)}</text
-					>
-					{#if n.caption}
-						<text {x} y={y + 38} text-anchor="middle" class="am-caption">{clip(n.caption, 24)}</text
-						>
-					{/if}
-				{/snippet}
+							<text x={nx(c.x) - COL_W / 2 + 14} y={HEAD - 14} class="am-col">{c.column}</text>
+						</g>
+					{/each}
 
-				{#each map.nodes as n (n.id)}
-					{#if n.artifactId}
-						<g
-							data-testid="agent-map-node"
-							class="am-click"
-							role="button"
-							tabindex="0"
-							aria-label="Open {n.label}"
-							onclick={() => activate(n)}
-							onkeydown={(ev) => {
-								if (ev.key === 'Enter' || ev.key === ' ') {
-									ev.preventDefault();
-									activate(n);
-								}
-							}}>{@render nodeBody(n)}</g
+					{#each map.edges as e, i (i)}
+						<path
+							data-testid="agent-map-edge"
+							d={edgePath(e.from, e.to)}
+							class="am-edge"
+							style="stroke: var(--am-{e.color})"
+						/>
+					{/each}
+
+					{#each laneStarts as s (s.lane.id)}
+						{@const y = ny(s.lane.row)}
+						{@const x = s.lane.id === 'trunk' ? nx(0) - 14 : nx(s.x) - 14}
+						<g data-testid="agent-map-lane">
+							<text
+								data-testid="agent-map-lane-label"
+								{x}
+								y={y - 30}
+								class="am-lane"
+								style="fill: var(--am-{s.lane.color})">{s.lane.label}</text
+							>
+							<text {x} y={y - 17} class="am-caption">{clip(s.lane.caption, 34)}</text>
+						</g>
+					{/each}
+
+					{#snippet nodeBody(n: MapNode)}
+						{@const x = nx(n.x)}
+						{@const y = ny(nodeRow(n))}
+						{@const c = `var(--am-${colorOf.get(n.lane) ?? 'other'})`}
+						<title>{n.label}{n.caption ? ` · ${n.caption}` : ''}</title>
+						{#if n.shape === 'check'}
+							<circle cx={x} cy={y} r="10" style="fill: {c}" />
+							<path d="M{x - 4.5} {y}l3 3l6 -6.5" class="am-tick" stroke-width="2.4" fill="none" />
+						{:else if n.shape === 'x'}
+							<path
+								d="M{x - 7} {y - 7}l14 14M{x + 7} {y - 7}l-14 14"
+								class="am-x"
+								stroke-width="3.5"
+							/>
+						{:else if n.shape === 'live'}
+							<circle cx={x} cy={y} r="11" style="fill: {c}" opacity="0.25">
+								<animate attributeName="r" values="7;15;7" dur="1.6s" repeatCount="indefinite" />
+								<animate
+									attributeName="opacity"
+									values="0.45;0;0.45"
+									dur="1.6s"
+									repeatCount="indefinite"
+								/>
+							</circle>
+							<circle cx={x} cy={y} r="6" style="fill: {c}" />
+						{:else if n.shape === 'dot'}
+							<circle cx={x} cy={y} r="5" style="fill: {c}" />
+						{:else}
+							<circle cx={x} cy={y} r="7" class="am-hollow" stroke-width="3" style="stroke: {c}" />
+						{/if}
+						<text
+							data-testid="agent-map-node-label"
+							{x}
+							y={y + 25}
+							text-anchor="middle"
+							class="am-label {n.shape === 'x' ? 'am-fail' : ''}">{clip(n.label, 20)}</text
 						>
-					{:else}
-						<g data-testid="agent-map-node">{@render nodeBody(n)}</g>
-					{/if}
-				{/each}
-			</svg>
+						{#if n.caption}
+							<text {x} y={y + 38} text-anchor="middle" class="am-caption"
+								>{clip(n.caption, 24)}</text
+							>
+						{/if}
+					{/snippet}
+
+					{#each map.nodes as n (n.id)}
+						{#if n.artifactId}
+							<g
+								data-testid="agent-map-node"
+								class="am-click"
+								role="button"
+								tabindex="0"
+								aria-label="Open {n.label}"
+								onclick={() => activate(n)}
+								onkeydown={(ev) => {
+									if (ev.key === 'Enter' || ev.key === ' ') {
+										ev.preventDefault();
+										activate(n);
+									}
+								}}>{@render nodeBody(n)}</g
+							>
+						{:else}
+							<g data-testid="agent-map-node">{@render nodeBody(n)}</g>
+						{/if}
+					{/each}
+				</svg>
+			</div>
 		</div>
 	{/if}
 </div>
