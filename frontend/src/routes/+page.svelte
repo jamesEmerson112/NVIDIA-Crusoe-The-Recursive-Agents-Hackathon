@@ -9,14 +9,6 @@
 
 	let creating = $state(false);
 
-	// One-click starters; each opens a conversation that exercises the run API.
-	const examples = [
-		'Find me a 1-bedroom in SF under $3,500 near Caltrain',
-		'Plan a team offsite for 8 people in SF next month',
-		'Split a $480 dinner bill fairly among 8 friends',
-		'Plan a 5-day trip to Tokyo on a mid-range budget'
-	];
-
 	async function send(content: string) {
 		creating = true;
 		const { id } = await (await fetch('/api/conversations', { method: 'POST' })).json();
@@ -31,7 +23,16 @@
 >
 	<SanFrancisco3D />
 	<div class="relative w-full max-w-3xl space-y-8">
-		<h1 data-testid="start-heading" class="text-center text-3xl font-normal tracking-tight">
+		<!-- A soft frosted patch behind the heading keeps it legible over the animated map: blurred,
+		     lightly tinted, with a radial mask so its edges fade out instead of forming a box. -->
+		<h1
+			data-testid="start-heading"
+			class="relative isolate mx-auto w-fit text-center text-3xl font-normal tracking-tight"
+		>
+			<span
+				aria-hidden="true"
+				class="absolute -inset-x-24 -inset-y-12 -z-10 bg-white/75 [mask-image:radial-gradient(closest-side,black_50%,transparent)] backdrop-blur-xl dark:bg-zinc-950/60"
+			></span>
 			What's on your mind today?
 		</h1>
 		<Composer
@@ -41,15 +42,5 @@
 			busy={creating || live.running}
 			onsend={send}
 		/>
-		<div data-testid="start-examples" class="flex flex-wrap justify-center gap-2">
-			{#each examples as prompt (prompt)}
-				<button
-					data-testid="start-example"
-					class="rounded-full border border-zinc-300 bg-white/80 px-3 py-1.5 text-sm text-zinc-600 backdrop-blur-sm hover:bg-zinc-100 disabled:opacity-40 dark:border-zinc-700 dark:bg-zinc-900/80 dark:text-zinc-300 dark:hover:bg-zinc-800"
-					disabled={creating || live.running}
-					onclick={() => send(prompt)}>{prompt}</button
-				>
-			{/each}
-		</div>
 	</div>
 </div>

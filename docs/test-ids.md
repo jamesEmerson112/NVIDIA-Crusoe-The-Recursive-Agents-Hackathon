@@ -38,7 +38,7 @@ Repeated items (messages, steps, list rows, chips) share one id; pick one by tex
 
 **`lib/components/RunLog.svelte`**: `run-log`, `run-log-summary`, `run-log-empty`, `run-log-scroll`, `run-log-table`, `run-log-row`, `run-log-time`, `run-log-role`, `run-log-model`, `run-log-cache-hit`, `run-log-cost`, `run-log-duration`, `run-log-did`, `run-log-artifact`, `run-log-tool`, `run-log-totals`
 
-**`lib/components/SanFrancisco3D.svelte`**: `sf3d-attribution`, `sf3d-backdrop`, `sf3d-host`
+**`lib/components/SanFrancisco3D.svelte`**: `sf3d-backdrop`, `sf3d-host`, `sf3d-attribution`
 
 **`lib/components/StatusBadge.svelte`**: `status-badge`
 
@@ -48,7 +48,7 @@ Repeated items (messages, steps, list rows, chips) share one id; pick one by tex
 
 **`routes/+layout.svelte`**: `app-root`, `sidebar`, `sidebar-toggle`, `sidebar-new`, `sidebar-library`, `sidebar-plans`, `sidebar-conversations`, `sidebar-item`, `sidebar-conversation`, `sidebar-working`, `sidebar-delete`, `sidebar-delete-error`, `sidebar-mock-notice`, `app-main`
 
-**`routes/+page.svelte`**: `start-root`, `start-heading`, `start-examples`, `start-example`
+**`routes/+page.svelte`**: `start-root`, `start-heading`
 
 **`routes/library/+page.svelte`**: `library-root`, `library-heading`, `library-search`, `library-kinds`, `library-kind`, `library-results`, `library-result`, `library-empty`
 
