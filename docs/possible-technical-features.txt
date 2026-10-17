@@ -24,19 +24,23 @@ Ranked: most essential first, most optional last
 
 NOW
 1. [M] Low/High render quality for /plans           <-- James
-   - High: shadows, GTAO, SSGI, SSR, TRAA
+   - Presets, auto-detect, shadows, GTAO, SSR, TRAA done
    - Auto-detects M3 Max; ?quality= overrides
+   - SSGI built but off; hazed the image
+   - Reworking toward photoreal 3D floor plan
+   - Textured wood/tile floors, real furniture models
+   - White walls, dark cut caps, bright daylight
 2. [S] Comparison table view of shortlisted homes   <-- James
 3. [M] Visit feedback form and visit task view      <-- James
    - Ratings feed BE's next search round
 
 LATER
 4. [S] Landing page copy and one-line pitch
-5. [S] Run log view of every call
+5. [S] Run log view of every call                   <-- James
 6. [S] Real-world task list with checkboxes
 7. [M] Weight sliders re-rank shortlist             <-- Laurie
    - Plain code re-sorts, no model call
-   - formloop has drag-to-rank; Workbench not yet
+   - formloop infers weights; Workbench doesn't yet
 8. [S] Live "options remaining" counter on forms
 9. [M] Map with listing pins
    - Sandbox blocks network; inline or static
@@ -64,7 +68,7 @@ NOW
   - Alternate two models; avoid 30 RPM cap
 - [M] Rental listings tool over scraped data   <-- Gaelan
   - Speaker B's Bay Area listings in SQLite
-  - Reuse formloop's You.com listings source
+  - Reuse formloop's synthetic listings
   - Fallback: DataSF context tool below
 - [S] Market snapshot: median rent via SQL     <-- Gaelan
 - [S] You.com search and research agent tools
@@ -134,10 +138,15 @@ LATER: PARALLEL ROOM-DESIGN EXTENSION
 Works on its own; Workbench (frontend/) can't use it yet.
 
 - formloop engine (lsarta), outside Workbench       <-- Laurie
-  - Listings incl. You.com, renter simulator
+  - Synthetic listings, renter simulator
   - Agent, matcher, scorer, reviewer, eval
   - Two-pane demo: editable form, live listings
-- formloop: drag-to-rank form sets answer weights   <-- Laurie
+- formloop: weights inferred from answer detail     <-- Laurie
+- formloop: add-your-own-question row on form       <-- Laurie
+- formloop: You.com grounds renters' own factors    <-- Laurie
+  - Cached search; source links on cards
+- formloop: every listing exports as 3D blueprint   <-- Laurie
+  - GET /api/plan/<listing id>; passes validatePlan
 - formloop: agent writes follow-up questions        <-- Laurie
 - formloop: skipped questions dropped by reviewer   <-- Laurie
 - formloop: form v3 beats v1 on unseen renters      <-- Laurie
