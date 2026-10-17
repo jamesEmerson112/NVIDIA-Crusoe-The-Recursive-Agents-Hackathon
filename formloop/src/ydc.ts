@@ -13,7 +13,7 @@ export const ydcCacheDir = join(formloopDir, 'cache', 'ydc');
 /** Never query or keep results from listing sites. */
 export const LISTING_SITES = [
 	'zillow.com', 'apartments.com', 'craigslist.org', 'trulia.com', 'hotpads.com', 'zumper.com', 'padmapper.com',
-	'redfin.com', 'realtor.com', 'rent.com', 'apartmentlist.com', 'apartmentguide.com', 'rentcafe.com', 'streeteasy.com'
+	'redfin.com', 'realtor.com', 'rent.com', 'apartmentlist.com', 'apartmentguide.com', 'rentcafe.com', 'streeteasy.com', 'renthop.com', 'apartmentadvisor.com', 'rentable.co', 'apartmenthomeliving.com', 'apartmentfinder.com'
 ];
 
 export type YdcResult = { url: string; title: string; description: string; snippets: string[] };

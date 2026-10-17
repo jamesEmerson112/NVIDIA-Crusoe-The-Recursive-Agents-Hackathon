@@ -1,0 +1,175 @@
+# Neighborhoods: the 20 San Francisco neighborhoods (names match formloop/src/types.ts NEIGHBORHOODS)
+# plus 4 Bay Area regions, with an approximate centre, typical transit commutes, tags and a one-line profile.
+# Editable by the researcher: fix any value, keep ids snake_case and names exact.
+# Values: center is approximate (hand-placed). commute_min is SIMULATED: plausible typical transit
+# minutes (door to door, weekday morning) to FiDi, the Mission, SoMa and Palo Alto, estimated, not measured.
+# tags and profile are written by hand from general knowledge, not sourced.
+areas:
+  - id: mission
+    name: Mission
+    region: sf
+    center: [37.7599, -122.4148]
+    commute_min: { fidi: 20, mission: 5, soma: 15, palo_alto: 60 }
+    tags: [bart, food, nightlife]
+    profile: Dense, flat neighborhood along two BART stations, known for its restaurants, murals and Latino heritage.
+  - id: soma
+    name: SoMa
+    region: sf
+    center: [37.7785, -122.4056]
+    commute_min: { fidi: 12, mission: 15, soma: 5, palo_alto: 55 }
+    tags: [new-construction, transit, offices]
+    profile: Mix of offices, warehouses and newer high-rise apartments next to downtown and Caltrain.
+  - id: hayes_valley
+    name: Hayes Valley
+    region: sf
+    center: [37.7766, -122.4241]
+    commute_min: { fidi: 18, mission: 12, soma: 12, palo_alto: 65 }
+    tags: [boutiques, walkable, central]
+    profile: Small, central neighborhood with shops, restaurants and quick access to Market Street transit.
+  - id: nob_hill
+    name: Nob Hill
+    region: sf
+    center: [37.7930, -122.4161]
+    commute_min: { fidi: 12, mission: 25, soma: 15, palo_alto: 65 }
+    tags: [hills, cable-car, older-buildings]
+    profile: Steep, established neighborhood of older apartment buildings and hotels just above downtown.
+  - id: pacific_heights
+    name: Pacific Heights
+    region: sf
+    center: [37.7925, -122.4382]
+    commute_min: { fidi: 25, mission: 30, soma: 28, palo_alto: 75 }
+    tags: [quiet, views, upscale]
+    profile: Quiet, mostly residential hilltop area of large homes and apartments with bay views.
+  - id: marina
+    name: Marina
+    region: sf
+    center: [37.8037, -122.4368]
+    commute_min: { fidi: 30, mission: 35, soma: 32, palo_alto: 80 }
+    tags: [waterfront, young-professionals, flat]
+    profile: Flat waterfront neighborhood near Crissy Field with busy Chestnut Street shops and bars.
+  - id: inner_sunset
+    name: Inner Sunset
+    region: sf
+    center: [37.7602, -122.4662]
+    commute_min: { fidi: 35, mission: 30, soma: 30, palo_alto: 75 }
+    tags: [park, fog, n-judah]
+    profile: Residential area beside Golden Gate Park and UCSF with a compact commercial strip on Irving Street.
+  - id: outer_sunset
+    name: Outer Sunset
+    region: sf
+    center: [37.7550, -122.4945]
+    commute_min: { fidi: 45, mission: 40, soma: 42, palo_alto: 75 }
+    tags: [beach, quiet, fog]
+    profile: Low-rise, foggy residential grid near Ocean Beach, farther from downtown.
+  - id: inner_richmond
+    name: Inner Richmond
+    region: sf
+    center: [37.7802, -122.4645]
+    commute_min: { fidi: 30, mission: 35, soma: 32, palo_alto: 80 }
+    tags: [food, park, residential]
+    profile: Residential area between Golden Gate Park and the Presidio with a busy Clement Street food scene.
+  - id: outer_richmond
+    name: Outer Richmond
+    region: sf
+    center: [37.7779, -122.4930]
+    commute_min: { fidi: 40, mission: 45, soma: 42, palo_alto: 85 }
+    tags: [quiet, fog, beach]
+    profile: Quiet, foggy residential area near Lands End and Ocean Beach.
+  - id: noe_valley
+    name: Noe Valley
+    region: sf
+    center: [37.7502, -122.4337]
+    commute_min: { fidi: 30, mission: 12, soma: 25, palo_alto: 60 }
+    tags: [families, sunny, quiet]
+    profile: Sunny, family-oriented neighborhood of single-family homes and flats around 24th Street.
+  - id: castro
+    name: Castro
+    region: sf
+    center: [37.7609, -122.4350]
+    commute_min: { fidi: 22, mission: 10, soma: 18, palo_alto: 65 }
+    tags: [lgbtq-history, muni-metro, nightlife]
+    profile: Historic center of LGBTQ life in San Francisco, with a Muni Metro station and lively main streets.
+  - id: bernal_heights
+    name: Bernal Heights
+    region: sf
+    center: [37.7389, -122.4152]
+    commute_min: { fidi: 30, mission: 12, soma: 25, palo_alto: 55 }
+    tags: [residential, hills, families]
+    profile: Residential hill neighborhood south of the Mission with a small-town feel along Cortland Avenue.
+  - id: potrero_hill
+    name: Potrero Hill
+    region: sf
+    center: [37.7605, -122.4009]
+    commute_min: { fidi: 25, mission: 15, soma: 15, palo_alto: 50 }
+    tags: [sunny, views, residential]
+    profile: Sunny residential hill with downtown views, close to the freeways and Caltrain.
+  - id: dogpatch
+    name: Dogpatch
+    region: sf
+    center: [37.7590, -122.3880]
+    commute_min: { fidi: 22, mission: 20, soma: 15, palo_alto: 50 }
+    tags: [new-construction, t-third, industrial]
+    profile: Former industrial waterfront area with newer apartment buildings along the T Third line.
+  - id: tenderloin
+    name: Tenderloin
+    region: sf
+    center: [37.7847, -122.4141]
+    commute_min: { fidi: 12, mission: 18, soma: 10, palo_alto: 60 }
+    tags: [central, affordable, transit]
+    profile: Dense, central neighborhood with many older studio buildings, close to downtown and BART.
+  - id: north_beach
+    name: North Beach
+    region: sf
+    center: [37.8061, -122.4103]
+    commute_min: { fidi: 15, mission: 30, soma: 20, palo_alto: 70 }
+    tags: [italian, cafes, walkable]
+    profile: Historic Italian-American neighborhood of cafes, restaurants and older flats next to Chinatown.
+  - id: russian_hill
+    name: Russian Hill
+    region: sf
+    center: [37.8011, -122.4194]
+    commute_min: { fidi: 18, mission: 30, soma: 22, palo_alto: 70 }
+    tags: [hills, views, cable-car]
+    profile: Steep, residential hill of apartments and flats with bay views, between North Beach and the Marina.
+  - id: lower_haight
+    name: Lower Haight
+    region: sf
+    center: [37.7720, -122.4316]
+    commute_min: { fidi: 22, mission: 15, soma: 18, palo_alto: 65 }
+    tags: [bars, central, victorians]
+    profile: Small, central neighborhood of Victorian flats with bars and cafes along Haight Street.
+  - id: excelsior
+    name: Excelsior
+    region: sf
+    center: [37.7246, -122.4261]
+    commute_min: { fidi: 35, mission: 20, soma: 30, palo_alto: 50 }
+    tags: [families, residential, affordable]
+    profile: Outer residential neighborhood of single-family homes near Balboa Park BART.
+  - id: oakland
+    name: Oakland
+    region: east_bay
+    center: [37.8044, -122.2712]
+    commute_min: { fidi: 25, mission: 35, soma: 30, palo_alto: 75 }
+    tags: [bart, larger-units, diverse]
+    profile: Large East Bay city; downtown is one BART stop under the bay from downtown San Francisco.
+  - id: berkeley_east_bay
+    name: Berkeley / East Bay
+    region: east_bay
+    center: [37.8715, -122.2730]
+    commute_min: { fidi: 35, mission: 45, soma: 40, palo_alto: 85 }
+    tags: [university, bart, walkable]
+    profile: University city north of Oakland with BART service and walkable commercial districts.
+  - id: marin
+    name: Marin
+    region: marin
+    center: [37.8800, -122.5200]
+    commute_min: { fidi: 50, mission: 60, soma: 55, palo_alto: 95 }
+    tags: [ferry, outdoors, car-friendly]
+    profile: Mostly suburban county north of the Golden Gate Bridge, reached by ferry, bus or car.
+  - id: peninsula
+    name: Peninsula
+    region: peninsula
+    center: [37.5630, -122.3255]
+    commute_min: { fidi: 50, mission: 45, soma: 45, palo_alto: 25 }
+    tags: [caltrain, suburban, south-bay-access]
+    profile: Suburban cities along Caltrain between San Francisco and Silicon Valley, centred here on San Mateo.

@@ -141,7 +141,7 @@
 	.heard .chip.hard { border-color: var(--clay); }
 	/* Map */
 	.mapwrap { position: sticky; top: -26px; z-index: 5; margin: -26px -28px 18px; padding: 16px 28px 14px; background: var(--bg); border-bottom: 1px solid var(--line); }
-	#map { height: 230px; border-radius: 14px; border: 1px solid var(--line); background: #e9e5da; }
+	#map { height: 250px; border-radius: 14px; border: 1px solid var(--line); background: #e9e5da; }
 	#map.nomap { display: flex; align-items: center; justify-content: center; color: var(--muted); font-size: 13px; }
 	.maprow { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 10px; gap: 10px; flex-wrap: wrap; }
 	.fitcount { font: 500 15px var(--sans); color: var(--muted); }
@@ -153,6 +153,24 @@
 	.pulse span::after { content: ""; position: absolute; inset: -2px; border-radius: 50%; border: 2px solid var(--clay); animation: ring 1.6s ease-out infinite; }
 	@keyframes ring { from { transform: scale(1); opacity: .9; } to { transform: scale(2.6); opacity: 0; } }
 	.leaflet-tooltip { font: 12px var(--sans); }
+	.leaflet-tooltip.areatip, .areapop .leaflet-popup-content { padding: 0; margin: 0; }
+	.leaflet-tooltip.areatip { border: 0; border-radius: 12px; box-shadow: 0 10px 30px -8px #0004; white-space: normal; }
+	.areapanel { display: none; position: absolute; top: 58px; right: 40px; z-index: 1200; background: #fff; border-radius: 12px; box-shadow: 0 14px 40px -10px #0005; }
+	.areapanel.show { display: block; }
+	.areapanel .x { position: absolute; top: 6px; right: 10px; color: var(--muted); font-size: 16px; }
+	.ac { width: 270px; padding: 12px 14px; font: 12.5px/1.45 var(--sans); color: var(--ink); }
+	.ac h4 { margin: 0; font: 600 16px/1.2 var(--serif); display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
+	.ac h4 span { font: 600 10.5px var(--sans); letter-spacing: .1em; text-transform: uppercase; color: var(--clay); }
+	.ac p { margin: 4px 0 6px; color: var(--muted); }
+	.ac .tg { display: inline-block; font-size: 11px; background: var(--bg); border-radius: 999px; padding: 1px 8px; margin: 0 4px 6px 0; }
+	.ac table { width: 100%; border-collapse: collapse; margin: 2px 0 4px; }
+	.ac td { padding: 2px 0; font-variant-numeric: tabular-nums; }
+	.ac td:last-child { text-align: right; }
+	.ac .k { font-size: 9.5px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; border-radius: 4px; padding: 0 4px; margin-left: 4px; }
+	.ac .k.sim { background: #efe9dc; color: var(--muted); }
+	.ac .k.src { background: var(--green-soft); color: var(--green); }
+	.ac .sec { font-size: 10.5px; font-weight: 600; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); margin-top: 6px; }
+	.ac .srcs a { color: var(--green); margin-right: 6px; }
 	.card.flash { box-shadow: 0 0 0 3px var(--clay); }
 	/* Views */
 	.tabs { display: flex; gap: 4px; background: var(--bg); border: 1px solid var(--line); border-radius: 999px; padding: 3px; }
@@ -221,6 +239,7 @@
 				<div class="count"><span class="working">agent re-ranking</span> <span id="count"></span></div>
 			</div>
 			<div id="map"></div>
+			<div class="areapanel" id="areaPanel"></div>
 		</div>
 		<div class="matches-head"><div class="eyebrow">Best matches right now</div></div>
 		<div id="saved" class="saved"></div>
@@ -406,7 +425,7 @@ function hash(s) { let h = 2166136261; for (const c of s) h = Math.imul(h ^ c.ch
 async function initMap() {
 	const box = $('#map');
 	if (!window.L) { box.classList.add('nomap'); box.textContent = 'Map tiles need the network; matching still works.'; return; }
-	const map = L.map(box, { zoomControl: false, scrollWheelZoom: false, attributionControl: true }).setView([37.764, -122.443], 12);
+	const map = L.map(box, { zoomControl: true, scrollWheelZoom: false, attributionControl: true }).setView([37.764, -122.443], 12);
 	L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '© OpenStreetMap contributors', maxZoom: 17 }).addTo(map);
 	const listings = await (await fetch('/api/listings')).json();
 	for (const l of listings) {
@@ -427,6 +446,45 @@ async function initMap() {
 	addEventListener('resize', fit);
 	mapState.map = map;
 	if (mapState.pending) updateMap(mapState.pending);
+	addAreaCards(map);
+}
+
+// Area hover cards: research/neighborhoods.yaml + market.yaml (simulated) + rent_calibration.yaml (You.com, sourced).
+const kindTag = (k) => `<span class="k ${k === 'sourced' ? 'src' : 'sim'}">${k === 'sourced' ? 'sourced' : 'simulated'}</span>`;
+function areaCard(a, withLinks) {
+	const r = a.rent || {};
+	const rentRow = (label, x) => x && x.value != null ? `<tr><td>${label}</td><td>${money(x.value)}${kindTag(x.kind)}</td></tr>` : '';
+	const c = a.commute || {};
+	const num = (x, f) => x && x.value != null ? `${f(x.value)}${kindTag(x.kind)}` : '–';
+	return `<div class="ac"><h4>${a.name}<span>${({ sf: 'San Francisco', east_bay: 'East Bay', marin: 'Marin', peninsula: 'Peninsula' })[a.region] || ''}</span></h4>
+		<p>${a.profile || ''}</p>${(a.tags || []).map((t) => `<span class="tg">${t}</span>`).join('')}
+		<div class="sec">Median rent</div><table>${rentRow('Studio', r.studio)}${rentRow('1 bedroom', r.one_br)}${rentRow('2 bedrooms', r.two_br)}
+		<tr><td>Year over year</td><td>${num(a.yoy_pct, (v) => `${v > 0 ? '+' : ''}${v}%`)}</td></tr></table>
+		<div class="sec">Market</div><table><tr><td>Available units</td><td>${num(a.units, (v) => v.toLocaleString('en-US'))}</td></tr>
+		<tr><td>Vacancy</td><td>${num(a.vacancy_pct, (v) => `${v}%`)}</td></tr><tr><td>In the pipeline</td><td>${num(a.pipeline, (v) => `${v.toLocaleString('en-US')} units`)}</td></tr></table>
+		<div class="sec">Transit minutes${kindTag(c.kind || 'simulated')}</div><div>FiDi ${c.fidi ?? '–'} · Mission ${c.mission ?? '–'} · SoMa ${c.soma ?? '–'} · Palo Alto ${c.palo_alto ?? '–'}</div>
+		${a.sources?.length ? `<div class="sec">Sources</div><div class="srcs">${withLinks ? a.sources.map((u, i) => `<a href="${u}" target="_blank" rel="noopener">${i + 1}</a>`).join('') : `${a.sources.length} cited (click the area for links)`}</div>` : ''}</div>`;
+}
+let areaPinned = null;
+function showArea(a, pin) {
+	const panel = $('#areaPanel');
+	if (pin) areaPinned = a.id;
+	else if (areaPinned && areaPinned !== a.id) return;
+	panel.innerHTML = (pin ? '<button class="x" title="Close">×</button>' : '') + areaCard(a, pin);
+	panel.classList.add('show');
+	panel.querySelector('.x')?.addEventListener('click', () => { areaPinned = null; panel.classList.remove('show'); });
+}
+async function addAreaCards(map) {
+	let data;
+	try { data = await (await fetch('/api/areas')).json(); } catch { return; }
+	const areas = Array.isArray(data) ? data : data.areas || [];
+	for (const a of areas) {
+		if (!a.center) continue;
+		const ring = L.circleMarker(a.center, { radius: a.region === 'sf' ? 10 : 14, color: '#b8562f', weight: 1.5, fillColor: '#b8562f', fillOpacity: 0.08, dashArray: '3 3' }).addTo(map);
+		ring.on('mouseover', () => showArea(a, false));
+		ring.on('mouseout', () => { if (!areaPinned) $('#areaPanel').classList.remove('show'); });
+		ring.on('click', () => showArea(a, true));
+	}
 }
 
 function tweenCount(to) {

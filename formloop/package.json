@@ -26,7 +26,8 @@
 		"check": "tsc --noEmit -p .",
 		"validate": "node src/cli/validate.ts",
 		"factor": "node src/cli/factor.ts",
-		"plan3d-check": "node src/cli/plan3d-check.ts"
+		"plan3d-check": "node src/cli/plan3d-check.ts",
+		"calibrate-rents": "node src/cli/calibrate-rents.ts"
 	},
 	"allowScripts": {},
 	"dependencies": {

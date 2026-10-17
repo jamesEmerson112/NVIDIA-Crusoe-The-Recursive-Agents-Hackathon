@@ -244,6 +244,15 @@ createServer(async (req, res) => {
 			const form = formFor(v ? Number(v) : undefined);
 			return send(res, 200, { ...form, mode: live ? 'live' : 'offline', listings: listings.length, top_k: cfg.top_k });
 		}
+		if (req.method === 'GET' && url.pathname === '/api/areas') {
+			// Read from research/ files only (cache-only: no network). Loaded per request so edits show on reload.
+			try {
+				const { loadAreas } = await import('./areas.ts');
+				return send(res, 200, loadAreas());
+			} catch (e) {
+				return send(res, 200, { error: (e as Error).message, areas: [] });
+			}
+		}
 		if (req.method === 'GET' && url.pathname === '/api/evolution') return send(res, 200, evolution());
 		if (req.method === 'GET' && url.pathname === '/api/results') {
 			// The newest held-out eval exactly as saved: never recomputed or rounded here.

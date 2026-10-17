@@ -1,0 +1,32 @@
+# Market: per-area rental market figures (inventory, vacancy, pipeline, median rents, year-over-year change).
+# Editable by the researcher: change any number; keys must match ids in research/neighborhoods.yaml.
+# EVERY VALUE HERE IS SIMULATED: hand-set to be plausible relative to each area's size and 2026 Bay Area
+# rent levels, not measured or sourced. Rents from this file are used only when
+# research/rent_calibration.yaml has no sourced figure for that area and unit size.
+# available_units = units listed for rent now; vacancy_pct = percent; pipeline_units = units under construction;
+# median_rent = monthly USD; yoy_pct = year-over-year rent change in percent.
+areas:
+  mission:         { available_units: 420, vacancy_pct: 4.8, pipeline_units: 650, median_rent: { studio: 2650, one_br: 3450, two_br: 4600 }, yoy_pct: 5.5 }
+  soma:            { available_units: 780, vacancy_pct: 7.2, pipeline_units: 2100, median_rent: { studio: 2750, one_br: 3500, two_br: 4800 }, yoy_pct: 4.0 }
+  hayes_valley:    { available_units: 160, vacancy_pct: 4.5, pipeline_units: 380, median_rent: { studio: 2850, one_br: 3700, two_br: 5000 }, yoy_pct: 6.0 }
+  nob_hill:        { available_units: 300, vacancy_pct: 5.0, pipeline_units: 120, median_rent: { studio: 2500, one_br: 3400, two_br: 4900 }, yoy_pct: 4.5 }
+  pacific_heights: { available_units: 230, vacancy_pct: 3.9, pipeline_units: 60, median_rent: { studio: 2900, one_br: 4000, two_br: 5900 }, yoy_pct: 5.0 }
+  marina:          { available_units: 210, vacancy_pct: 4.2, pipeline_units: 40, median_rent: { studio: 2850, one_br: 3900, two_br: 5600 }, yoy_pct: 5.0 }
+  inner_sunset:    { available_units: 170, vacancy_pct: 3.8, pipeline_units: 90, median_rent: { studio: 2300, one_br: 3000, two_br: 4000 }, yoy_pct: 4.5 }
+  outer_sunset:    { available_units: 190, vacancy_pct: 3.5, pipeline_units: 150, median_rent: { studio: 2100, one_br: 2700, two_br: 3600 }, yoy_pct: 4.0 }
+  inner_richmond:  { available_units: 180, vacancy_pct: 3.7, pipeline_units: 70, median_rent: { studio: 2300, one_br: 3000, two_br: 4100 }, yoy_pct: 4.5 }
+  outer_richmond:  { available_units: 160, vacancy_pct: 3.4, pipeline_units: 50, median_rent: { studio: 2100, one_br: 2700, two_br: 3700 }, yoy_pct: 4.0 }
+  noe_valley:      { available_units: 110, vacancy_pct: 3.3, pipeline_units: 30, median_rent: { studio: 2600, one_br: 3600, two_br: 5100 }, yoy_pct: 5.0 }
+  castro:          { available_units: 140, vacancy_pct: 4.0, pipeline_units: 110, median_rent: { studio: 2600, one_br: 3500, two_br: 4900 }, yoy_pct: 5.0 }
+  bernal_heights:  { available_units: 90, vacancy_pct: 3.2, pipeline_units: 40, median_rent: { studio: 2400, one_br: 3200, two_br: 4300 }, yoy_pct: 4.5 }
+  potrero_hill:    { available_units: 150, vacancy_pct: 4.6, pipeline_units: 420, median_rent: { studio: 2700, one_br: 3500, two_br: 4800 }, yoy_pct: 4.5 }
+  dogpatch:        { available_units: 170, vacancy_pct: 6.0, pipeline_units: 900, median_rent: { studio: 2750, one_br: 3550, two_br: 4900 }, yoy_pct: 3.5 }
+  tenderloin:      { available_units: 380, vacancy_pct: 6.8, pipeline_units: 260, median_rent: { studio: 1850, one_br: 2500, two_br: 3300 }, yoy_pct: 2.5 }
+  north_beach:     { available_units: 140, vacancy_pct: 4.1, pipeline_units: 30, median_rent: { studio: 2400, one_br: 3300, two_br: 4600 }, yoy_pct: 4.5 }
+  russian_hill:    { available_units: 190, vacancy_pct: 4.0, pipeline_units: 40, median_rent: { studio: 2700, one_br: 3700, two_br: 5300 }, yoy_pct: 5.0 }
+  lower_haight:    { available_units: 100, vacancy_pct: 4.2, pipeline_units: 80, median_rent: { studio: 2400, one_br: 3200, two_br: 4400 }, yoy_pct: 5.0 }
+  excelsior:       { available_units: 80, vacancy_pct: 3.0, pipeline_units: 60, median_rent: { studio: 1900, one_br: 2500, two_br: 3300 }, yoy_pct: 3.0 }
+  oakland:           { available_units: 2400, vacancy_pct: 7.5, pipeline_units: 3200, median_rent: { studio: 1800, one_br: 2300, two_br: 3000 }, yoy_pct: 1.5 }
+  berkeley_east_bay: { available_units: 1100, vacancy_pct: 5.0, pipeline_units: 1800, median_rent: { studio: 2100, one_br: 2700, two_br: 3600 }, yoy_pct: 3.0 }
+  marin:             { available_units: 600, vacancy_pct: 3.6, pipeline_units: 450, median_rent: { studio: 2400, one_br: 3100, two_br: 4200 }, yoy_pct: 3.0 }
+  peninsula:         { available_units: 2000, vacancy_pct: 4.5, pipeline_units: 2600, median_rent: { studio: 2400, one_br: 3000, two_br: 4000 }, yoy_pct: 3.5 }
