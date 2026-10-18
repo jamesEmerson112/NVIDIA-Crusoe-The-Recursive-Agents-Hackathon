@@ -1,12 +1,12 @@
 <script lang="ts">
 	import { CAMERA_PRESETS } from '#lib/room-showcase/presets.ts';
-	import type { RoomHandle } from '#lib/room-showcase/scene.ts';
+	import type { RoomHandle, RoomStyle } from '#lib/room-showcase/scene.ts';
 
 	/**
 	 * James's photoreal showcase room as an embeddable view. It loads ~24 MB of models and
 	 * textures, so it only starts once scrolled into view, and is disposed when unmounted.
 	 */
-	let { class: className = '' }: { class?: string } = $props();
+	let { class: className = '', style = 'airy' }: { class?: string; style?: RoomStyle } = $props();
 
 	let container: HTMLDivElement;
 	let host: HTMLDivElement;
@@ -26,6 +26,7 @@
 			const { createRoom } = await import('#lib/room-showcase/scene.ts');
 			if (cancelled) return;
 			const h = await createRoom(container, {
+				style,
 				onProgress: (n, total) => (progress = Math.round((n / total) * 100)),
 				onReady: () => (status = 'ready'),
 				onError: () => (status = 'error')

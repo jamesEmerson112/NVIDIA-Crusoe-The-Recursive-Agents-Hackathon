@@ -33,6 +33,8 @@
 			const h = await createRoom(container, {
 				// `?ao=0` turns ambient occlusion off, for before/after comparisons.
 				ambientOcclusion: page.url.searchParams.get('ao') !== '0',
+				// `?style=warm` stages the second look (see ROOM_STYLES in room-showcase/scene.ts).
+				style: page.url.searchParams.get('style') === 'warm' ? 'warm' : 'airy',
 				onProgress: (n, total) => (progress = Math.round((n / total) * 100)),
 				onReady: () => (status = 'ready'),
 				onError: (m) => {

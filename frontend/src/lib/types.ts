@@ -90,6 +90,8 @@ export interface WidgetSpec {
  */
 export interface BlueprintSpec {
 	plan: string;
+	/** Which staged room look ('airy' | 'warm', see ROOM_STYLES); different apartments get different looks. */
+	scene?: 'airy' | 'warm';
 	/** Fictional street address or listing name. */
 	address?: string;
 	/** One line on why this place fits the user. */

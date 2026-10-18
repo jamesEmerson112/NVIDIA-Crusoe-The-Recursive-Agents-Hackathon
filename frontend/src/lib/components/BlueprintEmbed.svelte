@@ -22,7 +22,7 @@
 
 	let tab = $state<'room' | 'plan'>('room');
 	const viewerHref = $derived(`/plans/view?plan=${encodeURIComponent(spec.plan)}&c=${cid}&a=${id}`);
-	const roomHref = $derived(`/plans/room?c=${cid}&a=${id}`);
+	const roomHref = $derived(`/plans/room?style=${spec.scene ?? 'airy'}&c=${cid}&a=${id}`);
 	const tabClass = (on: boolean) =>
 		`rounded-md px-2 py-0.5 text-xs font-medium ${on ? 'bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-900' : 'text-zinc-500 hover:bg-zinc-100 dark:hover:bg-zinc-800'}`;
 </script>
@@ -62,7 +62,7 @@
 	</div>
 
 	{#if tab === 'room'}
-		<RoomScene class="h-80" />
+		<RoomScene class="h-80" style={spec.scene ?? 'airy'} />
 	{:else}
 		<a
 			data-testid="blueprint-embed-plan"

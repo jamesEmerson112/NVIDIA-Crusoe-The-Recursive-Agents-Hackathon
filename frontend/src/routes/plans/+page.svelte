@@ -30,7 +30,7 @@
 					>
 						<a
 							data-testid="blueprint-open"
-							href="/plans/room?c={b.conversationId}&a={b.id}"
+							href="/plans/room?style={b.spec.scene ?? 'airy'}&c={b.conversationId}&a={b.id}"
 							class="block hover:bg-zinc-50 dark:hover:bg-zinc-800/50"
 						>
 							<PlanSketch plan={b.spec.plan} class="h-44 bg-zinc-50 p-3 dark:bg-zinc-950" />

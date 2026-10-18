@@ -177,6 +177,12 @@ To fix a widget before the user answers it, call update_artifact with its id and
 						type: 'string',
 						description: 'Fictional address or listing name, e.g. "742 Clement St, Apt 3"'
 					},
+					scene: {
+						type: 'string',
+						enum: ['airy', 'warm'],
+						description:
+							'Staged look: airy (bright daylight, light oak, cream) or warm (golden hour, walnut, olive and terracotta). Give different places different looks.'
+					},
 					summary: { type: 'string', description: 'One short line on why it fits this user.' },
 					highlights: {
 						type: 'array',
@@ -455,8 +461,19 @@ async function execute(
 				.map(text)
 				.filter((h): h is string => !!h)
 				.slice(0, 4);
+			// Different apartments should not look identical: use the agent's choice, or else
+			// whichever look has been used less so far (ties go to airy).
+			const used = (await store.listBlueprints()).map((b) => b.spec.scene ?? 'airy');
+			const count = (look: string) => used.filter((u) => u === look).length;
+			const scene: 'airy' | 'warm' =
+				args.scene === 'airy' || args.scene === 'warm'
+					? args.scene
+					: count('warm') < count('airy')
+						? 'warm'
+						: 'airy';
 			const spec: BlueprintSpec = {
 				plan: args.plan,
+				scene,
 				...(text(args.address) ? { address: text(args.address) } : {}),
 				...(text(args.summary) ? { summary: text(args.summary) } : {}),
 				...(highlights.length ? { highlights } : {})

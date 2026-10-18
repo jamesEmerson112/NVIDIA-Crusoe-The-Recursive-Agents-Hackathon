@@ -21,6 +21,17 @@ const H = ROOM.height;
 const T = 0.15; // wall thickness
 const WIN = { x0: -2.1, x1: 2.1, sill: 0.3, head: 2.45 };
 
+/**
+ * The same room shell staged as different apartments, so walkthroughs of different places don't
+ * look identical. 'airy' is the original daylight Japandi room; 'warm' mirrors the layout and
+ * changes floor, walls, textiles, several furniture pieces and the light (golden hour).
+ */
+export type RoomStyle = 'airy' | 'warm';
+export const ROOM_STYLES: { id: RoomStyle; label: string }[] = [
+	{ id: 'airy', label: 'Airy daylight' },
+	{ id: 'warm', label: 'Warm evening' }
+];
+
 export interface RoomHandle {
 	setPreset(id: string): void;
 	dispose(): void;
@@ -30,6 +41,8 @@ export interface RoomOptions {
 	onProgress?(loaded: number, total: number): void;
 	onReady?(): void;
 	onError?(message: string): void;
+	/** Which apartment look to stage. Default 'airy'. */
+	style?: RoomStyle;
 	/** Ambient occlusion (soft contact shadows in corners and under furniture). Default true. */
 	ambientOcclusion?: boolean;
 }
@@ -60,7 +73,8 @@ export async function createRoom(
 	renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
 	renderer.outputColorSpace = THREE.SRGBColorSpace;
 	renderer.toneMapping = THREE.AgXToneMapping;
-	renderer.toneMappingExposure = 1.15;
+	const warm = opts.style === 'warm';
+	renderer.toneMappingExposure = warm ? 1.05 : 1.15;
 	renderer.shadowMap.enabled = true;
 	renderer.shadowMap.type = THREE.VSMShadowMap;
 	container.appendChild(renderer.domElement);
@@ -83,11 +97,13 @@ export async function createRoom(
 		return d;
 	};
 
+	// The warm style mirrors the room in x, so mirror the camera presets with it.
+	const mx = warm ? -1 : 1;
 	function applyPreset(p: CameraPreset) {
-		camera.position.set(...p.position);
+		camera.position.set(p.position[0] * mx, p.position[1], p.position[2]);
 		camera.fov = p.fov;
 		camera.updateProjectionMatrix();
-		controls.target.set(...p.target);
+		controls.target.set(p.target[0] * mx, p.target[1], p.target[2]);
 		controls.update();
 	}
 	applyPreset(CAMERA_PRESETS[0]);
@@ -144,7 +160,7 @@ export async function createRoom(
 	const tick = () => opts.onProgress?.(++loaded, total);
 	const maxAniso = renderer.capabilities.getMaxAnisotropy();
 	function tex(name: string, repeat: [number, number], srgb: boolean) {
-		const t = track(texLoader.load(`${BASE}/textures/${name}`));
+		const t = track(texLoader.load(name.startsWith('/') ? name : `${BASE}/textures/${name}`));
 		t.wrapS = t.wrapT = THREE.RepeatWrapping;
 		t.repeat.set(...repeat);
 		t.anisotropy = maxAniso;
@@ -152,12 +168,26 @@ export async function createRoom(
 		return t;
 	}
 
+	// Warm: darker walnut-toned laminate from the shared floor-plan textures.
+	const floorRepeat: [number, number] = warm ? [2.8, 3.2] : [2.2, 2.6];
 	const floorMat = track(
 		new THREE.MeshStandardMaterial({
-			map: tex('wood_floor_diff_1k.jpg', [2.2, 2.6], true),
-			normalMap: tex('wood_floor_nor_gl_1k.jpg', [2.2, 2.6], false),
-			roughnessMap: tex('wood_floor_rough_1k.jpg', [2.2, 2.6], false),
-			color: new THREE.Color(1.0, 0.9, 0.78),
+			map: tex(
+				warm ? '/textures/laminate_floor_02_diff.jpg' : 'wood_floor_diff_1k.jpg',
+				floorRepeat,
+				true
+			),
+			normalMap: tex(
+				warm ? '/textures/laminate_floor_02_nor.jpg' : 'wood_floor_nor_gl_1k.jpg',
+				floorRepeat,
+				false
+			),
+			roughnessMap: tex(
+				warm ? '/textures/laminate_floor_02_rough.jpg' : 'wood_floor_rough_1k.jpg',
+				floorRepeat,
+				false
+			),
+			color: warm ? new THREE.Color(0.78, 0.6, 0.45) : new THREE.Color(1.0, 0.9, 0.78),
 			roughness: 0.85,
 			envMapIntensity: 0.9
 		})
@@ -168,16 +198,16 @@ export async function createRoom(
 		new THREE.MeshStandardMaterial({
 			normalMap: tex('white_plaster_02_nor_gl_1k.jpg', wallRepeat, false),
 			roughnessMap: tex('white_plaster_02_rough_1k.jpg', wallRepeat, false),
-			color: new THREE.Color('#f7efe2'),
+			color: new THREE.Color(warm ? '#e0d2bb' : '#f7efe2'),
 			roughness: 0.92
 		})
 	);
 	wallMat.normalScale.set(0.18, 0.18);
 	const ceilingMat = track(
 		new THREE.MeshStandardMaterial({
-			color: '#f7f2ea',
+			color: warm ? '#f1e9db' : '#f7f2ea',
 			roughness: 0.95,
-			emissive: '#f7f2ea',
+			emissive: warm ? '#f1e9db' : '#f7f2ea',
 			emissiveIntensity: 0.12
 		})
 	);
@@ -278,10 +308,10 @@ export async function createRoom(
 	// Sheer linen curtains gathered at both sides of the window.
 	const curtainMat = track(
 		new THREE.MeshStandardMaterial({
-			color: '#f1ebe1',
+			color: warm ? '#c9ad86' : '#f1ebe1',
 			roughness: 1,
 			transparent: true,
-			opacity: 0.82,
+			opacity: warm ? 0.92 : 0.82,
 			side: THREE.DoubleSide
 		})
 	);
@@ -317,7 +347,7 @@ export async function createRoom(
 	}
 
 	// ---------- rug (procedural Japandi lattice) ----------
-	const rugTex = track(new THREE.CanvasTexture(makeRugCanvas()));
+	const rugTex = track(new THREE.CanvasTexture(makeRugCanvas(warm)));
 	rugTex.colorSpace = THREE.SRGBColorSpace;
 	rugTex.anisotropy = maxAniso;
 	const rugMat = track(new THREE.MeshStandardMaterial({ map: rugTex, roughness: 1 }));
@@ -416,8 +446,8 @@ export async function createRoom(
 		g.rotation.y = rotY;
 		scene.add(g);
 	}
-	art(1, 1.0, 0.7, [W - 0.005, 1.55, -0.55], -Math.PI / 2);
-	art(2, 0.6, 0.8, [-1.15, 1.5, D - 0.005], Math.PI);
+	art(warm ? 5 : 1, 1.0, 0.7, [W - 0.005, 1.55, -0.55], -Math.PI / 2);
+	art(warm ? 6 : 2, 0.6, 0.8, [-1.15, 1.5, D - 0.005], Math.PI);
 
 	// ---------- table lamp (paper shade) ----------
 	const shadeMat = track(
@@ -432,8 +462,10 @@ export async function createRoom(
 	const baseMat = track(new THREE.MeshStandardMaterial({ color: '#c9b9a3', roughness: 0.6 }));
 
 	// ---------- lights ----------
-	const sun = new THREE.DirectionalLight('#fff3e2', 5.5);
-	sun.position.set(-3.2, 6.5, -9);
+	// Warm: low golden-hour sun for long raking shadows, with the lamps doing more of the work.
+	const sun = new THREE.DirectionalLight(warm ? '#ffc488' : '#fff3e2', warm ? 4.2 : 5.5);
+	if (warm) sun.position.set(-6.5, 3.2, -9);
+	else sun.position.set(-3.2, 6.5, -9);
 	sun.target.position.set(0.4, 0, 0.2);
 	sun.castShadow = true;
 	sun.shadow.mapSize.set(2048, 2048);
@@ -449,13 +481,15 @@ export async function createRoom(
 	sun.shadow.blurSamples = 16;
 	scene.add(sun, sun.target);
 
-	const bounce = new THREE.HemisphereLight('#fffaf2', '#d9c3a5', 1.1);
+	const bounce = warm
+		? new THREE.HemisphereLight('#ffe6c7', '#a8876a', 0.8)
+		: new THREE.HemisphereLight('#fffaf2', '#d9c3a5', 1.1);
 	scene.add(bounce);
 
-	const pendantLight = new THREE.PointLight('#ffc98a', 3.2, 6, 2);
+	const pendantLight = new THREE.PointLight('#ffc98a', warm ? 5 : 3.2, 6, 2);
 	pendantLight.position.set(-1.15, 1.85, 1.9);
 	scene.add(pendantLight);
-	const lampLight = new THREE.PointLight('#ffbf7a', 2.4, 5, 2);
+	const lampLight = new THREE.PointLight('#ffbf7a', warm ? 4 : 2.4, 5, 2);
 	scene.add(lampLight);
 
 	// ---------- HDRI ----------
@@ -465,10 +499,10 @@ export async function createRoom(
 		track(hdr);
 		const env = track(pmrem.fromEquirectangular(hdr).texture);
 		scene.background = hdr;
-		scene.backgroundIntensity = 0.85;
+		scene.backgroundIntensity = warm ? 0.6 : 0.85;
 		scene.backgroundRotation.set(0, Math.PI * 0.35, 0);
 		scene.environment = env;
-		scene.environmentIntensity = 0.42;
+		scene.environmentIntensity = warm ? 0.32 : 0.42;
 		scene.environmentRotation.set(0, Math.PI * 0.35, 0);
 		tick();
 	});
@@ -516,7 +550,7 @@ export async function createRoom(
 		model('dining_chair_02', {
 			at: [tableCenter[0] + Math.sin(phi) * 0.62, tableCenter[1] + Math.cos(phi) * 0.62],
 			rot: phi + Math.PI
-		}).then(linenChair)
+		}).then(warm ? keep : linenChair)
 	);
 
 	const jobs: Promise<unknown>[] = [
@@ -526,18 +560,22 @@ export async function createRoom(
 			rot: -Math.PI / 2,
 			fit: 2.25,
 			maxX: W - 0.04
-		}).then(creamUpholstery),
-		model('mid_century_lounge_chair', { at: [-1.25, -2.05], rot: 0.75 }),
-		model('modern_wooden_cabinet', {
+		}).then(warm ? oliveVelvet : creamUpholstery),
+		warm
+			? model('/models/armchair.glb', { at: [-1.25, -2.05], rot: 0.75, fit: 0.85 })
+			: model('mid_century_lounge_chair', { at: [-1.25, -2.05], rot: 0.75 }),
+		model(warm ? '/models/tv-console.glb' : 'modern_wooden_cabinet', {
 			at: [-W + 0.3, -0.55],
 			rot: Math.PI / 2,
 			fit: 1.8,
 			minX: -W + 0.02
 		}),
-		model('round_wooden_table_01', { at: tableCenter, fit: 1.05 }).then(oakStain),
+		model('round_wooden_table_01', { at: tableCenter, fit: 1.05 }).then(warm ? keep : oakStain),
 		...chairs,
 		model('modern_ceiling_lamp_01', { at: tableCenter, maxY: H }),
-		model('pachira_aquatica_01', { at: [W - 0.45, -D + 0.45] }),
+		warm
+			? model('/models/plant-large.glb', { at: [W - 0.45, -D + 0.45], fit: 0.6 })
+			: model('pachira_aquatica_01', { at: [W - 0.45, -D + 0.45] }),
 		model('potted_plant_02', { at: [-W + 0.35, 0.75] }),
 		model('side_table_01', { at: [W - 0.3, -1.95] }).then(async (t) => {
 			const top = new THREE.Box3().setFromObject(t).max.y;
@@ -558,6 +596,10 @@ export async function createRoom(
 		scene.add(base, shade);
 		lampLight.position.set(x, y + 0.28, z);
 	}
+
+	// Warm mirrors the whole room (TV and sofa swap sides). three flips face winding for
+	// negative-determinant transforms, so lighting and shadows stay correct.
+	if (warm) scene.scale.x = -1;
 
 	let disposed = false;
 	Promise.all(jobs)
@@ -657,6 +699,15 @@ const linenChair = dye(
 	dyeColor = vec3(0.5, 0.43, 0.33) * (0.85 + 2.0 * lum);
 	dyeRough = 0.95;`
 );
+/** Black leather sofa becomes olive velvet (warm style); the wood frame is kept. */
+const oliveVelvet = dye(
+	'sofa-olive',
+	`dyeMask = 1.0 - smoothstep(0.035, 0.09, chroma);
+	dyeColor = vec3(0.16, 0.19, 0.11) * (0.8 + 0.9 * lum);
+	dyeRough = 0.78;`
+);
+/** Leave a model as authored (the warm style keeps brown leather chairs and the mahogany table). */
+const keep = (root: THREE.Object3D) => root;
 /** Mahogany table becomes light oak, keeping the grain from the luminance. */
 const oakStain = dye(
 	'oak',
@@ -700,7 +751,7 @@ function makeArtCanvas(seed: number): HTMLCanvasElement {
 }
 
 /** Cream wool rug with a charcoal border and a soft diamond lattice, plus fibre noise. */
-function makeRugCanvas(): HTMLCanvasElement {
+function makeRugCanvas(warm = false): HTMLCanvasElement {
 	const w = 768;
 	const h = 1088;
 	const c = document.createElement('canvas');
@@ -708,9 +759,10 @@ function makeRugCanvas(): HTMLCanvasElement {
 	c.height = h;
 	const g = c.getContext('2d');
 	if (!g) return c;
-	g.fillStyle = '#e8dfcf';
+	// Warm: terracotta field with a dark brown border and cream lattice.
+	g.fillStyle = warm ? '#a8684a' : '#e8dfcf';
 	g.fillRect(0, 0, w, h);
-	g.strokeStyle = '#4f4943';
+	g.strokeStyle = warm ? '#3b2a21' : '#4f4943';
 	g.lineWidth = 22;
 	g.strokeRect(30, 30, w - 60, h - 60);
 	g.lineWidth = 4;
@@ -719,7 +771,7 @@ function makeRugCanvas(): HTMLCanvasElement {
 	g.beginPath();
 	g.rect(80, 80, w - 160, h - 160);
 	g.clip();
-	g.strokeStyle = '#a99a85';
+	g.strokeStyle = warm ? '#e3cfb2' : '#a99a85';
 	g.lineWidth = 3;
 	const s = 76;
 	for (let k = -h; k < w + h; k += s) {
