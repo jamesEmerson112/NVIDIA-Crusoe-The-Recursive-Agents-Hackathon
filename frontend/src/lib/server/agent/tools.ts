@@ -5,6 +5,7 @@ import { runQuickEdit } from './subagent';
 import { normalizeFormSpec, typeable } from '#lib/forms.ts';
 import { normalizeWidget } from '#lib/widgets.ts';
 import { BLUEPRINT_PLANS, isBlueprintPlan } from '#lib/floorplan/catalog.ts';
+import { WebSearchError, webSearch } from '../ydc';
 
 export interface ToolContext {
 	conversationId: string;
@@ -301,6 +302,32 @@ To fix a widget before the user answers it, call update_artifact with its id and
 					extra_seconds: { type: 'number', description: 'Optional time for that extra work.' }
 				},
 				required: ['artifact_ids', 'summary', 'plan']
+			}
+		}
+	},
+	{
+		type: 'function',
+		function: {
+			name: 'web_search',
+			description:
+				'Search the web with You.com. Returns up to 5 results with title, url, snippet and page_age. Use it for real-world specifics (rents, prices, venues, opening hours, statistics, news) and cite the urls you rely on.',
+			parameters: {
+				type: 'object',
+				properties: {
+					query: { type: 'string', description: 'A short web search query.' },
+					include_domains: {
+						type: 'array',
+						items: { type: 'string' },
+						description: 'Optional: only return results from these domains, e.g. ["zumper.com"].'
+					},
+					freshness: {
+						type: 'string',
+						enum: ['day', 'week', 'month', 'year'],
+						description: 'Optional: only pages from the last day, week, month or year.'
+					},
+					count: { type: 'integer', description: 'Number of results, 1-5 (default 5).' }
+				},
+				required: ['query']
 			}
 		}
 	}
@@ -688,6 +715,42 @@ async function execute(
 				},
 				awaitUser: true
 			};
+		}
+		case 'web_search': {
+			const query = String(args.query ?? '').trim();
+			if (!query) return { content: fail('query is required') };
+			try {
+				const results = await webSearch(query, {
+					count: args.count === undefined ? undefined : Number(args.count) || undefined,
+					includeDomains: Array.isArray(args.include_domains) ? args.include_domains : undefined,
+					freshness: typeof args.freshness === 'string' ? args.freshness : undefined,
+					signal: ctx.signal
+				});
+				ctx.emit({
+					type: 'tool',
+					name,
+					summary: `Searched the web for "${query.slice(0, 60)}" (${results.length} results)`
+				});
+				return {
+					content: ok({
+						source: 'You.com web search; results as indexed by You.com, not verified',
+						query,
+						results
+					})
+				};
+			} catch (err) {
+				if (ctx.signal?.aborted) throw err;
+				const message =
+					err instanceof WebSearchError
+						? err.message
+						: `Web search failed: ${(err as Error).message}`;
+				ctx.emit({ type: 'tool', name, summary: message.slice(0, 80) });
+				return {
+					content: fail(
+						`${message} Tell the user you could not search the web, and label any real-world specifics as unverified.`
+					)
+				};
+			}
 		}
 		default:
 			return { content: fail(`Unknown tool ${name}`) };

@@ -61,8 +61,7 @@ NOW
   - Reuse formloop's synthetic listings
   - Fallback: DataSF context tool below
 - [S] Market snapshot: median rent via SQL     <-- Gaelan
-- [S] You.com search and research agent tools
-  - Listings and neighborhood briefs, cited sources
+- [S] You.com Research tool for briefs
   - See docs/research/you-com-api.md
 - [M] Visit list and feedback round in prompt
   - Ratings drive the next search round
@@ -173,6 +172,7 @@ Works on its own; Workbench (frontend/) can't use it yet.
 - Usage table: cost, tokens, cache hits            <-- Gaelan
 - Offline mock mode: unset CRUSOE_API_KEY          <-- Gaelan
 - npm run set-key and npm run models               <-- Gaelan
+- You.com web_search tool, cited links             <-- Gaelan
   - Save Crusoe key; list live model IDs
 - Self-check: mentioned artifacts must exist       <-- Gaelan
 - Approved redo updates the same artifacts         <-- Gaelan

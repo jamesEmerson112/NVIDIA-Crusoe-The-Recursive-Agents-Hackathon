@@ -45,7 +45,7 @@ Response: `Content-Type: application/x-ndjson`, one JSON `RunEvent` per line:
 | `status` | `text` | Short status ("Thinking", "Continuing") |
 | `delta` | `text` | Next chunk of the assistant's chat reply |
 | `reasoning` | `text` | Next chunk of model reasoning |
-| `tool` | `name`, `summary` | A tool call ran (e.g. `set_plan`, "Planned 5 steps") |
+| `tool` | `name`, `summary` | A tool call ran (e.g. `set_plan`, "Planned 5 steps"; `web_search`, "Searched the web for \"…\" (5 results)") |
 | `changed` | none | Stored state changed: re-fetch or `invalidate('app:conversation')` |
 | `error` | `message` | The run failed |
 | `done` | none | Run finished; the stream closes |

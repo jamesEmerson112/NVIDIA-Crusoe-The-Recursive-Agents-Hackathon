@@ -19,6 +19,11 @@ export const variables = defineEnvVars({
 		description: 'Cheap model for quick artifact edits run as sub-agents.',
 		schema: (value) => value || 'deepseek-ai/Deepseek-V4-Flash'
 	},
+	YDC_API_KEY: {
+		description:
+			"You.com API key for the agent's web_search tool (and formloop). Without it web_search returns an error and the agent says it cannot search.",
+		schema: optional
+	},
 	PUBLIC_MAPTILER_KEY: {
 		description:
 			'MapTiler key for the 3D San Francisco map on the start page. Shipped to the browser, so restrict it to your domains in the MapTiler dashboard. Without it the start page draws a keyless three.js skyline.',
