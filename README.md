@@ -2,6 +2,22 @@
 
 Our entry for the Crusoe × Cerebral Valley Recursive Agents Hackathon (Oct 17, 2026): a team of agents you can walk away from, built on Crusoe Managed Inference.
 
+## Demo: Workbench
+
+A real run on Crusoe (`zai-org/GLM-5.3-Flash` agent, `deepseek-ai/Deepseek-V4-Flash` sub-agents). Listings and 3D rooms are staged samples, not live data.
+
+**1. Ask.** One sentence becomes a plan and a short inline form. Every answer is free text, so "idk" always fits.
+
+![Asking for an apartment: plan and inline form](docs/media/demo-ask.gif)
+
+**2. Answer.** The agent works through its plan: a neighborhood comparison, a shortlist, a staged 3D walkthrough embedded in the chat, and a search plan. The whole run took 13 model calls, cost $0.0067 and hit the prompt cache 80% of the time.
+
+![Answering the form: documents, 3D room and floor plan](docs/media/demo-answer.gif)
+
+**3. Change your mind.** Edit an answer in place. Everything built from it is marked out of date, and the agent decides whether the change is small (patch it with sub-agents) or large. Here the budget drop is large, so it asks first, showing a cost and time estimate, then redoes the work, including a new top pick.
+
+![Editing the budget: stale artifacts, redo proposal, reworked results](docs/media/demo-edit.gif)
+
 ## Layout
 
 | Path | What |
