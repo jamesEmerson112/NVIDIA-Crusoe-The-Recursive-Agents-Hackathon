@@ -44,7 +44,7 @@ Repeated items (messages, steps, list rows, chips) share one id; pick one by tex
 
 **`lib/components/Widget.svelte`**: `widget`, `widget-description`, `widget-frame`, `widget-error`
 
-**`lib/components/Workspace.svelte`**: `workspace-title`, `workspace-open-map`, `workspace-toggle-process`, `workspace-chat`, `workspace-message-form-submit`, `workspace-form-submit-open`, `workspace-message-artifact-edit`, `workspace-artifact-edit-open`, `workspace-message-check`, `workspace-check-summary`, `workspace-check-problem`, `workspace-message-proposal-reply`, `workspace-message-user`, `workspace-message-error`, `workspace-live`, `workspace-live-status`, `workspace-live-activity`, `workspace-error`, `workspace-panel`, `workspace-panel-tabs`, `workspace-panel-tab`, `workspace-panel-close`
+**`lib/components/Workspace.svelte`**: `workspace-title`, `workspace-open-map`, `workspace-toggle-process`, `workspace-chat`, `workspace-message-form-submit`, `workspace-form-submit-open`, `workspace-message-artifact-edit`, `workspace-artifact-edit-open`, `workspace-message-check`, `workspace-check-summary`, `workspace-check-problem`, `workspace-message-proposal-reply`, `workspace-message-user`, `workspace-message-error`, `workspace-live`, `workspace-live-status`, `workspace-live-activity`, `workspace-error`, `workspace-panel`, `workspace-panel-resize`, `workspace-panel-tabs`, `workspace-panel-tab`, `workspace-panel-close`
 
 **`routes/+layout.svelte`**: `app-root`, `sidebar`, `sidebar-toggle`, `sidebar-new`, `sidebar-library`, `sidebar-plans`, `sidebar-conversations`, `sidebar-item`, `sidebar-conversation`, `sidebar-working`, `sidebar-delete`, `sidebar-delete-error`, `sidebar-mock-notice`, `app-main`
 

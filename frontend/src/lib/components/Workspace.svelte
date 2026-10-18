@@ -38,6 +38,61 @@
 		panelParam === 'map' || panelParam === 'log' ? panelParam : 'process'
 	);
 	const mapWide = $derived(panelTab !== 'process' && !opened);
+
+	// Right panel width: drag its left edge to resize (double-click resets); remembered per browser.
+	const PANEL_DEFAULT = 480;
+	const PANEL_MIN = 360;
+	let panelWidth = $state(PANEL_DEFAULT);
+	let viewportWidth = $state(1440);
+	const clampWidth = (w: number) =>
+		Math.round(Math.min(Math.max(w, PANEL_MIN), viewportWidth * 0.75));
+	const asideWidth = $derived.by(() => {
+		if (viewportWidth < 1280) return mapWide ? viewportWidth : Math.min(panelWidth, viewportWidth);
+		const w = clampWidth(panelWidth);
+		// The map and run log want room: at least min(880px, 58vw) when shown.
+		return mapWide ? Math.max(w, Math.min(880, viewportWidth * 0.58)) : w;
+	});
+	$effect(() => {
+		try {
+			const saved = Number(localStorage.getItem('workbench.panelWidth'));
+			if (saved) panelWidth = saved;
+		} catch {
+			// Storage unavailable: keep the default.
+		}
+	});
+	function savePanelWidth() {
+		try {
+			localStorage.setItem('workbench.panelWidth', String(panelWidth));
+		} catch {
+			// Not persisted; the width still applies for this page.
+		}
+	}
+	function startResize(e: PointerEvent) {
+		const handle = e.currentTarget as HTMLElement;
+		handle.setPointerCapture(e.pointerId);
+		const startX = e.clientX;
+		const startW = asideWidth;
+		document.body.style.userSelect = 'none';
+		const move = (ev: PointerEvent) => (panelWidth = clampWidth(startW + (startX - ev.clientX)));
+		const up = () => {
+			handle.removeEventListener('pointermove', move);
+			handle.removeEventListener('pointerup', up);
+			handle.removeEventListener('pointercancel', up);
+			document.body.style.userSelect = '';
+			savePanelWidth();
+		};
+		handle.addEventListener('pointermove', move);
+		handle.addEventListener('pointerup', up);
+		handle.addEventListener('pointercancel', up);
+	}
+	function resizeByKey(e: KeyboardEvent) {
+		const step = e.shiftKey ? 96 : 24;
+		if (e.key === 'ArrowLeft') panelWidth = clampWidth(asideWidth + step);
+		else if (e.key === 'ArrowRight') panelWidth = clampWidth(asideWidth - step);
+		else return;
+		e.preventDefault();
+		savePanelWidth();
+	}
 	// Below xl the panel overlays the chat, so start with it closed there.
 	$effect(() => {
 		if (window.innerWidth < 1280) panelOpen = false;
@@ -97,6 +152,8 @@
 		if (scroller) scroller.scrollTop = scroller.scrollHeight;
 	});
 </script>
+
+<svelte:window bind:innerWidth={viewportWidth} />
 
 <div class="relative flex h-full min-w-0 flex-1">
 	<section class="flex min-w-0 flex-1 flex-col">
@@ -269,10 +326,24 @@
 	{#if panelOpen || opened}
 		<aside
 			data-testid="workspace-panel"
-			class="{mapWide
-				? 'w-[min(880px,58vw)] max-xl:w-full'
-				: 'w-[420px] max-xl:w-[min(420px,100%)]'} shrink-0 border-l border-zinc-200 bg-zinc-50 max-xl:absolute max-xl:inset-y-0 max-xl:right-0 max-xl:z-10 max-xl:shadow-2xl dark:border-zinc-800 dark:bg-zinc-950"
+			class="relative shrink-0 border-l border-zinc-200 bg-zinc-50 max-xl:absolute max-xl:inset-y-0 max-xl:right-0 max-xl:z-10 max-xl:shadow-2xl dark:border-zinc-800 dark:bg-zinc-950"
+			style="width: {asideWidth}px"
 		>
+			<!-- Drag (or arrow keys) to resize; double-click resets. A focusable role=separator is the
+			     ARIA pattern for a resize handle, which Svelte's a11y lint doesn't know. -->
+			<!-- svelte-ignore a11y_no_noninteractive_tabindex, a11y_no_noninteractive_element_interactions -->
+			<div
+				data-testid="workspace-panel-resize"
+				role="separator"
+				aria-orientation="vertical"
+				aria-label="Resize panel"
+				aria-valuenow={asideWidth}
+				tabindex="0"
+				class="absolute inset-y-0 -left-1 z-20 w-2 cursor-col-resize transition-colors hover:bg-emerald-500/30 focus-visible:bg-emerald-500/40 focus-visible:outline-none max-xl:hidden"
+				onpointerdown={startResize}
+				ondblclick={() => ((panelWidth = PANEL_DEFAULT), savePanelWidth())}
+				onkeydown={resizeByKey}
+			></div>
 			{#if opened}
 				<ArtifactView
 					artifact={opened}
