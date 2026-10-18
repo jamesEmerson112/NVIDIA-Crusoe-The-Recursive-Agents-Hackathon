@@ -38,11 +38,18 @@ export function createSanFranciscoMap(host: HTMLElement, options: SfMapOptions):
 		fadeDuration: 0
 	});
 	map.getCanvas().dataset.testid = 'sf3d-map-canvas';
+	// Top padding moves the view's centre (the downtown towers) below the start page's heading.
+	const pad = () =>
+		map.setPadding({ top: Math.round(host.clientHeight * 0.45), bottom: 0, left: 0, right: 0 });
+	pad();
 
 	let frame = 0;
 	let disposed = false;
 	const scene: SfScene = {
-		resize: () => map.resize(),
+		resize: () => {
+			map.resize();
+			pad();
+		},
 		dispose() {
 			if (disposed) return;
 			disposed = true;

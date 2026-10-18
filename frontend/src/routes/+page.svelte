@@ -23,17 +23,12 @@
 >
 	<SanFrancisco3D />
 	<div class="relative w-full max-w-3xl space-y-8">
-		<!-- A soft frosted patch behind the heading keeps it legible over the animated map: blurred,
-		     lightly tinted, with a radial mask so its edges fade out instead of forming a box. -->
-		<h1
-			data-testid="start-heading"
-			class="relative isolate mx-auto w-fit text-center text-3xl font-normal tracking-tight"
-		>
+		<h1 data-testid="start-heading" class="text-center text-3xl font-normal tracking-tight">
+			<!-- Apple-style glass pill (blur, saturation, light rim) so the heading reads over the SF map. -->
 			<span
-				aria-hidden="true"
-				class="absolute -inset-x-24 -inset-y-12 -z-10 bg-white/75 [mask-image:radial-gradient(closest-side,black_50%,transparent)] backdrop-blur-xl dark:bg-zinc-950/60"
-			></span>
-			What's on your mind today?
+				class="inline-block rounded-full border border-white/70 bg-gradient-to-b from-white/60 to-white/25 px-7 py-2.5 shadow-[inset_0_1px_1px_rgba(255,255,255,0.9),inset_0_-1px_1px_rgba(0,0,0,0.04),0_8px_30px_rgba(0,0,0,0.08)] backdrop-blur-xl backdrop-saturate-150 dark:border-white/15 dark:from-white/15 dark:to-white/5 dark:shadow-[inset_0_1px_1px_rgba(255,255,255,0.15),0_8px_30px_rgba(0,0,0,0.4)]"
+				>What's on your mind today?</span
+			>
 		</h1>
 		<Composer
 			variant="hero"
